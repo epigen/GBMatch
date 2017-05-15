@@ -1,0 +1,157 @@
+cellType	collection	N	Tissue	Lineage1	Lineage2	Lineage	cellState	cellType_corr
+Acute Myeloid Leukemia	codex	17	Blood	Myeloid	Myeloid	Myeloid	Malignant	AML
+alternatively activated macrophage	blueprint20150820	18	Blood	Myeloid	Myeloid	Myeloid	Healthy	Macrophage
+B-Cells	codex	3	Blood	Lymphoid	Lymphoid	Lymphoid	Healthy	B lymphocyte
+B-cells	codex	1	Blood	Lymphoid	Lymphoid	Lymphoid	Healthy	B lymphocyte
+band form neutrophil	blueprint20150820	13	Blood	Myeloid	Myeloid	Myeloid	Healthy	Granulocyte
+CD14-positive, CD16-negative classical monocyte	blueprint20150820	44	Blood	Myeloid	Myeloid	Myeloid	Healthy	Monocyte
+CD3-negative, CD4-positive, CD8-positive, double positive thymocyte	blueprint20150820	1	Blood	Lymphoid	Lymphoid	Lymphoid	Progenitor	T lymphocyte
+CD3-positive, CD4-positive, CD8-positive, double positive thymocyte	blueprint20150820	2	Blood	Lymphoid	Lymphoid	Lymphoid	Progenitor	T lymphocyte
+CD34-negative, CD41-positive, CD42-positive megakaryocyte cell	blueprint20150820	5	Blood	MK/erythroid	Megakaryocytic	Myeloid	Healthy	Megacaryocyte
+CD38-negative naive B cell	blueprint20150820	14	Blood	Lymphoid	Lymphoid	Lymphoid	Healthy	B lymphocyte
+CD4-positive, alpha-beta T cell	blueprint20150820	32	Blood	Lymphoid	Lymphoid	Lymphoid	Healthy	T lymphocyte
+CD4-positive, alpha-beta thymocyte	blueprint20150820	1	Blood	Lymphoid	Lymphoid	Lymphoid	Progenitor	T lymphocyte
+CD8-positive, alpha-beta T cell	blueprint20150820	21	Blood	Lymphoid	Lymphoid	Lymphoid	Healthy	T lymphocyte
+CD8-positive, alpha-beta thymocyte	blueprint20150820	1	Blood	Lymphoid	Lymphoid	Lymphoid	Progenitor	T lymphocyte
+central memory CD4-positive, alpha-beta T cell	blueprint20150820	6	Blood	Lymphoid	Lymphoid	Lymphoid	Healthy	T lymphocyte
+Chronic lymphocytic leukemia	blueprint20150820	18	Blood	Lymphoid	Lymphoid	Lymphoid	Malignant	CLL
+Chronic myelogenous leukemia cells	codex	1	Blood	Myeloid	Myeloid	Myeloid	Malignant	CML
+cytotoxic CD56-dim natural killer cell	blueprint20150820	13	Blood	Lymphoid	Lymphoid	Lymphoid	Healthy	NK cell
+Dnd41	encode_tfbs	2	Blood	Lymphoid	Lymphoid	Lymphoid	Malignant	T lymphocyte
+effector memory CD8-positive, alpha-beta T cell	blueprint20150820	8	Blood	Lymphoid	Lymphoid	Lymphoid	Healthy	T lymphocyte
+effector memory CD8-positive, alpha-beta T cell, terminally differentiated	blueprint20150820	3	Blood	Lymphoid	Lymphoid	Lymphoid	Healthy	T lymphocyte
+erythroblast	blueprint20150820	10	Blood	MK/erythroid	Erythroid	Myeloid	Progenitor	Erythrocyte
+Erythroblast	codex	15	Blood	MK/erythroid	Erythroid	Myeloid	Progenitor	Erythrocyte
+Erythrocytic leukaemia cells	codex	22	Blood	MK/erythroid	Erythroid	Myeloid	Malignant	Erythrocyte
+Erythroid Leukaemia	codex	1	Blood	MK/erythroid	Erythroid	Myeloid	Malignant	Erythrocyte
+Erythroid Progenitor	codex	7	Blood	MK/erythroid	Erythroid	Myeloid	Progenitor	Erythrocyte
+germinal center B cell	blueprint20150820	9	Blood	Lymphoid	Lymphoid	Lymphoid	Healthy	B lymphocyte
+Germinal Center B-Cell-Like Diffuse Large B-Cell Lymphoma	blueprint20150820	10	Blood	Lymphoid	Lymphoid	Lymphoid	Malignant	B lymphocyte
+GM06990	encode_tfbs	1	Blood	Lymphoid	Lymphoid	Lymphoid	Transformed	B lymphocyte
+GM08714	encode_tfbs	1	Blood	Lymphoid	Lymphoid	Lymphoid	Transformed	B lymphocyte
+GM10847	encode_tfbs	2	Blood	Lymphoid	Lymphoid	Lymphoid	Transformed	B lymphocyte
+GM12801	encode_tfbs	1	Blood	Lymphoid	Lymphoid	Lymphoid	Transformed	B lymphocyte
+GM12864	encode_tfbs	1	Blood	Lymphoid	Lymphoid	Lymphoid	Transformed	B lymphocyte
+GM12865	encode_tfbs	1	Blood	Lymphoid	Lymphoid	Lymphoid	Transformed	B lymphocyte
+GM12872	encode_tfbs	1	Blood	Lymphoid	Lymphoid	Lymphoid	Transformed	B lymphocyte
+GM12873	encode_tfbs	1	Blood	Lymphoid	Lymphoid	Lymphoid	Transformed	B lymphocyte
+GM12874	encode_tfbs	1	Blood	Lymphoid	Lymphoid	Lymphoid	Transformed	B lymphocyte
+GM12875	encode_tfbs	1	Blood	Lymphoid	Lymphoid	Lymphoid	Transformed	B lymphocyte
+GM12878	encode_tfbs	90	Blood	Lymphoid	Lymphoid	Lymphoid	Transformed	B lymphocyte
+GM12891	encode_tfbs	10	Blood	Lymphoid	Lymphoid	Lymphoid	Transformed	B lymphocyte
+GM12892	encode_tfbs	8	Blood	Lymphoid	Lymphoid	Lymphoid	Transformed	B lymphocyte
+GM15510	encode_tfbs	2	Blood	Lymphoid	Lymphoid	Lymphoid	Transformed	B lymphocyte
+GM18505	encode_tfbs	2	Blood	Lymphoid	Lymphoid	Lymphoid	Transformed	B lymphocyte
+GM18526	encode_tfbs	2	Blood	Lymphoid	Lymphoid	Lymphoid	Transformed	B lymphocyte
+GM18951	encode_tfbs	2	Blood	Lymphoid	Lymphoid	Lymphoid	Transformed	B lymphocyte
+GM19099	encode_tfbs	2	Blood	Lymphoid	Lymphoid	Lymphoid	Transformed	B lymphocyte
+GM19193	encode_tfbs	2	Blood	Lymphoid	Lymphoid	Lymphoid	Transformed	B lymphocyte
+GM19238	encode_tfbs	1	Blood	Lymphoid	Lymphoid	Lymphoid	Transformed	B lymphocyte
+GM19239	encode_tfbs	1	Blood	Lymphoid	Lymphoid	Lymphoid	Transformed	B lymphocyte
+GM19240	encode_tfbs	1	Blood	Lymphoid	Lymphoid	Lymphoid	Transformed	B lymphocyte
+Hematopoietic Stem and Progenitor Cells	codex	12	Blood	Mesodermal	Hematopoietic	Early hematopoietic	Progenitor	Hematopoietic cell
+HL-60	encode_tfbs	1	Blood	Myeloid	Myeloid	Myeloid	Malignant	HL-60
+inflammatory macrophage	blueprint20150820	29	Blood	Myeloid	Myeloid	Myeloid	Healthy	Macrophage
+K562	encode_tfbs	150	Blood	Myeloid	Myeloid	Myeloid	Malignant	CML
+Leukaemia cell	codex	36	Blood	Myeloid	Myeloid	Myeloid	Malignant	AML
+Leukemia cell	codex	5	Blood	Lymphoid	Lymphoid	Lymphoid	Malignant	T lymphocyte
+lymphocyte of B lineage	blueprint20150820	6	Blood	Lymphoid	Lymphoid	Lymphoid	Healthy	B lymphocyte
+Lymphoma cell	codex	13	Blood	Lymphoid	Lymphoid	Lymphoid	Malignant	T lymphocyte
+macrophage	blueprint20150820	42	Blood	Myeloid	Myeloid	Myeloid	Healthy	Macrophage
+Macrophage	codex	3	Blood	Myeloid	Myeloid	Myeloid	Healthy	Macrophage
+Mantle cell lymphoma	blueprint20150820	12	Blood	Lymphoid	Lymphoid	Lymphoid	Malignant	B lymphocyte
+mature eosinophil	blueprint20150820	10	Blood	Myeloid	Myeloid	Myeloid	Healthy	Granulocyte
+mature neutrophil	blueprint20150820	51	Blood	Myeloid	Myeloid	Myeloid	Healthy	Granulocyte
+Megakaryocyte	codex	5	Blood	MK/erythroid	Megakaryocytic	Myeloid	Healthy	Megacaryocyte
+monocyte	blueprint20150820	5	Blood	Myeloid	Myeloid	Myeloid	Healthy	Monocyte
+Monocyte	codex	1	Blood	Myeloid	Myeloid	Myeloid	Healthy	Monocyte
+Multiple myeloma cell	codex	3	Blood	Lymphoid	Lymphoid	Lymphoid	Malignant	Plasma cell
+Multiple myeloma peak	blueprint20150820	5	Blood	Lymphoid	Lymphoid	Lymphoid	Malignant	Plasma cell
+myeloid cell	blueprint20150820	104	Blood	Myeloid	Myeloid	Myeloid	Healthy	Myeloid cell
+Myeloid Leukemia	codex	2	Blood	Myeloid	Myeloid	Myeloid	Malignant	CML
+naive B cell	blueprint20150820	22	Blood	Lymphoid	Lymphoid	Lymphoid	Healthy	B lymphocyte
+NB4	encode_tfbs	4	Blood	Myeloid	Myeloid	Myeloid	Malignant	AML
+neutrophilic metamyelocyte	blueprint20150820	8	Blood	Myeloid	Myeloid	Myeloid	Progenitor	Granulocyte
+neutrophilic myelocyte	blueprint20150820	10	Blood	Myeloid	Myeloid	Myeloid	Progenitor	Granulocyte
+PBDE	encode_tfbs	2	Blood	Mesodermal	Erythroid	Myeloid	Progenitor	Erythrocyte
+PBDEFetal	encode_tfbs	1	Blood	Mesodermal	Erythroid	Myeloid	Progenitor	Erythrocyte
+peripheral blood mononuclear cell	blueprint20150820	4	Blood	Myeloid	Myeloid	Myeloid	Healthy	Monocyte
+plasma cell	blueprint20150820	22	Blood	Lymphoid	Lymphoid	Lymphoid	Healthy	Plasma cell
+Raji	encode_tfbs	1	Blood	Lymphoid	Lymphoid	Lymphoid	Malignant	B lymphocyte
+Sporadic Burkitt lymphoma	blueprint20150820	11	Blood	Lymphoid	Lymphoid	Lymphoid	Malignant	B lymphocyte
+T-Cell	codex	7	Blood	Lymphoid	Lymphoid	Lymphoid	Healthy	T lymphocyte
+T-cell acute lymphoblastic leukemia cells	codex	2	Blood	Lymphoid	Lymphoid	Lymphoid	Malignant	T lymphocyte
+Umbilical Cord Blood Stem and Progenitor Cells	codex	3	Blood	Mesodermal	Hematopoietic	Early hematopoietic	Progenitor	Hematopoietic cell
+adult endothelial progenitor cell	blueprint20150820	6	Blood vessel	Mesodermal	Mesodermal	Mesodermal	Progenitor	Endothelial cell
+endothelial cell of umbilical vein (proliferating)	blueprint20150820	10	Blood vessel	Mesodermal	Mesodermal	Mesodermal	Healthy	Endothelial cell
+endothelial cell of umbilical vein (resting)	blueprint20150820	9	Blood vessel	Mesodermal	Mesodermal	Mesodermal	Healthy	Endothelial cell
+HBMEC	encode_tfbs	1	Blood vessel	Mesodermal	Mesodermal	Mesodermal	Healthy	Endothelial cell
+HPAF	encode_tfbs	1	Blood vessel	Mesodermal	Mesodermal	Mesodermal	Healthy	Fibroblast
+HUVEC	encode_tfbs	14	Blood vessel	Mesodermal	Mesodermal	Mesodermal	Healthy	Endothelial cell
+Osteobl	encode_tfbs	1	Bone	Mesodermal	Mesodermal	Mesodermal	Healthy	Osteoblast
+U2OS	encode_tfbs	2	Bone	Mesodermal	Mesodermal	Mesodermal	Malignant	Osteoblast
+mesenchymal stem cell of the bone marrow	blueprint20150820	6	Bone marrow	Mesenchymal	Mesodermal	Mesodermal	Progenitor	MSC
+mononuclear cell of bone marrow	blueprint20150820	5	Bone marrow	Myeloid	Myeloid	Myeloid	Healthy	Monocyte
+segmented neutrophil of bone marrow	blueprint20150820	15	Bone marrow	Myeloid	Myeloid	Myeloid	Healthy	Granulocyte
+BE2_C	encode_tfbs	1	Brain	Ectodermal	Ectodermal	Ectodermal	Malignant	Neuron
+Gliobla	encode_tfbs	2	Brain	Ectodermal	Ectodermal	Ectodermal	Malignant	Astrocyte
+NH-A	encode_tfbs	2	Brain	Ectodermal	Ectodermal	Ectodermal	Healthy	Astrocyte
+PFSK-1	encode_tfbs	4	Brain	Ectodermal	Ectodermal	Ectodermal	Malignant	Neuron
+SH-SY5Y	encode_tfbs	2	Brain	Ectodermal	Ectodermal	Ectodermal	Malignant	Neuron
+SK-N-MC	encode_tfbs	2	Brain	Ectodermal	Ectodermal	Ectodermal	Malignant	Neuron
+SK-N-SH	encode_tfbs	5	Brain	Ectodermal	Ectodermal	Ectodermal	Malignant	Neuron
+SK-N-SH_RA	encode_tfbs	6	Brain	Ectodermal	Ectodermal	Ectodermal	Malignant	Neuron
+U87	encode_tfbs	2	Brain	Ectodermal	Ectodermal	Ectodermal	Malignant	Astrocyte
+Cervical cancer cells	codex	1	Cervix	Ectodermal	Ectodermal	Ectodermal	Malignant	Epithelial cell
+HeLa-S3	encode_tfbs	64	Cervix	Ectodermal	Ectodermal	Ectodermal	Malignant	Epithelial cell
+HCPEpiC	encode_tfbs	1	Choroid plexus	Ectodermal	Ectodermal	Ectodermal	Healthy	Epithelial cell
+Caco-2	encode_tfbs	1	Colon	Endodermal	Endodermal	Endodermal	Malignant	Epithelial cell
+HCT-116	encode_tfbs	6	Colon	Endodermal	Endodermal	Endodermal	Malignant	Epithelial cell
+Endoderm	codex	2	Endoderm	Endodermal	Endodermal	Endodermal	In vitro	Endoderm
+ECC-1	encode_tfbs	7	Endometrium	Mesodermal	Mesodermal	Mesodermal	Malignant	Epithelial cell
+Endometrial Stromal Cell	codex	1	Endometrium	Mesodermal	Mesodermal	Mesodermal	Healthy	Stromal cell
+Embryonic Stem Cell	codex	22	ESC	ESC	ESC	ESC	ESC	ESC
+H1-hESC	encode_tfbs	58	ESC	ESC	ESC	ESC	ESC	ESC
+HEEpiC	encode_tfbs	1	Esophagus	Endodermal	Endodermal	Endodermal	Healthy	Epithelial cell
+WERI-Rb-1	encode_tfbs	1	Eye	Ectodermal	Ectodermal	Ectodermal	Malignant	Retina cell
+AG09319	encode_tfbs	1	Gingiva	Mesenchymal	Mesodermal	Mesodermal	Healthy	Fibroblast
+HCFaa	encode_tfbs	1	Heart	Mesodermal	Mesodermal	Mesodermal	Healthy	Fibroblast
+HCM	encode_tfbs	1	Heart	Mesodermal	Mesodermal	Mesodermal	Healthy	Myocyte
+Embryonic kidney cells	codex	4	Kidney	Mesodermal	Mesodermal	Mesodermal	Embryonic	EKC
+HEK293	encode_tfbs	5	Kidney	Mesodermal	Mesodermal	Mesodermal	Transformed	EKC
+HEK293-T-REx	encode_tfbs	1	Kidney	Mesodermal	Mesodermal	Mesodermal	Transformed	EKC
+HRE	encode_tfbs	1	Kidney	Mesodermal	Mesodermal	Mesodermal	Healthy	Epithelial cell
+HRPEpiC	encode_tfbs	1	Retina	Ectodermal	Ectodermal	Ectodermal	Healthy	Epithelial cell
+RPTEC	encode_tfbs	1	Kidney	Mesodermal	Mesodermal	Mesodermal	Healthy	Epithelial cell
+HepG2	encode_tfbs	76	Liver	Endodermal	Endodermal	Endodermal	Malignant	Liver cell
+A549	encode_tfbs	35	Lung	Endodermal	Endodermal	Endodermal	Malignant	Epithelial cell
+AG04450	encode_tfbs	1	Lung	Mesenchymal	Mesodermal	Mesodermal	Fetal	Fibroblast
+HPF	encode_tfbs	1	Lung	Endodermal	Endodermal	Endodermal	Healthy	Fibroblast
+IMR90	encode_tfbs	5	Lung	Endodermal	Endodermal	Endodermal	Fetal	Fibroblast
+NHLF	encode_tfbs	3	Lung	Endodermal	Endodermal	Endodermal	Healthy	Fibroblast
+SAEC	encode_tfbs	1	Lung	Endodermal	Endodermal	Endodermal	Healthy	Epithelial cell
+WI-38	encode_tfbs	1	Lung	Endodermal	Endodermal	Endodermal	Embryonic	Fibroblast
+HMEC	encode_tfbs	3	Mamma	Ectodermal	Ectodermal	Ectodermal	Healthy	Epithelial cell
+HMF	encode_tfbs	1	Mamma	Mesenchymal	Mesodermal	Mesodermal	Healthy	Fibroblast
+MCF-7	encode_tfbs	18	Mamma	Ectodermal	Ectodermal	Ectodermal	Malignant	Epithelial cell
+MCF10A-Er-Src	encode_tfbs	14	Mamma	Ectodermal	Ectodermal	Ectodermal	Transformed	Epithelial cell
+T-47D	encode_tfbs	7	Mamma	Ectodermal	Ectodermal	Ectodermal	Malignant	Epithelial cell
+HSMM	encode_tfbs	2	Muscle	Mesodermal	Mesodermal	Mesodermal	Progenitor	Myocyte
+HSMMtube	encode_tfbs	2	Muscle	Mesodermal	Mesodermal	Mesodermal	Progenitor	Myocyte
+AoAF	encode_tfbs	1	Blood vessel	Mesodermal	Mesodermal	Mesodermal	Healthy	Fibroblast
+Fibrobl	encode_tfbs	1	Skin	Mesenchymal	Mesodermal	Mesodermal	Healthy	Fibroblast
+HA-sp	encode_tfbs	1	Spinal cord	Ectodermal	Ectodermal	Ectodermal	Healthy	Astrocyte
+HAc	encode_tfbs	1	Cerebellum	Ectodermal	Ectodermal	Ectodermal	Healthy	Astrocyte
+PANC-1	encode_tfbs	4	Pancreas	Endodermal	Endodermal	Endodermal	Malignant	Pancreatic carcinoma
+HVMF	encode_tfbs	1	Placenta	Mesenchymal	Mesodermal	Mesodermal	Healthy	Fibroblast
+AG04449	encode_tfbs	1	Skin	Mesenchymal	Mesodermal	Mesodermal	Fetal	Fibroblast
+AG09309	encode_tfbs	1	Skin	Mesenchymal	Mesodermal	Mesodermal	Healthy	Fibroblast
+AG10803	encode_tfbs	1	Skin	Mesenchymal	Mesodermal	Mesodermal	Healthy	Fibroblast
+BJ	encode_tfbs	1	Skin	Mesenchymal	Mesodermal	Mesodermal	Healthy	Fibroblast
+HFF	encode_tfbs	1	Skin	Mesenchymal	Mesodermal	Mesodermal	Healthy	Fibroblast
+HFF-Myc	encode_tfbs	1	Skin	Mesenchymal	Mesodermal	Mesodermal	Transformed	Fibroblast
+NHDF-Ad	encode_tfbs	2	Skin	Mesodermal	Mesodermal	Mesodermal	Healthy	Fibroblast
+NHDF-neo	encode_tfbs	1	Skin	Mesodermal	Mesodermal	Mesodermal	Healthy	Fibroblast
+NHEK	encode_tfbs	5	Skin	Ectodermal	Ectodermal	Ectodermal	Healthy	Keratinocyte
+ProgFib	encode_tfbs	2	Skin	Ectodermal	Ectodermal	Ectodermal	Progeria	Fibroblast
+NT2-D1	encode_tfbs	3	Testis	Embryonic carcinoma	Embryonic carcinoma	Embryonic carcinoma	Malignant	Pluripotent cell
