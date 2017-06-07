@@ -58,7 +58,7 @@ pat_stats[,`Follow-up Time (m)`:=round(`Follow-up Time (m)`*12,1),]
 write.table(pat_stats,file="Pat_stats.tsv",sep="\t",quote=FALSE,row.names=FALSE)
 
 #calculate basic pat stats
-pat_stats_summary=pat_stats[grepl("GBMatch",Categories),list(mean_ttp=mean(`Time to Progression (m)`),mean_followup=mean(`Follow-up Time (m)`),sd_ttp=mean(`Time to Progression (m)`),sd_followup=mean(`Follow-up Time (m)`),median_ttp=median(`Time to Progression (m)`),median_followup=median(`Follow-up Time (m)`),male=sum(Sex=="m"),female=sum(Sex=="f"),mean_age=mean(`Age (Diagnosis)`),sd_age=sd(`Age (Diagnosis)`)),by="IDH status"]
+pat_stats_summary=pat_stats[grepl("GBMatch",Categories),list(mean_ttp=mean(`Time to Progression (m)`),mean_followup=mean(`Follow-up Time (m)`),sd_ttp=mean(`Time to Progression (m)`),sd_followup=mean(`Follow-up Time (m)`),median_ttp=median(`Time to Progression (m)`),median_followup=median(`Follow-up Time (m)`),male=sum(Sex=="m"),female=sum(Sex=="f"),median_age=as.double(median(`Age (Diagnosis)`)),mean_age=mean(`Age (Diagnosis)`),sd_age=sd(`Age (Diagnosis)`)),by="IDH status"]
 write.table(pat_stats_summary,file="Pat_stats_summary.tsv",sep="\t",quote=FALSE,row.names=FALSE)
 
 
