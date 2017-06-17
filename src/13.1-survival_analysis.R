@@ -309,6 +309,13 @@ copywriter_wide=reshape(copywriter,timevar="surgery",idvar="patID",direction="wi
 copywriter_date_surv=merge(copywriter_wide,annot_surv,by="patID")
 copywriter_date_relapse=merge(copywriter_wide,annot_relapse,by="patID")
 
+#chr10q deletion overview
+chr10q_del_surv=copywriter_date_surv[,list(N=.N,mean_follow_up=mean(follow_up),sd_follow_up=sd(follow_up)),by=c("10_q_deletion.1","10_q_deletion.2")]
+chr10q_del_rel=copywriter_date_relapse[,list(N=.N,mean_follow_up=mean(follow_up),sd_follow_up=sd(follow_up)),by=c("10_q_deletion.1","10_q_deletion.2")]
+write.table(chr10q_del_surv,"chr10q_del_surv.tsv",quote=FALSE,sep="\t",row.names=FALSE)
+write.table(chr10q_del_rel,"chr10q_del_rel.tsv",quote=FALSE,sep="\t",row.names=FALSE)
+mat=matrix(c(38, 33, 16, 24),nrow = 2, dimnames = list(first = c("nodel", "del"),second = c("nodel", "del")))
+fisher.test(mat,alternative="two.sided")
 
 pdf("copywriter_date_annotation_surv.pdf",height=3.5,width=3)
 print(plot_surv(copywriter_date_surv)[[1]])
