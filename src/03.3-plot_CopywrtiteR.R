@@ -1,10 +1,7 @@
 library(project.init)
 project.init2("GBMatch")
 library(gsubfn)
-#library(GenomicRanges)
 library(gtools)
-#library(rtracklayer)
-#library(pheatmap)
 library(ggrepel)
 
 
@@ -210,7 +207,7 @@ GOIs_sel_ext=rbindlist(list(copy(GOIs_sel[,surgery:=1,]),copy(GOIs_sel[,surgery:
 genes_frequency[,keep:=set_sig[which.min(min_frag_len_sep)],by=c("gene","surgery")]
 GOIs_diff=genes_frequency[set_sig!="tie"&!is.na(surgery)&keep==set_sig,c("gene","set_sig","chrom","transc_start","surgery"),with=FALSE]
 GOIs_comb=merge(GOIs_diff,GOIs_sel_ext[surgery%in%c(1,2)],by=c("gene","chrom","transc_start","surgery"),all.y=TRUE)
-GOIs_comb[is.na(classification),classification:="n.d.",]
+GOIs_comb[is.na(classification),classification:="ND",]
 
 GOIs_comb=GOIs_comb[chrom%in%c(as.character(1:22),"X","Y")&sel==TRUE]
 GOIs_comb[is.na(set_sig),set_sig:="sel"]
