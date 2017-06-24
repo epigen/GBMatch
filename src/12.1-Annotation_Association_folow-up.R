@@ -69,9 +69,9 @@ pdf("transcSG-dip_cor.pdf",height=3,width=7)
 for (test in test_list){
   sub=unique(annotation[auc>auc_thres&category=="GBMatch"&IDH=="wt",c("N_number_seq",test,classes,"surgery"),with=FALSE])
   sub_long=melt(sub,id.vars=c("N_number_seq",test),measure.vars=c("Classical","Mesenchymal","Proneural"))
-  my_cors=sub_long[,list(xpos=min(value,na.rm=TRUE)+0.1,ypos=max(get(test),na.rm=TRUE)+0.1,cor=cor(get(test),value,use="complete.obs")),by=variable]
+  my_cors=sub_long[,list(xpos=min(value,na.rm=TRUE)+0.1,ypos=max(get(test),na.rm=TRUE)+0.1,cor=cor(get(test),value,use="complete.obs"),cor.test=cor.test(get(test),value,use="complete.obs")$p.value),by=variable]
   
-  pl=ggplot(sub_long, aes(x=value,y=get(test)))+geom_point(shape=21,color="grey",alpha=0.7,size=2)+geom_text(data=my_cors,hjust=0,vjust=1,aes(y=ypos,x=xpos,label=paste0("r= ",round(cor,3))))+geom_smooth(method="lm",aes(fill=variable,col=variable))+facet_wrap(~variable,scale="free")+ggtitle(test)+xlim(c(0,1))+xlab("Class probability")+ylab("MIRA score")+theme(aspect.ratio=1)
+  pl=ggplot(sub_long, aes(x=value,y=get(test)))+geom_point(shape=21,color="grey",alpha=0.7,size=2)+geom_text(data=my_cors,hjust=0,vjust=1,aes(y=ypos,x=xpos,label=paste0("r= ",round(cor,3),"\np= 10^",round(log10(cor.test),0))))+geom_smooth(method="lm",aes(fill=variable,col=variable))+facet_wrap(~variable,scale="free")+ggtitle(test)+xlim(c(0,1))+xlab("Class probability")+ylab("MIRA score")+theme(aspect.ratio=1)
   print(pl)
 }
 dev.off()
