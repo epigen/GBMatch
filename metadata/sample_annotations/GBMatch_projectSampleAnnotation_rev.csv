@@ -1,0 +1,608 @@
+N_number	sex	age	cellType	phenotype	genotype	tissue	individual	date	material	category	dateOfBirth	order	resectionNo	batch
+Graz 21_1	m	62	Astrocytic		wtIDH1	Tumor	195	15.04.2014	FFPE	GBmatch_val				3
+Graz 32_2 	f	75	Astrocytic		wtIDH1	Tumor	203	03.09.2015	FFPE	GBmatch_val				3
+Graz 33_4 	f	55	Astrocytic		wtIDH1	Tumor	204	31.01.2013	FFPE	GBmatch_val				3
+Graz 34	m	77	Astrocytic		wtIDH1	Tumor	205	17.12.2014	FFPE	GBmatch_val				3
+Graz 41	f	53	Astrocytic		wtIDH1	Tumor	211	31.08.2016	FFPE	GBmatch_val				3
+Graz 42	m	82	Astrocytic		wtIDH1	Tumor	212	01.06.2015	FFPE	GBmatch_val				3
+Graz 45	m	86	Astrocytic		wtIDH1	Tumor	213	18.11.2016	FFPE	GBmatch_val				3
+Graz 52	m	74	Astrocytic		wtIDH1	Tumor	219	24.04.2015	FFPE	GBmatch_val				3
+Graz 54	m	72	Astrocytic		wtIDH1	Tumor	221	15.07.2014	FFPE	GBmatch_val				3
+Graz 57	m	57	Astrocytic		wtIDH1	Tumor	224	25.06.2014	FFPE	GBmatch_val				3
+Graz_10_1_2009	m	40				Tumor	120	12.06.2009	FFPE	GBMatch		309	1	2
+Graz_10_3_2009	m	41				Tumor	120	06.10.2009	FFPE	GBMatch		310	2	2
+Graz_11_2_2010	f	53		Secondary GBM		Tumor	121	22.10.2010	FFPE	GBmatch_add		311	1	2
+Graz_11_3_2011	f	54		Secondary GBM		Tumor	121	21.07.2011	FFPE	GBmatch_add		312	2	2
+Graz_11_8_2012	f	54		Secondary GBM		Tumor	121	03.01.2012	FFPE	GBmatch_add		313	3	2
+Graz_12_2_2011	m	64				Tumor	122	28.01.2011	FFPE	GBMatch		314	1	2
+Graz_12_3_2011	m	65				Tumor	122	08.09.2011	FFPE	GBMatch		315	2	2
+Graz_22	m	51	Astrocytic		wtIDH1	Tumor	196	17.10.2016	FFPE	GBmatch_val				3
+Graz_23_4	m	58	Astrocytic		wtIDH1	Tumor	197	07.01.2014	FFPE	GBmatch_val				3
+Graz_25_1	f	82	Astrocytic		wtIDH1	Tumor	198	27.03.2015	FFPE	GBmatch_val				3
+Graz_26_1	f	73	Astrocytic		wtIDH1	Tumor	199	08.07.2016	FFPE	GBmatch_val				3
+Graz_27	f	85	Astrocytic		wtIDH1	Tumor	200	14.11.2014	FFPE	GBmatch_val				3
+Graz_30	f	70	Astrocytic		wtIDH1	Tumor	201	28.03.2014	FFPE	GBmatch_val				3
+Graz_31_2	m	55	Astrocytic		wtIDH1	Tumor	202	29.12.2015	FFPE	GBmatch_val				3
+Graz_35_3	f	62	Astrocytic		wtIDH1	Tumor	206	08.07.2014	FFPE	GBmatch_val				3
+Graz_36	m	61	Astrocytic		wtIDH1	Tumor	207	13.03.2015	FFPE	GBmatch_val				3
+Graz_37_1	m	80	Astrocytic		wtIDH1	Tumor	208	08.09.2014	FFPE	GBmatch_val				3
+Graz_38_2	f	59	Astrocytic		wtIDH1	Tumor	209	13.02.2015	FFPE	GBmatch_val				3
+Graz_39_2	f	69	Astrocytic		wtIDH1	Tumor	210	06.10.2016	FFPE	GBmatch_val				3
+Graz_46_2	f	68	Astrocytic		wtIDH1	Tumor	214	17.11.2014	FFPE	GBmatch_val				3
+Graz_47	f	62	Astrocytic		wtIDH1	Tumor	215	10.03.2015	FFPE	GBmatch_val				3
+Graz_49_2	m	64	Astrocytic		wtIDH1	Tumor	216	07.11.2016	FFPE	GBmatch_val				3
+Graz_5_4_2009	m	58				Tumor	118	20.07.2009	FFPE	GBMatch		305	2	2
+Graz_50_1	m	86	Astrocytic		wtIDH1	Tumor	217	20.10.2014	FFPE	GBmatch_val				3
+Graz_51_1	m	75	Astrocytic		wtIDH1	Tumor	218	28.02.2014	FFPE	GBmatch_val				3
+Graz_53	f	84	Astrocytic		wtIDH1	Tumor	220	31.03.2015	FFPE	GBmatch_val				3
+Graz_55_1	f	63	Astrocytic		wtIDH1	Tumor	222	30.12.2015	FFPE	GBmatch_val				3
+Graz_56_2	m	53	Astrocytic		wtIDH1	Tumor	223	13.10.2015	FFPE	GBmatch_val				3
+Graz_9_2_2011	m	69				Tumor	119	20.05.2011	FFPE	GBMatch		306	1	2
+Graz_9_4_2012	m	70				Tumor	119	13.04.2012	FFPE	GBMatch		307	2	2
+Graz_9_8_2014	m	71				Tumor	119	03.01.2014	FFPE	GBMatch		308	3	2
+Graz4_1_2010	m	37				Tumor	117	18.02.2010	FFPE	GBMatch		302	1	2
+Graz4_5_2010	m	38				Tumor	117	12.10.2010	FFPE	GBMatch		303	2	2
+Graz5_1_2009	m	57				Tumor	118	16.03.2009	FFPE	GBMatch		304	1	2
+N1020-09	f	46	Astrocytic		wtIDH1	Tumor	288	18.07.2009	FFPE	GBmatch_val				3
+N1020-10	m	47	Astrocytic		wtIDH1	Tumor	111	19.07.2010	FFPE	GBMatch	28.08.1962	254		1
+N1020-10_f	m	48	Astrocytic			Tumor 	111	19.07.2010	frozen	TCGA	28.08.1962	1		1
+N1020-10_fv	f	60	Astrocytic		wtIDH1	Tumor	111	27.01.2014	frozen	GBmatch_valF				3
+N1020-10_rk	m	47	Astrocytic		wtIDH1	Tumor	111	19.07.2010	RCL	GBmatch_rcl	28.08.1962	342		2
+N1021-08	m	50	Astrocytic		wtIDH1	Tumor	181	04.09.2008	FFPE	GBmatch_val				3
+N1024-15B	m	53	Astrocytic		wtIDH1	Tumor	148	28.04.2015	FFPE	GBmatch_val				3
+N1025-10	f	55	Astrocytic	Sarcoma-like	wtIDH1	Tumor	2	21.07.2010	FFPE	GBMatch	18.09.1954	18		1
+N1025-10_rk	f	55	Astrocytic	Sarcoma-like	wtIDH1	Tumor	2	21.07.2010	RCL	GBmatch_rcl	18.09.1954	343		2
+N1028-11	f	67	Astrocytic		wtIDH1	Tumor	302	07.07.2011	FFPE	GBmatch_val				3
+N104-11	m	58	Astrocytic		wtIDH1	Tumor	137	24.01.2011	FFPE	GBmatch_val				3
+N1043-09	f	63	Astrocytic		wtIDH1	Tumor	178	22.07.2009	FFPE	GBmatch_val				3
+N1056-11	m	71	Astrocytic		wtIDH1	Tumor	286	13.07.2011	FFPE	GBmatch_val				3
+N1059-07 A	m	46	Astrocytic		wtIDH1	Tumor	37	10.08.2007	FFPE	GBMatch	20.10.1960	99		1
+N1071-14D	m	62	Astrocytic		wtIDH1	Tumor	235	20.05.2014	FFPE	GBmatch_val				3
+N1073-14D	m	73	Astrocytic		wtIDH1	Tumor	229	21.05.2014	FFPE	GBmatch_val				3
+N1-08	f	43	Astrocytic	GB classic	wtIDH1	Tumor	4	31.12.2007	FFPE	GBMatch	05.05.1964	21		1
+N1096-14 B	f	37	Astrocytic		wtIDH1	Tumor	86	26.05.2014	FFPE	GBMatch	26.02.1977	200		1
+N1101-03B	m	47		Oligodendroglioma	mtIDH1	Tumor	133	19.11.2003	FFPE	GBmatch_add		337	1	2
+N1106-05	m	33	Astrocytic		wtIDH1	Tumor	15	20.09.2005	FFPE	GBMatch	27.03.1939	50		1
+N1109-10	f	21	Astrocytic	GB classic	wtIDH1	Tumor	3	12.08.2010	FFPE	GBMatch	05.02.1989	19		1
+N1109-10_rk	f	21	Astrocytic	GB classic	wtIDH1	Tumor	3	12.08.2010	RCL	GBmatch_rcl	05.02.1989	344		2
+N1120-11	m	64	Astrocytic		wtIDH1	Tumor	299	27.07.2011	FFPE	GBmatch_val				3
+N1131-12_f	m	50	Astrocytic		wtIDH1	Tumor	24	28.06.2012	frozen	TCGA	03.05.1962	5	1	1
+N1132-12B	m	50	Astrocytic		wtIDH1	Tumor	24	28.06.2012	FFPE	GBMatch	03.05.1962	73		1
+N1135-15F	f	68	Astrocytic		wtIDH1	Tumor	106	18.05.2015	FFPE	GBMatch	17.03.1947	240		1
+N1137-98	f	34		Oligodendroglioma	mtIDH1	Tumor	128	25.11.1998	FFPE	GBmatch_add		326	1	2
+N115-14	f	52	Astrocytic		wtIDH1	Tumor	103	19.01.2014	FFPE	GBMatch	29.08.1961	233		1
+N1154/55-13_f	m	55	Astrocytic		wtIDH1	Tumor	27	16.07.2013	frozen	TCGA	08.02.1958	10	2	1
+N1154-13	m	55	Astrocytic		wtIDH1	Tumor	27	16.07.2013	FFPE	GBMatch	08.02.1958	80		1
+N1154-13_fv	m	55	Astrocytic		wtIDH1	Tumor	27	16.07.2013	frozen	GBmatch_valF				3
+N1160-15	f	76	Astrocytic		wtIDH1	Tumor	149	20.05.2015	FFPE	GBmatch_val				3
+N1160-15_fv	f	76	Astrocytic		wtIDH1	Tumor	149	20.05.2015	frozen	GBmatch_valF				3
+N1161-06	m	69	Astrocytic		wtIDH1	Tumor	33	11.08.2006	FFPE	GBMatch	22.11.1936	91		1
+N1164-14_fv	m	53	Astrocytic		wtIDH1	Tumor	28	05.06.2014	frozen	GBmatch_valF				3
+N1165-14_rk	m	53	Astrocytic		wtIDH1	Tumor	28	05.06.2014	RCL	GBmatch_rcl	25.02.1961	346		2
+N1165-14A	m	53	Astrocytic		wtIDH1	Tumor	28	05.06.2014	FFPE	GBMatch	25.02.1961	82		1
+N1168-05 A	m	43	Astrocytic	GB classic	wtIDH1	Tumor	1	07.10.2005	FFPE	GBMatch	06.10.1962	15		1
+N1173-07	f	61	Astrocytic		wtIDH1	Tumor	322	07.09.2007	FFPE	GBmatch_val				3
+N1176-06	m	60	Astrocytic		wtIDH1	Tumor	333	16.08.2006	FFPE	GBmatch_val				3
+N1176-10	m	46	Astrocytic		wtIDH1	Tumor	287	27.08.2010	FFPE	GBmatch_val				3
+N1180-10_rk	f	57	Astrocytic		wtIDH1	Tumor	20	30.08.2010	RCL	GBmatch_rcl		352		2
+N1180-10B	f	57	Astrocytic		wtIDH1	Tumor	20	30.08.2010	FFPE	GBMatch		64		1
+N1180-15	m	41	Astrocytic		wtIDH1	Tumor	55	12.01.2005	FFPE	GBMatch	19.03.1963	135		1
+N1181-15	m	44	Astrocytic		wtIDH1	Tumor	55	30.05.2007	FFPE	GBMatch	19.03.1963	136		1
+N1182-15	m	45	Astrocytic		wtIDH1	Tumor	55	07.05.2008	FFPE	GBMatch	19.03.1963	137		1
+N1186-15	f	45	Astrocytic		wtIDH1	Tumor	56	15.02.2008	FFPE	GBMatch	24.07.1962	138		1
+N1187-15	f	49	Astrocytic		wtIDH1	Tumor	56	09.09.2011	FFPE	GBMatch	24.07.1962	139		1
+N1188-15	m	55	Astrocytic		wtIDH1	Tumor	57	25.03.2008	FFPE	GBMatch	09.03.1953	140		1
+N1189-15 A	m	55	Astrocytic		wtIDH1	Tumor	57	14.07.2008	FFPE	GBMatch	09.03.1953	141		1
+N1190-15	m	55	Astrocytic		wtIDH1	Tumor	57	07.01.2009	FFPE	GBMatch	09.03.1953	142		1
+N1191-15	f	77	Astrocytic		wtIDH1	Tumor	58	28.03.2008	FFPE	GBMatch	22.11.1930	143		1
+N1192-15	f	79	Astrocytic		wtIDH1	Tumor	58	16.08.2010	FFPE	GBMatch	22.11.1930	144		1
+N1195-13 A	m	37	Astrocytic		mtIDH1	Tumor	109	18.07.2013	FFPE	GBMatch	20.03.1976	251		1
+N1195-15	m	58	Astrocytic		wtIDH1	Tumor	59	18.07.2008	FFPE	GBMatch	19.05.1950	145		1
+N1196-13_fv	m	37	Astrocytic		wtIDH1	Tumor	109	18.07.2013	frozen	GBmatch_valF				3
+N1196-15	m	59	Astrocytic		wtIDH1	Tumor	59	16.12.2009	FFPE	GBMatch	19.05.1950	146		1
+N1197-08	m	53	Astrocytic		wtIDH1	Tumor	305	07.10.2008	FFPE	GBmatch_val				3
+N1197-15	m	39	Astrocytic	GB classic	wtIDH1	Tumor	7	12.05.2000	FFPE	GBMatch	08.05.1961	27		1
+N1198-08	m	48	Astrocytic		wtIDH1	Tumor	298	08.10.2008	FFPE	GBmatch_val				3
+N1198-15	m	47	Astrocytic	Sarcoma-like	wtIDH1	Tumor	7	18.07.2008	FFPE	GBMatch	08.05.1961	28		1
+N1199-15 B	m	60	Astrocytic	GB classic	wtIDH1	Tumor	11	22.08.2008	FFPE	GBMatch	19.06.1948	36		1
+N1199-15 BIII	m	55	Astrocytic	GB classic	wtIDH1	Tumor	11	22.08.2008	FFPE	multiselector	19.06.1948	276		1
+N1199-15B I	m	55	Astrocytic	GB classic	wtIDH1	Tumor	11	22.08.2008	FFPE	multiselector	19.06.1948	274		1
+N1199-15B II	m	55	Astrocytic	GB classic	wtIDH1	Tumor	11	22.08.2008	FFPE	multiselector	19.06.1948	275		1
+N1200-15	m	61	Astrocytic	GB classic	wtIDH1	Tumor	11	12.02.2010	FFPE	GBMatch	19.06.1948	37		1
+N1200-15 I	m	56	Astrocytic	GB classic	wtIDH1	Tumor	11	12.02.2010	FFPE	multiselector	19.06.1948	277		1
+N1200-15 II	m	56	Astrocytic	GB classic	wtIDH1	Tumor	11	12.02.2010	FFPE	multiselector	19.06.1948	278		1
+N1200-15 III	m	56	Astrocytic	GB classic	wtIDH1	Tumor	11	12.02.2010	FFPE	multiselector	19.06.1948	279		1
+N1201-15	m	62	Astrocytic	GB classic	wtIDH1	Tumor	11	25.11.2010	FFPE	GBMatch	19.06.1948	38		1
+N1201-15 I	m	62	Astrocytic	GB classic	wtIDH1	Tumor	11	25.11.2010	FFPE	multiselector	19.06.1948	280		1
+N1201-15 II	m	62	Astrocytic	GB classic	wtIDH1	Tumor	11	25.11.2010	FFPE	multiselector	19.06.1948	281		1
+N1201-15 III	m	62	Astrocytic	GB classic	wtIDH1	Tumor	11	25.11.2010	FFPE	multiselector	19.06.1948	282		1
+N1202-15	f	66	Astrocytic	GB classic	wtIDH1	Tumor	5	22.09.2008	FFPE	GBMatch	23.03.1942	23		1
+N1203-15	f	67	Astrocytic	Sarcoma-like	wtIDH1	Tumor	5	25.09.2009	FFPE	GBMatch	23.03.1942	24		1
+N1204-15	m	52	Astrocytic		wtIDH1	Tumor	60	29.09.2008	FFPE	GBMatch	23.10.1955	147		1
+N1205-15	m	53	Astrocytic		wtIDH1	Tumor	60	14.07.2009	FFPE	GBMatch	23.10.1955	148		1
+N1206-15	m	65	Astrocytic		wtIDH1	Tumor	61	05.11.2008	FFPE	GBMatch	17.01.1943	149		1
+N1207-15	m	70	Astrocytic		wtIDH1	Tumor	61	22.03.2013	FFPE	GBMatch	17.01.1943	150		1
+N1208-15 B	f	62	Astrocytic		wtIDH1	Tumor	62	04.02.2009	FFPE	GBMatch	04.01.1947	151		1
+N1209-12	m	58	Astrocytic		wtIDH1	Tumor	304	13.07.2012	FFPE	GBmatch_val				3
+N1209-15	f	63	Astrocytic		wtIDH1	Tumor	62	20.01.2010	FFPE	GBMatch	04.01.1947	152		1
+N1210-15 B	m	47	Astrocytic		wtIDH1	Tumor	63	06.05.2009	FFPE	GBMatch	12.11.1961	153		1
+N1211-15	m	48	Astrocytic		wtIDH1	Tumor	63	01.02.2010	FFPE	GBMatch	12.11.1961	154		1
+N1212-15	m	63	Astrocytic		wtIDH1	Tumor	64	15.05.2009	FFPE	GBMatch	11.07.1945	155		1
+N1213-15	m	64	Astrocytic		wtIDH1	Tumor	64	01.09.2009	FFPE	GBMatch	11.07.1945	156		1
+N1218-15	m	46	Astrocytic	GB classic	wtIDH1	Tumor	12	20.01.2010	FFPE	GBMatch	01.12.1963	39		1
+N1218-15 I	m	46	Astrocytic	GB classic	wtIDH1	Tumor	12	20.01.2010	FFPE	multiselector	01.12.1963	283		1
+N1218-15 II	m	46	Astrocytic	GB classic	wtIDH1	Tumor	12	20.01.2010	FFPE	multiselector	01.12.1963	284		1
+N1218-15 III	m	46	Astrocytic	GB classic	wtIDH1	Tumor	12	20.01.2010	FFPE	multiselector	01.12.1963	285		1
+N1219-15	m	48	Astrocytic	GB classic	wtIDH1	Tumor	12	21.09.2012	FFPE	GBMatch	01.12.1963	40		1
+N1219-15 I	m	48	Astrocytic	GB classic	wtIDH1	Tumor	12	21.09.2012	FFPE	multiselector	01.12.1963	286		1
+N1219-15 II	m	48	Astrocytic	GB classic	wtIDH1	Tumor	12	21.09.2012	FFPE	multiselector	01.12.1963	287		1
+N1220-15	m	49	Astrocytic	GB classic	wtIDH1	Tumor	12	06.08.2013	FFPE	GBMatch	01.12.1963	41		1
+N1220-15 I	m	62	Astrocytic	GB classic	wtIDH1	Tumor	12	06.08.2013	FFPE	multiselector	01.12.1963	288		1
+N1220-15 II	m	62	Astrocytic	GB classic	wtIDH1	Tumor	12	06.08.2013	FFPE	multiselector	01.12.1963	289		1
+N1220-15 III	m	62	Astrocytic	GB classic	wtIDH1	Tumor	12	06.08.2013	FFPE	multiselector	01.12.1963	290		1
+N1221-15	m	69	Astrocytic	Sarcoma-like	wtIDH1	Tumor	10	11.03.2010	FFPE	GBMatch	07.12.1940	34		1
+N1222-10	m	72	Astrocytic		wtIDH1	Tumor	300	03.09.2010	FFPE	GBmatch_val				3
+N1222-15	m	71	Astrocytic	Sarcoma-like	wtIDH1	Tumor	10	19.01.2012	FFPE	GBMatch	07.12.1940	35		1
+N1223-15	m	42	Astrocytic		wtIDH1	Tumor	17	07.10.2010	FFPE	GBMatch	02.08.1968	55		1
+N1224-15 B	m	43	Astrocytic		wtIDH1	Tumor	17	28.02.2012	FFPE	GBMatch	02.08.1968	56		1
+N1225-11	m	76	Astrocytic		wtIDH1	Tumor	330	18.08.2011	FFPE	GBmatch_val				3
+N1225-15 A	m	44	Astrocytic		wtIDH1	Tumor	17	25.10.2012	FFPE	GBMatch	02.08.1968	57		1
+N1226-15	f	70	Astrocytic		wtIDH1	Tumor	66	29.11.2010	FFPE	GBMatch	03.11.1940	157		1
+N1227-15	f	72	Astrocytic		wtIDH1	Tumor	66	30.09.2013	FFPE	GBMatch	03.11.1940	158		1
+N1228-15	m	52	Astrocytic		wtIDH1	Tumor	67	16.12.2010	FFPE	GBMatch	01.07.1958	159		1
+N1229-15 A	m	53	Astrocytic		wtIDH1	Tumor	67	14.12.2011	FFPE	GBMatch	01.07.1958	160		1
+N1230-15	m	63	Astrocytic	GB classic	wtIDH1	Tumor	6	14.04.2011	FFPE	GBMatch	11.06.1947	25		1
+N1231-15	m	65	Astrocytic	Sarcoma-like	wtIDH1	Tumor	6	20.03.2013	FFPE	GBMatch	11.06.1947	26		1
+N1232-15	m	60	Astrocytic		wtIDH1	Tumor	18	10.05.2011	FFPE	GBMatch	12.07.1950	58		1
+N1233-15	m	62	Astrocytic		wtIDH1	Tumor	18	03.05.2013	FFPE	GBMatch	12.07.1950	59		1
+N1234-15	m	64	Astrocytic		wtIDH1	Tumor	18	03.09.2014	FFPE	GBMatch	12.07.1950	60		1
+N1235-15 A	m	51	Astrocytic		wtIDH1	Tumor	68	15.07.2011	FFPE	GBMatch	11.12.1959	161		1
+N1236-14A	f	74	Astrocytic		wtIDH1	Tumor	150	17.06.2014	FFPE	GBmatch_val				3
+N1236-15	m	52	Astrocytic		wtIDH1	Tumor	68	19.10.2012	FFPE	GBMatch	11.12.1959	162		1
+N1237-15	m	50	Astrocytic		wtIDH1	Tumor	13	09.08.2011	FFPE	GBMatch	13.06.1961	42		1
+N1238-15	m	50	Astrocytic		wtIDH1	Tumor	13	24.01.2012	FFPE	GBMatch	13.06.1961	43		1
+N1239-15	m	51	Astrocytic		wtIDH1	Tumor	13	16.11.2012	FFPE	GBMatch	13.06.1961	44		1
+N1241-15	m	43	Astrocytic		wtIDH1	Tumor	69	14.09.2011	FFPE	GBMatch	15.03.1968	163		1
+N1242-15 A	m	44	Astrocytic		wtIDH1	Tumor	69	23.04.2012	FFPE	GBMatch	15.03.1968	164		1
+N1243-15	f	50	Astrocytic		wtIDH1	Tumor	70	20.01.2012	FFPE	GBMatch	11.01.1962	165		1
+N1245-15	f	51	Astrocytic		wtIDH1	Tumor	70	15.10.2013	FFPE	GBMatch	11.01.1962	166		1
+N1246-15	m	64	Astrocytic		wtIDH1	Tumor	71	11.01.2013	FFPE	GBMatch	21.09.1948	167		1
+N1247-15	m	65	Astrocytic		wtIDH1	Tumor	71	19.12.2013	FFPE	GBMatch	21.09.1948	168		1
+N1248-04	m	21	Astrocytic		wtIDH1	Tumor	16	28.09.2004	FFPE	GBMatch	02.08.1983	53		1
+N1248-06	m	72	Astrocytic		wtIDH1	Tumor	327	29.08.2006	FFPE	GBmatch_val				3
+N1250-15	m	61	Astrocytic	GB classic	wtIDH1	Tumor	8	26.02.2013	FFPE	GBMatch	30.09.1951	29		1
+N1250-15 I	m	61	Astrocytic	GB classic	wtIDH1	Tumor	8	26.02.2013	FFPE	multiselector	30.09.1951	291		1
+N1250-15 II	m	61	Astrocytic	GB classic	wtIDH1	Tumor	8	26.02.2013	FFPE	multiselector	30.09.1951	292		1
+N1250-15 III	m	61	Astrocytic	GB classic	wtIDH1	Tumor	8	26.02.2013	FFPE	multiselector	30.09.1951	293		1
+N1252-15 A	m	62	Astrocytic	Sarcoma-like	wtIDH1	Tumor	8	07.10.2013	FFPE	GBMatch	30.09.1951	30		1
+N1252-15A I	m	62	Astrocytic	Sarcoma-like	wtIDH1	Tumor	8	07.10.2013	FFPE	multiselector	30.09.1951	294		1
+N1252-15A II	m	62	Astrocytic	Sarcoma-like	wtIDH1	Tumor	8	07.10.2013	FFPE	multiselector	30.09.1951	295		1
+N1252-15A III	m	62	Astrocytic	Sarcoma-like	wtIDH1	Tumor	8	07.10.2013	FFPE	multiselector	30.09.1951	296		1
+N1254-06	f	63	Astrocytic		wtIDH1	Tumor	328	31.08.2006	FFPE	GBmatch_val				3
+N1261-10	f	68	Astrocytic		wtIDH1	Tumor	310	10.09.2010	FFPE	GBmatch_val				3
+N1267-07	m	68	Astrocytic		wtIDH1	Tumor	31	03.10.2007	FFPE	GBMatch	01.07.1939	88		1
+N127-05	f	28	Astrocytic		wtIDH1	Tumor	29	01.02.2005	FFPE	GBMatch	17.04.1976	83		1
+N1275-15B	f	53	Astrocytic		wtIDH1	Tumor	230	22.05.2015	FFPE	GBmatch_val				3
+N1277-10	m	59	Astrocytic		wtIDH1	Tumor	312	15.09.2010	FFPE	GBmatch_val				3
+N1279-07A	m	66	Astrocytic		wtIDH1	Tumor	110	05.10.2007	FFPE	GBMatch	23.08.1941	252		1
+N1279-14 A	f	46	Astrocytic		wtIDH1	Tumor	35	24.06.2014	FFPE	GBMatch	14.07.1967	96		1
+N1281-11	f	70	Astrocytic		wtIDH1	Tumor	291	31.08.2011	FFPE	GBmatch_val				3
+N1283-13 B	m	59	Astrocytic		wtIDH1	Tumor	90	28.07.2013	FFPE	GBMatch	22.09.1953	208		1
+N1290-12	m	68	Astrocytic		wtIDH1	Tumor	142	24.07.2012	FFPE	GBmatch_val				3
+N1290-12_fv	m	67	Astrocytic		wtIDH1	Tumor	142	24.07.2012	frozen	GBmatch_valF				3
+N1298-16	f	50	Astrocytic		wtIDH1	Tumor	342	20.06.2016	FFPE	GBmatch_val				3
+N1298-16_fv	f	50	Astrocytic		wtIDH1	Tumor	342	20.06.2016	frozen	GBmatch_valF				3
+N1315-11 B	m	72	Astrocytic		wtIDH1	Tumor	77	04.10.2010	FFPE	GBMatch	17.01.1938	180		1
+N1317-10	f	72	Astrocytic		wtIDH1	Tumor	311	21.09.2010	FFPE	GBmatch_val				3
+N1317-12	f	59	Astrocytic		wtIDH1	Tumor	20	31.07.2012	FFPE	GBMatch		65		1
+N1317-12_rk	f	59	Astrocytic		wtIDH1	Tumor	20	31.07.2012	RCL	GBmatch_rcl		353		2
+N132-12	m	80	Astrocytic		wtIDH1	Tumor	309	19.01.2012	FFPE	GBmatch_val				3
+N1322-08A	m	71	Astrocytic		wtIDH1	Tumor	33	05.11.2008	FFPE	GBMatch	22.11.1936	92		1
+N1330-09	m	40	Astrocytic		mtIDH1	Tumor	108	22.09.2009	FFPE	GBMatch	15.03.1969	245		1
+N1336-14A	m	60	Astrocytic		wtIDH1	Tumor	151	01.07.2014	FFPE	GBmatch_val				3
+N1344-12	m	65	Astrocytic		wtIDH1	Tumor	306	08.08.2012	FFPE	GBmatch_val				3
+N1351-09	m	68	Astrocytic		wtIDH1	Tumor	143	24.09.2009	FFPE	GBmatch_val				3
+N1371-10	m	70	Astrocytic		wtIDH1	Tumor	292	01.10.2010	FFPE	GBmatch_val				3
+N1381-07	m	76	Astrocytic		wtIDH1	Tumor	325	25.10.2007	FFPE	GBmatch_val				3
+N1381-12	f	69	Astrocytic		wtIDH1	Tumor	297	16.08.2012	FFPE	GBmatch_val				3
+N1383-14A	m	57	Astrocytic		wtIDH1	Tumor	152	08.07.2014	FFPE	GBmatch_val				3
+N1383-14A_fv	m	56	Astrocytic		wtIDH1	Tumor	152	08.07.2014	frozen	GBmatch_valF				3
+N1388-04	m	59	Astrocytic		wtIDH1	Tumor	41	29.10.2004	FFPE	GBMatch	12.11.1944	108		1
+N1388-10	f	79	Astrocytic		wtIDH1	Tumor	303	05.10.2010	FFPE	GBmatch_val				3
+N1390-13	m	69	Astrocytic		wtIDH1	Tumor	190	21.08.2013	FFPE	GBmatch_val				3
+N1390-13_fv	m	69	Astrocytic		wtIDH1	Tumor	190	21.08.2013	frozen	GBmatch_valF				3
+N139-03C	m	31	Astrocytic		wtIDH1	Tumor	15	03.02.2003	FFPE	GBMatch	27.03.1939	49		1
+N1404-13	f	75	Astrocytic		wtIDH1	Tumor	32	22.08.2013	FFPE	GBMatch	20.09.1937	90		1
+N1404-13_f	f	75	Astrocytic		wtIDH1	Tumor 	32	22.08.2013	frozen	TCGA	20.09.1937	4	2	1
+N1420-08	f	44	Astrocytic	Sarcoma-like	wtIDH1	Tumor	4	02.12.2008	FFPE	GBMatch	05.05.1964	22		1
+N1420-08_rk	f	44	Astrocytic	Sarcoma-like	wtIDH1	Tumor	4	02.12.2008	RCL	GBmatch_rcl	05.05.1964	339		2
+N1436-06	m	65	Astrocytic	GB classic	wtIDH1	Tumor	10	27.09.2006	FFPE	GBMatch	07.12.1940	33		1
+N1436-15	m	63	Astrocytic		wtIDH1	Tumor	153	19.06.2015	FFPE	GBmatch_val				3
+N1436-15_fv	m	62	Astrocytic		wtIDH1	Tumor	153	19.06.2015	frozen	GBmatch_valF				3
+N144-06	m	72	Astrocytic		wtIDH1	Tumor	323	30.01.2006	FFPE	GBmatch_val				3
+N1448-14	f	53	Astrocytic		wtIDH1	Tumor	154	14.07.2014	FFPE	GBmatch_val				3
+N1453-06B	f	66		Oligodendroglioma	mtIDH1	Tumor	129	28.09.2006	FFPE	GBmatch_add		330	2	2
+N1471-11A	f	61		Epilepsy		White matter	112	06.10.2011	FFPE	control		297		1
+N1491-15	m	74	Astrocytic		wtIDH1	Tumor	155	24.06.2015	FFPE	GBmatch_val				3
+N1496-13 C	m	66	Astrocytic		wtIDH1	Tumor	84	02.09.2013	FFPE	GBMatch	20.05.1947	196		1
+N1509-08	m	67	Astrocytic		wtIDH1	Tumor	317	19.12.2008	FFPE	GBmatch_val				3
+N1510-11	f	57	Astrocytic		wtIDH1	Tumor	40	14.10.2011	FFPE	GBMatch	16.01.1954	105		1
+N1512-14B	f	64		Gliosarcoma	wtIDH1	Tumor	126	23.07.2014	FFPE	GBMatch		322	1	2
+N1516-10	m	71	Astrocytic		wtIDH1	Tumor	313	02.11.2010	FFPE	GBmatch_val				3
+N1518-07 A	f	68	Astrocytic		wtIDH1	Tumor	22	03.12.2007	FFPE	GBMatch	09.10.1939	70		1
+N1522-14A	m	66	Astrocytic		wtIDH1	Tumor	275	17.03.2014	FFPE	GBmatch_val				3
+N1541-14	f	62	Astrocytic		wtIDH1	Tumor	156	25.07.2014	FFPE	GBmatch_val				3
+N1541-14_fv	f	61	Astrocytic		wtIDH1	Tumor	156	25.07.2014	frozen	GBmatch_valF				3
+N1543-14E 	m	37	Astrocytic		wtIDH1	Tumor	157	25.07.2014	FFPE	GBmatch_val				3
+N1543-14E_fv	m	37	Astrocytic		wtIDH1	Tumor	157	25.07.2014	frozen	GBmatch_valF				3
+N1555-14C	m	58	Astrocytic		wtIDH1	Tumor	227	25.07.2014	FFPE	GBmatch_val				3
+N1563-09	m	69	Astrocytic		wtIDH1	Tumor	315	21.10.2009	FFPE	GBmatch_val				3
+N1563-11	f	68	Astrocytic		wtIDH1	Tumor	289	25.10.2011	FFPE	GBmatch_val				3
+N1569-15B	m	74	Astrocytic		wtIDH1	Tumor	242	30.06.2015	FFPE	GBmatch_val				3
+N1575-12_fv	f	75	Astrocytic		wtIDH1	Tumor	32	25.09.2012	frozen	GBmatch_valF				3
+N1575-78-12_f	f	75	Astrocytic		wtIDH1	Tumor 	32	25.09.2012	frozen	TCGA	20.09.1937	3	1	1
+N1576-12	f	75	Astrocytic		wtIDH1	Tumor	32	25.09.2012	FFPE	GBMatch	20.09.1937	89		1
+N1576-15	f	68	Astrocytic		wtIDH1	Tumor	158	01.07.2015	FFPE	GBmatch_val				3
+N158-07	f	65	Astrocytic		wtIDH1	Tumor	34	31.01.2007	FFPE	GBMatch	14.01.1942	94		1
+N1581-09	m	70	Astrocytic		wtIDH1	Tumor	138	26.10.2009	FFPE	GBmatch_val				3
+N1582-06	m	78	Astrocytic		wtIDH1	Tumor	329	24.10.2006	FFPE	GBmatch_val				3
+N1583-07	m	63	Astrocytic		wtIDH1	Tumor	141	11.12.2007	FFPE	GBmatch_val				3
+N1592-95-12_f	f	64	Astrocytic		wtIDH1	Tumor	21	28.09.2012	frozen	TCGA	16.03.1948	7	1	1
+N1593-12	f	64	Astrocytic		wtIDH1	Tumor	21	28.09.2012	FFPE	GBMatch	16.03.1948	67		1
+N1613-14B	f	75	Astrocytic		wtIDH1	Tumor	236	01.08.2014	FFPE	GBmatch_val				3
+N1625-11	m	75	Astrocytic		wtIDH1	Tumor	294	08.11.2011	FFPE	GBmatch_val				3
+N1649-12	f	45	Astrocytic		wtIDH1	Tumor	35	09.10.2012	FFPE	GBMatch	14.07.1967	95		1
+N1653-07	f	79	Astrocytic		wtIDH1	Tumor	324	27.12.2007	FFPE	GBmatch_val				3
+N1672-14	m	60	Astrocytic		wtIDH1	Tumor	159	14.08.2014	FFPE	GBmatch_val				3
+N1672-14_fv	m	59	Astrocytic		wtIDH1	Tumor	159	14.08.2014	frozen	GBmatch_valF				3
+N1677-06	m	44	Astrocytic	Sarcoma-like	wtIDH1	Tumor	1	10.11.2006	FFPE	GBMatch	06.10.1962	16		1
+N1711-10	m	66	Astrocytic		wtIDH1	Tumor	147	15.12.2010	FFPE	GBmatch_val				3
+N1722-10	f	57	Astrocytic		wtIDH1	Tumor	296	16.12.2010	FFPE	GBmatch_val				3
+N173-14_rk	f	60	Astrocytic		wtIDH1	Tumor	40	27.01.2014	RCL	GBmatch_rcl	16.01.1954	345	2	2
+N1734-10	f	21	Astrocytic	Monstrocellular	wtIDH1	Tumor	3	17.12.2010	FFPE	GBMatch	05.02.1989	20		1
+N1735-09	f	58	Astrocytic		wtIDH1	Tumor	23	23.11.2009	FFPE	GBMatch	15.04.1951	72		1
+N174-14	f	60	Astrocytic		wtIDH1	Tumor	40	27.01.2014	FFPE	GBMatch	16.01.1954	106		1
+N1764-06	m	30	Astrocytic		mtIDH1	Tumor	109	24.11.2006	FFPE	GBMatch	20.03.1976	247		1
+N1767-06	f	32	Astrocytic		wtIDH1	Tumor	182	26.11.2006	FFPE	GBmatch_val				3
+N177-13	m	57	Astrocytic		wtIDH1	Tumor	192	29.01.2013	FFPE	GBmatch_val				3
+N177-13_fv	f	57	Astrocytic		wtIDH1	Tumor	192	29.01.2013	frozen	GBmatch_valF				3
+N1783-14	m	24		Epilepsy		White matter	116	04.09.2014	FFPE	control		301		1
+N1814-09_rk	m	38	Astrocytic		wtIDH1	Tumor	26	07.12.2009	RCL	GBmatch_rcl	26.04.1971	341		2
+N1814-09A	m	38	Astrocytic		wtIDH1	Tumor	26	07.12.2009	FFPE	GBMatch	26.04.1971	78		1
+N1834-15	f	51	Astrocytic		wtIDH1	Tumor	88	14.11.2012	FFPE	GBMatch	06.06.1961	203		1
+N1835-16	m	55	Astrocytic		wtIDH1	Tumor	343	24.08.2016	FFPE	GBmatch_val				3
+N1835-16_fv	m	55	Astrocytic		wtIDH1	Tumor	343	24.08.2016	frozen	GBmatch_valF				3
+N1844-13_f	m	51	Astrocytic		wtIDH1	Tumor	24	15.10.2013	frozen	TCGA	03.05.1962	6	2	1
+N1844-13_rk	m	51	Astrocytic		wtIDH1	Tumor	24	15.10.2013	RCL	GBmatch_rcl	03.05.1962	347		2
+N1844-13B	m	51	Astrocytic		wtIDH1	Tumor	24	15.10.2013	FFPE	GBMatch	03.05.1962	74		1
+N1875-14	f	74	Astrocytic		wtIDH1	Tumor	160	17.09.2014	FFPE	GBmatch_val				3
+N1883-14	m	66	Astrocytic		wtIDH1	Tumor	161	18.09.2014	FFPE	GBmatch_val				3
+N1883-14_fv	m	65	Astrocytic		wtIDH1	Tumor	161	18.09.2014	frozen	GBmatch_valF				3
+N1916-12	m	50	Astrocytic		wtIDH1	Tumor	111	29.11.2012	FFPE	GBMatch	28.08.1962	255		1
+N1916-12_f	m	50	Astrocytic			Tumor 	111	29.11.2012	frozen	TCGA	28.08.1962	2		1
+N1917-12_fv	m	50	Astrocytic		wtIDH1	Tumor	111	28.11.2012	frozen	GBmatch_valF				3
+N1934-14_fv	f	57	Astrocytic		wtIDH1	Tumor	104	15.11.2013	frozen	GBmatch_valF				3
+N1935-14	f	58	Astrocytic		wtIDH1	Tumor	104	25.09.2014	FFPE	GBMatch	30.03.1956	236		1
+N194-05 A	m	28	Astrocytic		mtIDH1	Tumor	109	18.02.2005	FFPE	GBMatch	20.03.1976	246		1
+N1956-12	f	70	Astrocytic		wtIDH1	Tumor	290	10.12.2012	FFPE	GBmatch_val				3
+N1963-14B	m	54	Astrocytic		wtIDH1	Tumor	239	26.09.2014	FFPE	GBmatch_val				3
+N1995-15	m	78			wtIDH1	Tumor	127	02.09.2015	FFPE	GBMatch		325	2	2
+N200-15	m	31			wtIDH1	Tumor	125	26.01.2015	FFPE	GBMatch		320	1	2
+N2012-14	m	69	Astrocytic		wtIDH1	Tumor	162	08.10.2014	FFPE	GBmatch_val				3
+N203-13 A	f	59	Astrocytic		wtIDH1	Tumor	20	04.02.2013	FFPE	GBMatch		66		1
+N204-11	m	39	Astrocytic		wtIDH1	Tumor	39	08.02.2011	FFPE	GBMatch	29.04.1971	103		1
+N2041-14 D	m	63	Astrocytic		wtIDH1	Tumor	83	08.10.2014	FFPE	GBMatch	30.01.1951	194		1
+N2044-14	m	74	Astrocytic		wtIDH1	Tumor	279	30.09.2014	FFPE	GBmatch_val				3
+N2083-13 A	f	57	Astrocytic		wtIDH1	Tumor	104	15.11.2013	FFPE	GBMatch	30.03.1956	235		1
+N2085-14B	f	60	Astrocytic		wtIDH1	Tumor	163	16.10.2014	FFPE	GBmatch_val				3
+N2085-14B_fv	f	59	Astrocytic		wtIDH1	Tumor	163	16.10.2014	frozen	GBmatch_valF				3
+N211-15D	m	82	Astrocytic		wtIDH1	Tumor	237	22.01.2015	FFPE	GBmatch_val				3
+N2138-17	f	73	Astrocytic		wtIDH1	Tumor	273	29.01.2014	FFPE	GBmatch_val				3
+N2139-17	f	64	Astrocytic		wtIDH1	Tumor	277	22.01.2015	FFPE	GBmatch_val				3
+N2140-17	f	68	Astrocytic		wtIDH1	Tumor	280	01.07.2014	FFPE	GBmatch_val				3
+N2141-17	f	48	Astrocytic		wtIDH1	Tumor	281	12.03.2015	FFPE	GBmatch_val				3
+N2142-17	m	47	Astrocytic		wtIDH1	Tumor	282	10.12.2014	FFPE	GBmatch_val				3
+N2143-17	m	68	Astrocytic		wtIDH1	Tumor	283	01.10.2015	FFPE	GBmatch_val				3
+N2144-17	f	52	Astrocytic		wtIDH1	Tumor	284	19.06.2015	FFPE	GBmatch_val				3
+N2145-17	m	72	Astrocytic		wtIDH1	Tumor	285	13.07.2016	FFPE	GBmatch_val				3
+N2146-17	f	52	Astrocytic		wtIDH1	Tumor	247	17.12.2013	FFPE	GBmatch_val				3
+N2147-17	f	76	Astrocytic		wtIDH1	Tumor	248	16.01.2014	FFPE	GBmatch_val				3
+N2148-17	m	75	Astrocytic		wtIDH1	Tumor	249	21.03.2014	FFPE	GBmatch_val				3
+N2149-17	m	67	Astrocytic		wtIDH1	Tumor	250	26.03.2014	FFPE	GBmatch_val				3
+N2151-17	f	72	Astrocytic		wtIDH1	Tumor	251	22.04.2014	FFPE	GBmatch_val				3
+N2152-17	m	49	Astrocytic		wtIDH1	Tumor	252	28.04.2014	FFPE	GBmatch_val				3
+N2153-17	m	73	Astrocytic		wtIDH1	Tumor	253	14.05.2014	FFPE	GBmatch_val				3
+N2154-17	f	71	Astrocytic		wtIDH1	Tumor	254	10.06.2014	FFPE	GBmatch_val				3
+N2155-17	f	77	Astrocytic		wtIDH1	Tumor	255	09.07.2014	FFPE	GBmatch_val				3
+N2156-17	m	77	Astrocytic		wtIDH1	Tumor	256	23.07.2014	FFPE	GBmatch_val				3
+N2157-17	m	78	Astrocytic		wtIDH1	Tumor	257	31.07.2014	FFPE	GBmatch_val				3
+N2158-17	m	63	Astrocytic		wtIDH1	Tumor	258	03.09.2014	FFPE	GBmatch_val				3
+N2159-17	m	68	Astrocytic		wtIDH1	Tumor	259	09.09.2014	FFPE	GBmatch_val				3
+N2160-17	m	67	Astrocytic		wtIDH1	Tumor	260	28.10.2014	FFPE	GBmatch_val				3
+N2161-17	m	75	Astrocytic		wtIDH1	Tumor	262	09.12.2014	FFPE	GBmatch_val				3
+N2162-17	m	65	Astrocytic		wtIDH1	Tumor	261	09.12.2014	FFPE	GBmatch_val				3
+N2163-17	f	51	Astrocytic		wtIDH1	Tumor	263	15.01.2015	FFPE	GBmatch_val				3
+N2164-17	m	60	Astrocytic		wtIDH1	Tumor	264	19.02.2015	FFPE	GBmatch_val				3
+N2165-17	m	57	Astrocytic		wtIDH1	Tumor	265	25.02.2015	FFPE	GBmatch_val				3
+N2170-17	m	65	Astrocytic		wtIDH1	Tumor	266	17.03.2015	FFPE	GBmatch_val				3
+N2171-17	f	80	Astrocytic		wtIDH1	Tumor	267	01.07.2015	FFPE	GBmatch_val				3
+N2172-17	f	61	Astrocytic		wtIDH1	Tumor	268	27.07.2015	FFPE	GBmatch_val				3
+N2174-17	m	71	Astrocytic		wtIDH1	Tumor	269	28.08.2015	FFPE	GBmatch_val				3
+N2175-17	m	62	Astrocytic		wtIDH1	Tumor	270	02.09.2015	FFPE	GBmatch_val				3
+N2176-17	m	68	Astrocytic		wtIDH1	Tumor	271	03.09.2015	FFPE	GBmatch_val				3
+N2177-17	m	66	Astrocytic		wtIDH1	Tumor	272	11.09.2015	FFPE	GBmatch_val				3
+N2189-15	m	60	Astrocytic		wtIDH1	Tumor	81	29.09.2015	FFPE	GBMatch	10.09.1955	190		1
+N2207-13	f	51	Astrocytic		wtIDH1	Tumor	146	06.12.2013	FFPE	GBmatch_val				3
+N2207-13_fv	f	50	Astrocytic		wtIDH1	Tumor	146	06.12.2013	frozen	GBmatch_valF				3
+N2242-15	f	64	Astrocytic		wtIDH1	Tumor	164	01.10.2015	FFPE	GBmatch_val				3
+N225-06	f	64	Astrocytic		wtIDH1	Tumor	34	16.02.2006	FFPE	GBMatch	14.01.1942	93		1
+N225-09	m	67	Astrocytic		wtIDH1	Tumor	38	11.02.2009	FFPE	GBMatch	14.11.1941	102		1
+N225-09_rk	m	67	Astrocytic		wtIDH1	Tumor	38	11.02.2009	RCL	GBmatch_rcl	14.11.1941	340		2
+N2264-13	m	36	Astrocytic		mtIDH1	Tumor	107	13.12.2013	FFPE	GBMatch	07.10.1977	242		1
+N2266-13	m	75	Astrocytic		wtIDH1	Tumor	185	13.12.2013	FFPE	GBmatch_val				3
+N2298-13 D	f	73	Astrocytic		wtIDH1	Tumor	85	17.12.2013	FFPE	GBMatch	19.03.1940	197		1
+N2310-13 D	f	33	Astrocytic		mtIDH1	Tumor	89	23.12.2013	FFPE	GBMatch	20.06.1983	206		1
+N234-09 C	m	39	Astrocytic		mtIDH1	Tumor	108	10.02.2009	FFPE	GBMatch	15.03.1969	244		1
+N234-14C	m	63	Astrocytic		wtIDH1	Tumor	238	30.01.2014	FFPE	GBmatch_val				3
+N2358-14	m	69	Astrocytic		wtIDH1	Tumor	274	30.10.2014	FFPE	GBmatch_val				3
+N2362-15	f	70	Astrocytic		wtIDH1	Tumor	72	03.04.2008	FFPE	GBMatch	21.04.1937	169		1
+N2363-15 C	f	72	Astrocytic		wtIDH1	Tumor	72	11.12.2009	FFPE	GBMatch	21.04.1937	170		1
+N2367-15	m	55	Astrocytic	GB classic	wtIDH1	Tumor	73	07.08.2006	FFPE	GBMatch	30.04.1951	171		1
+N2367-15 I	m	55	Astrocytic	GB classic	wtIDH1	Tumor	73	07.08.2006	FFPE	multiselector	30.04.1951	268		1
+N2367-15 II	m	55	Astrocytic	GB classic	wtIDH1	Tumor	73	07.08.2006	FFPE	multiselector	30.04.1951	269		1
+N2367-15 III	m	55	Astrocytic	GB classic	wtIDH1	Tumor	73	07.08.2006	FFPE	multiselector	30.04.1951	270		1
+N2368-15	m	56	Astrocytic	Sarcoma-like	wtIDH1	Tumor	73	25.03.2008	FFPE	GBMatch	30.04.1951	172		1
+N2368-15 I	m	56	Astrocytic	Sarcoma-like	wtIDH1	Tumor	73	25.03.2008	FFPE	multiselector	30.04.1951	271		1
+N2368-15 II	m	56	Astrocytic	Sarcoma-like	wtIDH1	Tumor	73	25.03.2008	FFPE	multiselector	30.04.1951	272		1
+N2368-15 III	m	56	Astrocytic	Sarcoma-like	wtIDH1	Tumor	73	25.03.2008	FFPE	multiselector	30.04.1951	273		1
+N2371-15 B	f	59	Astrocytic		wtIDH1	Tumor	74	04.05.2012	FFPE	GBMatch	05.06.1952	173		1
+N2372-15	f	60	Astrocytic		wtIDH1	Tumor	74	02.04.2013	FFPE	GBMatch	05.06.1952	174		1
+N2373-15	m	47	Astrocytic		wtIDH1	Tumor	75	10.10.2011	FFPE	GBMatch	16.09.1964	175		1
+N2374-15	m	47	Astrocytic		wtIDH1	Tumor	75	21.06.2012	FFPE	GBMatch	16.09.1964	176		1
+N2375-15	m	48	Astrocytic		wtIDH1	Tumor	75	14.01.2013	FFPE	GBMatch	16.09.1964	177		1
+N2376-15	m	51	Astrocytic		wtIDH1	Tumor	76	26.01.2011	FFPE	GBMatch	06.09.1959	178		1
+N2377-15	m	51	Astrocytic		wtIDH1	Tumor	76	20.05.2011	FFPE	GBMatch	06.09.1959	179		1
+N2378-15	m	73	Astrocytic		wtIDH1	Tumor	77	19.09.2011	FFPE	GBMatch	17.01.1938	181		1
+N2380-15 C	m	42	Astrocytic		wtIDH1	Tumor	78	05.03.2009	FFPE	GBMatch	19.01.1967	182		1
+N2381-15	m	44	Astrocytic		wtIDH1	Tumor	78	30.08.2011	FFPE	GBMatch	19.01.1967	183		1
+N2382-15	m	44	Astrocytic		wtIDH1	Tumor	78	22.12.2011	FFPE	GBMatch	19.01.1967	184		1
+N2383-15	m	60	Astrocytic		wtIDH1	Tumor	79	22.05.2009	FFPE	GBMatch	04.04.1949	185		1
+N2384-15	m	62	Astrocytic		wtIDH1	Tumor	79	07.07.2011	FFPE	GBMatch	04.04.1949	186		1
+N2385-15	m	55	Astrocytic		wtIDH1	Tumor	80	18.02.2010	FFPE	GBMatch	01.10.1954	187		1
+N2386-15	m	56	Astrocytic		wtIDH1	Tumor	80	27.07.2011	FFPE	GBMatch	01.10.1954	188		1
+N2395-15	f	54	Astrocytic		wtIDH1	Tumor	165	15.10.2015	FFPE	GBmatch_val				3
+N2403-15	m	58	Astrocytic		wtIDH1	Tumor	81	05.12.2013	FFPE	GBMatch	10.09.1955	189		1
+N2441-14C	f	58	Astrocytic		wtIDH1	Tumor	30	25.11.2014	FFPE	GBMatch	17.01.1956	85		1
+N2446-14	m	58	Astrocytic		wtIDH1	Tumor	45	29.06.2007	FFPE	GBMatch	01.02.1949	115		1
+N2447-14 A	m	59	Astrocytic		wtIDH1	Tumor	45	25.08.2008	FFPE	GBMatch	01.02.1949	116		1
+N2448-14	f	78	Astrocytic		wtIDH1	Tumor	46	11.02.2009	FFPE	GBMatch	21.04.1930	117		1
+N2449-14	f	79	Astrocytic		wtIDH1	Tumor	46	21.01.2010	FFPE	GBMatch	21.04.1930	118		1
+N2450-14	m	63	Astrocytic		wtIDH1	Tumor	47	24.11.2008	FFPE	GBMatch	04.10.1945	119		1
+N2451-14	m	64	Astrocytic		wtIDH1	Tumor	47	28.10.2009	FFPE	GBMatch	04.10.1945	120		1
+N2452-14	m	63	Astrocytic		wtIDH1	Tumor	48	05.07.2012	FFPE	GBMatch	01.06.1949	121		1
+N2453-14	m	64	Astrocytic		wtIDH1	Tumor	48	19.02.2014	FFPE	GBMatch	01.06.1949	122		1
+N2454-14	f	56	Astrocytic		wtIDH1	Tumor	49	21.12.2007	FFPE	GBMatch	26.11.1951	123		1
+N2455-14 A	f	59	Astrocytic		wtIDH1	Tumor	49	19.09.2011	FFPE	GBMatch	26.11.1951	124		1
+N2456-14	f	41	Astrocytic		wtIDH1	Tumor	50	08.06.2007	FFPE	GBMatch	08.04.1966	125		1
+N2457-14	f	43	Astrocytic		wtIDH1	Tumor	50	05.01.2010	FFPE	GBMatch	08.04.1966	126		1
+N2460-14	f	52	Astrocytic		wtIDH1	Tumor	51	10.09.2010	FFPE	GBMatch	03.05.1958	127		1
+N2461-14	f	54	Astrocytic		wtIDH1	Tumor	51	06.02.2013	FFPE	GBMatch	03.05.1958	128		1
+N2462-14	f	67	Astrocytic		wtIDH1	Tumor	14	21.02.2007	FFPE	GBMatch	27.03.1939	45		1
+N2462-15	m	66	Astrocytic		wtIDH1	Tumor	105	21.10.2015	FFPE	GBMatch	22.08.1949	238		1
+N2463-14	f	69	Astrocytic		wtIDH1	Tumor	14	08.01.2009	FFPE	GBMatch	27.03.1939	46		1
+N2464-14	f	70	Astrocytic		wtIDH1	Tumor	14	19.05.2009	FFPE	GBMatch	27.03.1939	47		1
+N2465-14	f	70	Astrocytic		wtIDH1	Tumor	14	03.02.2010	FFPE	GBMatch	27.03.1939	48		1
+N2477-14	m	57	Astrocytic		wtIDH1	Tumor	52	10.10.2011	FFPE	GBMatch	10.05.1954	129		1
+N2478-14	m	57	Astrocytic		wtIDH1	Tumor	52	09.02.2012	FFPE	GBMatch	10.05.1954	130		1
+N2481-14	m	69	Astrocytic		wtIDH1	Tumor	53	06.05.2011	FFPE	GBMatch	03.05.1942	131		1
+N2482-14 A	m	71	Astrocytic		wtIDH1	Tumor	53	08.07.2013	FFPE	GBMatch	03.05.1942	132		1
+N2487-14 A	f	67	Astrocytic		wtIDH1	Tumor	54	21.07.2011	FFPE	GBMatch	27.04.1944	133		1
+N2488-14	f	67	Astrocytic		wtIDH1	Tumor	54	16.02.2012	FFPE	GBMatch	27.04.1944	134		1
+N2489-14	m	45	Astrocytic		wtIDH1	Tumor	19	14.01.2010	FFPE	GBMatch	16.04.1964	61		1
+N2490-14	m	46	Astrocytic		wtIDH1	Tumor	19	14.09.2010	FFPE	GBMatch	16.04.1964	62		1
+N2491-14	m	46	Astrocytic		wtIDH1	Tumor	19	03.02.2011	FFPE	GBMatch	16.04.1964	63		1
+N2496-14D	f	55	Astrocytic		wtIDH1	Tumor	246	26.11.2014	FFPE	GBmatch_val				3
+N2506-14 B	m	65	Astrocytic		wtIDH1	Tumor	105	27.11.2014	FFPE	GBMatch	22.08.1949	239		1
+N2507-14	m	75	Astrocytic		wtIDH1	Tumor	278	21.11.2014	FFPE	GBmatch_val				3
+N2515-15C	m	79			wtIDH1	Tumor	124	03.11.2015	FFPE	GBMatch		319	2	2
+N255-16	m	73	Astrocytic		wtIDH1	Tumor	338	05.02.2016	FFPE	GBmatch_val				3
+N255-16_fv	m	73	Astrocytic		wtIDH1	Tumor	338	05.02.2016	frozen	GBmatch_valF				3
+N2566-15B	m	78			wtIDH1	Tumor	124	15.01.2014	FFPE	GBMatch		318	1	2
+N259-08	m	68	Astrocytic		wtIDH1	Tumor	25	07.03.2008	FFPE	GBMatch	27.10.1939	76		1
+N2600-14	f	73	Astrocytic		wtIDH1	Tumor	276	02.12.2014	FFPE	GBmatch_val				3
+N2606-15B	f	44	Astrocytic		wtIDH1	Tumor	166	09.09.2014	FFPE	GBmatch_val				3
+N2611-14	m	56	Astrocytic		wtIDH1	Tumor	193	12.12.2014	FFPE	GBmatch_val				3
+N2611-14_fv	m	56	Astrocytic		wtIDH1	Tumor	193	12.12.2014	frozen	GBmatch_valF				3
+N2613-14_fv	m	77	Astrocytic		wtIDH1	Tumor	127	15.12.2014	frozen	GBmatch_valF				3
+N2613-14C	m	77			wtIDH1	Tumor	127	15.12.2014	FFPE	GBMatch		324	1	2
+N268-09	f	75	Astrocytic		wtIDH1	Tumor	139	17.02.2009	FFPE	GBmatch_val				3
+N269-16	f	62			wtIDH1	Tumor	123	08.02.2016	FFPE	GBMatch		317	2	2
+N2699-14B	m	70	Astrocytic		wtIDH1	Tumor	194	29.12.2014	FFPE	GBmatch_val				3
+N2701-15	m	78	Astrocytic		wtIDH1	Tumor	234	20.11.2015	FFPE	GBmatch_val				3
+N2712-15	f	79	Astrocytic		wtIDH1	Tumor	337	26.11.2015	FFPE	GBmatch_val				3
+N2712-15_fv	f	79	Astrocytic		wtIDH1	Tumor	337	26.11.2015	frozen	GBmatch_valF				3
+N2714-14B	m	74	Astrocytic		wtIDH1	Tumor	225	24.12.2014	FFPE	GBmatch_val				3
+N276-15B	f	73	Astrocytic		wtIDH1	Tumor	226	27.01.2014	FFPE	GBmatch_val				3
+N282-08	f	37		Oligodendroglioma	mtIDH1	Tumor	131	12.03.2008	FFPE	GBmatch_add		333	1	2
+N289-04A	f	63		Oligodendroglioma	mtIDH1	Tumor	129	09.03.2004	FFPE	GBmatch_add		329	1	2
+N294-10 C	m	33	Astrocytic		mtIDH1	Tumor	109	24.02.2010	FFPE	GBMatch	20.03.1976	248		1
+N296-09	m	52	Astrocytic		wtIDH1	Tumor	307	20.02.2009	FFPE	GBmatch_val				3
+N30-13	m	58	Astrocytic		wtIDH1	Tumor	308	07.01.2013	FFPE	GBmatch_val				3
+N307-08	f	43	Astrocytic		wtIDH1	Tumor	135	17.03.2008	FFPE	GBmatch_val				3
+N313-10	m	54	Astrocytic		wtIDH1	Tumor	295	25.02.2010	FFPE	GBmatch_val				3
+N321-15C	m	45		Epilepsy		White matter	114	05.02.2015	FFPE	control		299		1
+N324-08	m	66	Astrocytic		wtIDH1	Tumor	320	26.03.2008	FFPE	GBmatch_val				3
+N337-13	m	60	Astrocytic		wtIDH1	Tumor	179	27.02.2013	FFPE	GBmatch_val				3
+N337-13_fv	m	60	Astrocytic		wtIDH1	Tumor	179	27.02.2013	frozen	GBmatch_valF				3
+N358-14C	f	56	Astrocytic		wtIDH1	Tumor	233	19.02.2014	FFPE	GBmatch_val				3
+N359-14 B	f	36	Astrocytic		wtIDH1	Tumor	86	19.02.2014	FFPE	GBMatch	26.02.1977	199		1
+N369-08	m	47	Astrocytic		wtIDH1	Tumor	37	11.04.2008	FFPE	GBMatch	20.10.1960	100		1
+N380-09B	f	54	Astrocytic	GB classic	wtIDH1	Tumor	2	09.03.2009	FFPE	GBMatch	18.09.1954	17		1
+N386-06	m	34	Astrocytic		wtIDH1	Tumor	15	21.03.2006	FFPE	GBMatch	27.03.1939	51		1
+N392-09	m	67	Astrocytic		wtIDH1	Tumor	110	10.03.2009	FFPE	GBMatch	23.08.1941	253		1
+N398-15D	m	78	Astrocytic		wtIDH1	Tumor	244	11.02.2015	FFPE	GBmatch_val				3
+N41-05A	f	40		Oligodendroglioma	mtIDH1	Tumor	128	12.01.2005	FFPE	GBmatch_add		327	2	2
+N417-14 	f	60	Astrocytic		wtIDH1	Tumor	42	27.02.2014	FFPE	GBMatch	29.09.1954	110		1
+N417-14_f	f	60	Astrocytic		wtIDH1	Tumor	42	27.02.2014	frozen	TCGA	29.09.1954	12		1
+N417-14_rk	f	60	Astrocytic		wtIDH1	Tumor	42	27.02.2014	RCL	GBmatch_rcl	29.09.1954	351		2
+N418-14	m	73	Astrocytic		wtIDH1	Tumor	167	27.02.2014	FFPE	GBmatch_val				3
+N435-06	m	57	Astrocytic		wtIDH1	Tumor	331	28.03.2006	FFPE	GBmatch_val				3
+N441-06	m	66	Astrocytic		wtIDH1	Tumor	31	30.03.2006	FFPE	GBMatch	01.07.1939	87		1
+N444-16B.1	f	65		Gliosarcoma	wtIDH1	Tumor	126	25.02.2016	FFPE	GBMatch		323	2	2
+N458-14_f	m	55	Astrocytic			Tumor	0	06.03.2014	frozen	TCGA		14	2	1
+N465-05 C	m	21	Astrocytic		wtIDH1	Tumor	16	21.04.2005	FFPE	GBMatch	02.08.1983	54		1
+N466-12A	m	40	Astrocytic		wtIDH1	Tumor	140	03.03.2012	FFPE	GBmatch_val				3
+N466-12A_fv	m	40	Astrocytic		wtIDH1	Tumor	140	03.03.2012	frozen	GBmatch_valF				3
+N472-10	m	81	Astrocytic		wtIDH1	Tumor	301	29.03.2010	FFPE	GBmatch_val				3
+N473-09	m	51	Astrocytic		wtIDH1	Tumor	136	27.03.2009	FFPE	GBmatch_val				3
+N475-15	f	58	Astrocytic		wtIDH1	Tumor	104	26.02.2015	FFPE	GBMatch	30.03.1956	237		1
+N486-13_fv	f	51	Astrocytic		wtIDH1	Tumor	43	02.04.2013	frozen	GBmatch_valF				3
+N487-16	f	64	Astrocytic		wtIDH1	Tumor	168	04.03.2016	FFPE	GBmatch_val				3
+N490-13B	f	52	Astrocytic		wtIDH1	Tumor	43	02.04.2014	FFPE	GBMatch	25.09.1961	111		1
+N500-10	f	62	Astrocytic		wtIDH1	Tumor	336	06.04.2010	FFPE	GBmatch_val				3
+N523-15A	f	58	Astrocytic		wtIDH1	Tumor	243	02.03.2015	FFPE	GBmatch_val				3
+N526-06	f	62	Astrocytic		wtIDH1	Tumor	326	12.04.2006	FFPE	GBmatch_val				3
+N531-07	m	67	Astrocytic		wtIDH1	Tumor	25	13.04.2007	FFPE	GBMatch	27.10.1939	75		1
+N536-07	f	31	Astrocytic		wtIDH1	Tumor	29	17.04.2007	FFPE	GBMatch	17.04.1976	84		1
+N540-09	m	65	Astrocytic		wtIDH1	Tumor	191	07.04.2009	FFPE	GBmatch_val				3
+N541-09	m	44		Oligodendroglioma	mtIDH1	Tumor	130	07.04.2009	FFPE	GBmatch_add		331	1	2
+N541-15	m	73	Astrocytic		wtIDH1	Tumor	169	05.03.2015	FFPE	GBmatch_val				3
+N541-15_fv	m	72	Astrocytic		wtIDH1	Tumor	169	05.03.2015	frozen	GBmatch_valF				3
+N54-13	m	36	Astrocytic		mtIDH1	Tumor	109	10.01.2013	FFPE	GBMatch	20.03.1976	250		1
+N54-13_fv	m	36	Astrocytic		wtIDH1	Tumor	109	09.01.2013	frozen	GBmatch_valF				3
+N554-03B	m	32	Astrocytic		wtIDH1	Tumor	26	11.06.2003	FFPE	GBMatch	26.04.1971	77		1
+N560-12	m	51	Astrocytic		wtIDH1	Tumor	186	15.03.2012	FFPE	GBmatch_val				3
+N560-12_fv	m	51	Astrocytic		wtIDH1	Tumor	186	15.03.2012	frozen	GBmatch_valF				3
+N561-11	m	33		Oligodendroglioma	mtIDH1	Tumor	132	08.04.2011	FFPE	GBmatch_add		336	2	2
+N567-09	m	68	Astrocytic		wtIDH1	Tumor	318	14.04.2009	FFPE	GBmatch_val				3
+N570-16	f	71	Astrocytic		wtIDH1	Tumor	339	15.03.2016	FFPE	GBmatch_val				3
+N570-16_fv	f	71	Astrocytic		wtIDH1	Tumor	339	15.03.2016	frozen	GBmatch_valF				3
+N579-12	f	72	Astrocytic		wtIDH1	Tumor	175	16.03.2012	FFPE	GBmatch_val				3
+N579-12_fv	f	72	Astrocytic		wtIDH1	Tumor	175	16.03.2012	frozen	GBmatch_valF				3
+N581-14A	m	35	Astrocytic		wtIDH1	Tumor	170	31.03.2014	FFPE	GBmatch_val				3
+N581-14A_fv	m	34	Astrocytic		wtIDH1	Tumor	170	31.03.2014	frozen	GBmatch_valF				3
+N586-12	f	71	Astrocytic		wtIDH1	Tumor	184	20.03.2012	FFPE	GBmatch_val				3
+N591-10	f	56	Astrocytic		wtIDH1	Tumor	314	22.04.2010	FFPE	GBmatch_val				3
+N592-15	m	84	Astrocytic		wtIDH1	Tumor	171	11.03.2015	FFPE	GBmatch_val				3
+N592-15_fv	m	84	Astrocytic		wtIDH1	Tumor	171	11.03.2015	frozen	GBmatch_valF				3
+N605-13	m	64	Astrocytic		wtIDH1	Tumor	87	16.04.2013	FFPE	GBMatch	08.11.1948	202		1
+N61-15D	f	32		Epilepsy		White matter	113	12.01.2015	FFPE	control		298		1
+N623-04	m	59	Astrocytic		wtIDH1	Tumor	41	05.05.2004	FFPE	GBMatch	12.11.1944	107		1
+N637-10	f	66	Astrocytic		wtIDH1	Tumor	144	30.04.2010	FFPE	GBmatch_val				3
+N654-12	f	80	Astrocytic		wtIDH1	Tumor	145	29.03.2012	FFPE	GBmatch_val				3
+N654-12_fv	f	80	Astrocytic		wtIDH1	Tumor	145	29.03.2012	frozen	GBmatch_valF				3
+N656-15_fv	f	53	Astrocytic		wtIDH1	Tumor	43	23.03.2015	frozen	GBmatch_valF				3
+N656-15_rk	f	53	Astrocytic		wtIDH1	Tumor	43	23.03.2015	RCL	GBmatch_rcl	25.09.1961	349	2	2
+N658-15 D	f	53	Astrocytic		wtIDH1	Tumor	43	23.03.2015	FFPE	GBMatch	25.09.1961	112		1
+N661-08	f	40	Astrocytic		wtIDH1	Tumor	134	16.06.2008	FFPE	GBmatch_val				3
+N667-14F	f	82	Astrocytic		wtIDH1	Tumor	245	28.03.2014	FFPE	GBmatch_val				3
+N668-06	m	41	Astrocytic	GB monstro	wtIDH1	Tumor	44	10.05.2006	FFPE	GBMatch	03.10.1964	113		1
+N669-06 I	m	41	Astrocytic	GB monstro	wtIDH1	Tumor	44	10.05.2006	FFPE	multiselector	03.10.1964	256		1
+N669-06 II	m	41	Astrocytic	GB monstro	wtIDH1	Tumor	44	10.05.2006	FFPE	multiselector	03.10.1964	257		1
+N669-06 III	m	41	Astrocytic	GB monstro	wtIDH1	Tumor	44	10.05.2006	FFPE	multiselector	03.10.1964	258		1
+N677-15	m	57	Astrocytic		wtIDH1	Tumor	82	07.11.2005	FFPE	GBMatch	20.06.1948	191		1
+N678-15	m	60	Astrocytic		wtIDH1	Tumor	82	16.02.2009	FFPE	GBMatch	20.06.1948	192		1
+N679-15	m	65	Astrocytic		wtIDH1	Tumor	84	31.01.2013	FFPE	GBMatch	20.05.1947	195		1
+N681-15	m	63	Astrocytic		wtIDH1	Tumor	87	02.05.2012	FFPE	GBMatch	08.11.1948	201		1
+N683-15	f	51	Astrocytic		wtIDH1	Tumor	88	25.03.2013	FFPE	GBMatch	06.06.1961	204		1
+N684-15	f	30	Astrocytic		mtIDH1	Tumor	89	01.11.2012	FFPE	GBMatch	20.06.1983	205		1
+N686-15	m	59	Astrocytic		wtIDH1	Tumor	90	11.03.2013	FFPE	GBMatch	22.09.1953	207		1
+N687-15	f	53	Astrocytic		wtIDH1	Tumor	91	07.02.2012	FFPE	GBMatch	07.10.1958	209		1
+N688-10	m	67	Astrocytic		wtIDH1	Tumor	176	12.05.2010	FFPE	GBmatch_val				3
+N688-15	f	54	Astrocytic		wtIDH1	Tumor	91	06.03.2013	FFPE	GBMatch	07.10.1958	210		1
+N689-15	m	73	Astrocytic		wtIDH1	Tumor	92	10.07.2012	FFPE	GBMatch	03.01.1939	211		1
+N690-08	f	69	Astrocytic		wtIDH1	Tumor	293	23.06.2008	FFPE	GBmatch_val				3
+N690-15	m	74	Astrocytic		wtIDH1	Tumor	92	16.01.2013	FFPE	GBMatch	03.01.1939	212		1
+N693-15	m	37	Astrocytic		wtIDH1	Tumor	93	29.09.2011	FFPE	GBMatch	05.12.1973	213		1
+N695-15	m	38	Astrocytic		wtIDH1	Tumor	93	25.05.2012	FFPE	GBMatch	05.12.1973	214		1
+N697-11A	f	47		Oligodendroglioma	mtIDH1	Tumor	128	02.05.2011	FFPE	GBmatch_add		328	3	2
+N697-14	f	71	Astrocytic		wtIDH1	Tumor	172	03.04.2014	FFPE	GBmatch_val				3
+N698-15	f	37	Astrocytic		wtIDH1	Tumor	94	24.09.2009	FFPE	GBMatch	18.10.1971	215		1
+N699-15	f	38	Astrocytic		wtIDH1	Tumor	94	10.02.2010	FFPE	GBMatch	18.10.1971	216		1
+N700-15 B	m	64	Astrocytic		wtIDH1	Tumor	95	20.10.2009	FFPE	GBMatch	06.09.1945	217		1
+N701-15 B	m	65	Astrocytic		wtIDH1	Tumor	95	05.01.2011	FFPE	GBMatch	06.09.1945	218		1
+N702-15	f	61	Astrocytic		wtIDH1	Tumor	96	24.05.2011	FFPE	GBMatch	23.08.1949	219		1
+N703-15	f	62	Astrocytic		wtIDH1	Tumor	96	13.02.2012	FFPE	GBMatch	23.08.1949	220		1
+N706-15	m	46	Astrocytic		wtIDH1	Tumor	97	14.07.2011	FFPE	GBMatch	13.09.1964	221		1
+N707-15	m	47	Astrocytic		wtIDH1	Tumor	97	09.05.2012	FFPE	GBMatch	13.09.1964	222		1
+N708-15	m	66	Astrocytic	GB classic	wtIDH1	Tumor	9	26.07.2006	FFPE	GBMatch	07.01.1940	31		1
+N709-15	m	67	Astrocytic	PNET-like	wtIDH1	Tumor	9	23.02.2007	FFPE	GBMatch	07.01.1940	32		1
+N710-15	f	64	Astrocytic		wtIDH1	Tumor	98	06.08.2008	FFPE	GBMatch	22.07.1944	223		1
+N7-11	m	64	Astrocytic		wtIDH1	Tumor	334	04.01.2011	FFPE	GBmatch_val				3
+N711-09	m	55	Astrocytic		wtIDH1	Tumor	316	07.05.2009	FFPE	GBmatch_val				3
+N711-15	f	64	Astrocytic		wtIDH1	Tumor	98	30.01.2009	FFPE	GBMatch	22.07.1944	224		1
+N712-14	m	65	Astrocytic		wtIDH1	Tumor	173	06.04.2014	FFPE	GBmatch_val				3
+N712-15	f	74	Astrocytic		wtIDH1	Tumor	99	12.06.2006	FFPE	GBMatch	22.03.1932	225		1
+N713-15	f	75	Astrocytic		wtIDH1	Tumor	99	24.04.2007	FFPE	GBMatch	22.03.1932	226		1
+N714-15	m	50	Astrocytic		wtIDH1	Tumor	100	25.11.2008	FFPE	GBMatch	06.09.1958	227		1
+N715-15	m	51	Astrocytic		wtIDH1	Tumor	100	05.11.2009	FFPE	GBMatch	06.09.1958	228		1
+N719-07	f	67	Astrocytic		wtIDH1	Tumor	22	29.05.2007	FFPE	GBMatch	09.10.1939	69		1
+N719-15	m	62	Astrocytic		wtIDH1	Tumor	101	02.11.2006	FFPE	GBMatch	18.02.1944	229		1
+N720-15 B	m	63	Astrocytic		wtIDH1	Tumor	101	20.03.2007	FFPE	GBMatch	18.02.1944	230		1
+N721-13 B	f	59	Astrocytic		wtIDH1	Tumor	42	08.05.2013	FFPE	GBMatch	29.09.1954	109		1
+N721-13_f	f	59	Astrocytic		wtIDH1	Tumor	42	08.05.2013	frozen	TCGA	29.09.1954	11		1
+N721-13_rk	f	59	Astrocytic		wtIDH1	Tumor	42	08.05.2013	RCL	GBmatch_rcl	29.09.1954	350		2
+N721-15	m	62	Astrocytic		wtIDH1	Tumor	102	16.08.2005	FFPE	GBMatch	14.11.1942	231		1
+N722-15	m	64	Astrocytic		wtIDH1	Tumor	102	05.03.2007	FFPE	GBMatch	14.11.1942	232		1
+N724-07	f	87	Astrocytic		wtIDH1	Tumor	321	30.05.2007	FFPE	GBmatch_val				3
+N724-16_fv	m	48	Astrocytic		wtIDH1	Tumor	340	04.04.2016	frozen	GBmatch_valF				3
+N727-16	m	48	Astrocytic		wtIDH1	Tumor	340	04.04.2016	FFPE	GBmatch_val				3
+N733-15 C	f	53	Astrocytic		wtIDH1	Tumor	103	23.03.2015	FFPE	GBMatch	29.08.1961	234		1
+N759-15B	f	61			wtIDH1	Tumor	123	27.03.2015	FFPE	GBMatch		316	1	2
+N762-14 B	f	74	Astrocytic		wtIDH1	Tumor	85	09.04.2014	FFPE	GBMatch	19.03.1940	198		1
+N778-11	m	46		Oligodendroglioma	mtIDH1	Tumor	130	17.05.2011	FFPE	GBmatch_add		332	2	2
+N779-12_fv	m	55	Astrocytic		wtIDH1	Tumor	133	26.04.2012	frozen	GBmatch_valF				3
+N781-12C	m	55		Oligodendroglioma	mtIDH1	Tumor	133	26.04.2012	FFPE	GBmatch_add		338	2	2
+N795-13	f	43		Oligodendroglioma	mtIDH1	Tumor	131	16.05.2013	FFPE	GBmatch_add		334	2	2
+N806-12	m	41	Astrocytic		wtIDH1	Tumor	39	30.04.2012	FFPE	GBMatch	29.04.1971	104		1
+N815-08	f	44	Astrocytic		wtIDH1	Tumor	183	23.07.2008	FFPE	GBmatch_val				3
+N820-07C	m	42	Astrocytic	GB monstro	wtIDH1	Tumor	44	15.06.2007	FFPE	GBMatch	03.10.1964	114		1
+N820-07C I	m	42	Astrocytic	GB monstro	wtIDH1	Tumor	44	15.06.2007	FFPE	multiselector	03.10.1964	259		1
+N820-07C II	m	42	Astrocytic	GB monstro	wtIDH1	Tumor	44	15.06.2007	FFPE	multiselector	03.10.1964	260		1
+N820-07C III	m	42	Astrocytic	GB monstro	wtIDH1	Tumor	44	15.06.2007	FFPE	multiselector	03.10.1964	261		1
+N822-13_f	m	54	Astrocytic			Tumor	0	21.05.2013	frozen	TCGA		13	1	1
+N828-15B	f	88	Astrocytic		wtIDH1	Tumor	240	01.04.2015	FFPE	GBmatch_val				3
+N831-11	m	48	Astrocytic		wtIDH1	Tumor	335	27.05.2011	FFPE	GBmatch_val				3
+N834-13	f	77	Astrocytic		wtIDH1	Tumor	177	22.05.2013	FFPE	GBmatch_val				3
+N834-13_fv	f	76	Astrocytic		wtIDH1	Tumor	177	22.05.2013	frozen	GBmatch_valF				3
+N836-09	m	65	Astrocytic		wtIDH1	Tumor	180	08.06.2009	FFPE	GBmatch_val				3
+N838-13_fv	f	65	Astrocytic		wtIDH1	Tumor	21	23.05.2013	frozen	GBmatch_valF				3
+N840-01	m	32	Astrocytic		mtIDH1	Tumor	108	14.08.2001	FFPE	GBMatch	15.03.1969	243		1
+N845-13	f	65	Astrocytic		wtIDH1	Tumor	21	23.05.2013	FFPE	GBMatch	16.03.1948	68		1
+N845-13_f	f	65	Astrocytic		wtIDH1	Tumor	21	23.05.2013	frozen	TCGA	16.03.1948	8	2	1
+N853-13 A	m	52	Astrocytic		wtIDH1	Tumor	28	24.05.2013	FFPE	GBMatch	25.02.1961	81		1
+N861-08A	f	64	Astrocytic	GB classic	wtIDH1	Tumor	36	06.08.2008	FFPE	GBMatch	25.08.1943	98		1
+N861-08A I	f	64	Astrocytic	GB classic	wtIDH1	Tumor	36	06.08.2008	FFPE	multiselector	25.08.1943	265		1
+N861-08A II	f	64	Astrocytic	GB classic	wtIDH1	Tumor	36	06.08.2008	FFPE	multiselector	25.08.1943	266		1
+N861-08A III	f	64	Astrocytic	GB classic	wtIDH1	Tumor	36	06.08.2008	FFPE	multiselector	25.08.1943	267		1
+N86-14E	f	56	Astrocytic		wtIDH1	Tumor	228	14.01.2014	FFPE	GBmatch_val				3
+N863-14A	f	50	Astrocytic		wtIDH1	Tumor	231	22.04.2014	FFPE	GBmatch_val				3
+N870-14	m	58	Astrocytic		wtIDH1	Tumor	241	23.04.2014	FFPE	GBmatch_val				3
+N87-09	m	45	Astrocytic		wtIDH1	Tumor	319	16.01.2009	FFPE	GBmatch_val				3
+N879-12_fv	m	54	Astrocytic		wtIDH1	Tumor	27	14.05.2012	frozen	GBmatch_valF				3
+N883-16A	m	33			wtIDH1	Tumor	125	22.04.2016	FFPE	GBMatch		321	2	2
+N886-12	m	54	Astrocytic		wtIDH1	Tumor	27	14.05.2012	FFPE	GBMatch	08.02.1958	79		1
+N886-12_f	m	54	Astrocytic		wtIDH1	Tumor	27	14.05.2012	frozen	TCGA	08.02.1958	9	1	1
+N886-12_rk	m	54	Astrocytic		wtIDH1	Tumor	27	14.05.2012	RCL	GBmatch_rcl	08.02.1958	348		2
+N892-10	f	65	Astrocytic		wtIDH1	Tumor	188	21.06.2010	FFPE	GBmatch_val				3
+N893-08	f	57	Astrocytic		wtIDH1	Tumor	23	13.08.2008	FFPE	GBMatch	15.04.1951	71		1
+N900-15B	f	75	Astrocytic		wtIDH1	Tumor	174	13.04.2015	FFPE	GBmatch_val				3
+N901-07 A	m	29		Oligodendroglioma	mtIDH1	Tumor	132	28.06.2007	FFPE	GBmatch_add		335	1	2
+N910-14 B	m	63	Astrocytic		wtIDH1	Tumor	83	30.04.2014	FFPE	GBMatch	30.01.1951	193		1
+N912-12F	f	58		Epilepsy		White matter	115	21.05.2012	FFPE	control		300		1
+N915-15	m	76	Astrocytic		wtIDH1	Tumor	232	13.04.2015	FFPE	GBmatch_val				3
+N918-15	f	59	Astrocytic		wtIDH1	Tumor	30	15.04.2015	FFPE	GBMatch	17.01.1956	86		1
+N922-12	m	71	Astrocytic		wtIDH1	Tumor	189	23.05.2012	FFPE	GBmatch_val				3
+N922-12_fv	m	70	Astrocytic		wtIDH1	Tumor	344	23.05.2012	frozen	GBmatch_valF				3
+N940-16	f	67	Astrocytic		wtIDH1	Tumor	341	28.04.2016	FFPE	GBmatch_val				3
+N940-16_fv	f	67	Astrocytic		wtIDH1	Tumor	345	28.04.2016	frozen	GBmatch_valF				3
+N951-09	f	70	Astrocytic		wtIDH1	Tumor	187	03.07.2009	FFPE	GBmatch_val				3
+N960-03	m	20	Astrocytic		wtIDH1	Tumor	16	16.10.2003	FFPE	GBMatch	02.08.1983	52		1
+N960-06	f	54	Astrocytic		wtIDH1	Tumor	332	07.07.2006	FFPE	GBmatch_val				3
+N969-08	m	66	Astrocytic		wtIDH1	Tumor	38	25.08.2008	FFPE	GBMatch	14.11.1941	101		1
+N986-07A	f	63	Astrocytic	GB classic	wtIDH1	Tumor	36	20.07.2007	FFPE	GBMatch	25.08.1943	97		1
+N986-07C I	f	63	Astrocytic	GB classic	wtIDH1	Tumor	36	20.07.2007	FFPE	multiselector	25.08.1943	262		1
+N986-07C II	f	63	Astrocytic	GB classic	wtIDH1	Tumor	36	20.07.2007	FFPE	multiselector	25.08.1943	263		1
+N986-07C III	f	63	Astrocytic	GB classic	wtIDH1	Tumor	36	20.07.2007	FFPE	multiselector	25.08.1943	264		1
+N995-10	m	34	Astrocytic		mtIDH1	Tumor	109	13.07.2010	FFPE	GBMatch	20.03.1976	249		1
+N995-11	m	33	Astrocytic		mtIDH1	Tumor	107	01.07.2011	FFPE	GBMatch	07.10.1977	241		1
