@@ -43,7 +43,7 @@ write.table(MGMT_meth_RRBS_combined,file.path(paste0("mgmt_status",sel,".tsv")),
 #MGMT_meth_RRBS_combined=fread(file.path(paste0("mgmt_status",sel,".tsv")))
 
 
-MGMT_meth_RRBS_combined_red=MGMT_meth_RRBS_combined[category=="GBMatch"&IDH=="wt"]
+MGMT_meth_RRBS_combined_red=MGMT_meth_RRBS_combined[category%in%c("GBMatch","GBmatch_val")&IDH=="wt"]
 
 MGMT_meth_RRBS_combined_red[mgmt_readCount>40,mgmt_readCount:=40,]
 MGMT_meth_RRBS_combined_red[,id:=paste0(patID,"_",surgery.x),]
@@ -52,8 +52,8 @@ MGMT_meth_RRBS_combined_red[,sample:=factor(sample,levels=sample[order(mgmt_meth
 MGMT_meth_RRBS_combined_red[,id:=factor(id,levels=unique(id[order(mgmt_methyl,decreasing=TRUE)])),]
 
 
-pdf(file.path(paste0("mgmt_status_GBMatch_",sel,".pdf")),height=3.5,width=18)
-ggplot(MGMT_meth_RRBS_combined_red,aes(x=id,y=mgmt_methyl,alpha=mgmt_readCount,fill=as.factor(mgmt_CpGcount)))+geom_hline(yintercept = 0.36,lty=20)+geom_bar(stat="identity")+geom_point(pch=22,size=3)+theme(axis.text.x=element_text(angle = 45, vjust = 1,hjust=1))+scale_alpha_continuous(range=c(0.4,1))+ geom_errorbar(aes(ymax=meth_max,ymin=meth_min), width=0.5,alpha=1)+scale_fill_manual(values=c("1"="#a8ddb5","2"="#43a2ca"))
+pdf(file.path(paste0("mgmt_status_GBMatch_",sel,".pdf")),height=7,width=18)
+ggplot(MGMT_meth_RRBS_combined_red,aes(x=id,y=mgmt_methyl,alpha=mgmt_readCount,fill=as.factor(mgmt_CpGcount)))+geom_hline(yintercept = 0.36,lty=20)+geom_bar(stat="identity")+geom_point(pch=22,size=3)+theme(axis.text.x=element_text(angle = 45, vjust = 1,hjust=1))+scale_alpha_continuous(range=c(0.4,1))+ geom_errorbar(aes(ymax=meth_max,ymin=meth_min), width=0.5,alpha=1)+scale_fill_manual(values=c("1"="#a8ddb5","2"="#43a2ca"))+facet_wrap(~category,ncol=1,scales="free_x")
 dev.off()
 
 pdf(file.path(paste0("mgmt_status_GBMatch_multi",sel,".pdf")),height=2.5,width=15)

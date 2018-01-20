@@ -6,23 +6,35 @@ wd=file.path(getOption("PROJECT.DIR"),"metadata/sample_annotations")
 setwd(wd)
 
 our_dir=file.path(getOption("PROCESSED.PROJECT"),"results_analysis/01.1-combined_annotation")
-dir.create(our_dir)
+dir.create(our_dir,recursive=TRUE)
 
-psa=fread("ProjectSampleAnnotation_add.txt")
-histo_all=prep_histo("GBMatch_histo part 3_20022017.csv")
+#psa=fread("ProjectSampleAnnotation_add.txt")
+psa=fread("GBMatch_projectSampleAnnotation_rev.csv")
+
+#histo_all=prep_histo("GBMatch_histo part 3_20022017.csv")
+histo_all=prep_histo("GBMatch_histo_immuno_rev.csv","GBMatch_histo_immuno_EZH2_rev.csv")
 histo=histo_all$histo_annotation
 histo_description=histo_all$histo_description
+
 sequencing_stats=fread(file.path(getOption("PROCESSED.PROJECT"),"results_pipeline/RRBS_stats_summary.tsv"))
 setnames(sequencing_stats,"sampleName","N_number")
 sequencing_annot=fread(file.path(getOption("PROJECT.DIR"),"metadata/GBMatch_samples.csv"))
 setnames(sequencing_annot,"sample_name","N_number")
 sequencing=merge(sequencing_annot,sequencing_stats,by="N_number")
-clinical=prep_clin_annot("GBMatch_clinical data_20032017_mod.csv");clinical
+
+#clinical=prep_clin_annot("GBMatch_clinical data_20032017_mod.csv");clinical
+clinical=prep_clin_annot("GBMatch_clinical data_2018_rev.csv");clinical
+
 imaging=fread("GBMatch_imaging_04012016.tsv")
 imaging_prog=fread("GBMatch_MR_progressiontype.csv")
-imaging_auto=fread("TumorFeaturesFixed.tsv")
+
+#imaging_auto=fread("TumorFeaturesFixed.tsv")
+imaging_auto=fread("GBMatch_MR_auto_rev.csv")
 setnames(imaging_auto,"N-Nummer","N_number")
-prep=fread("GBMatch_libraryPrep.csv")
+
+#prep=fread("GBMatch_libraryPrep.csv")
+prep=fread("GBMatch_libraryPrep_rev.csv")
+
 segmentation=fread("GBMatch_histo_part4_02142017.tsv")
 
 #include fragmentation check
@@ -38,21 +50,23 @@ frag_check[,rand_frag_perc:=rand_frag/all*100,]
 sequencing=merge(sequencing,frag_check,by="N_number",all.x=TRUE)
 
 
-psa[,N_number_st:=gsub("\\.|_|-| |/|A|B|C|D|F","",N_number, perl=TRUE),]
-sequencing[,N_number_st:=gsub("\\.|_|-| |rr|v|A|B|C|D|F","",N_number, perl=TRUE),]
+psa[,N_number_st:=gsub("\\.|_|-| |/|A|B|C|D|E|F|G1|G2|G3|Z2|Z","",N_number, perl=TRUE),]
+sequencing[,N_number_st:=gsub("\\.|_|-| |rr|A|B|C|D|E|F|G1|G2|G3|Z2|Z","",N_number, perl=TRUE),]
 sequencing[,N_number_st:=gsub("^M","N",N_number_st, perl=TRUE),]
-prep[,N_number_st:=gsub("\\.|_|-|/| |rr|v|A|B|C|D|F","",N_number, perl=TRUE),]
+sequencing[,N_number_st:=gsub("14v","14",N_number_st, perl=TRUE),]
+prep[,N_number_st:=gsub("\\.|_|-|/| |rr|A|B|C|D|E|F|G1|G2|G3|Z2|Z","",N_number, perl=TRUE),]
 prep[,N_number_st:=gsub("^M","N",N_number_st, perl=TRUE),]
-histo[,N_number_st:=gsub("\\.|_|-| |A|B|C|D|F","",N_number, perl=TRUE),]
-histo_description[,N_number_st:=gsub("\\.|_|-| |A|B|C|D|F","",N_number, perl=TRUE),]
-clinical[,N_number_st:=gsub("\\.|_|-| |A|B|C|D|F","",N_number, perl=TRUE),]
-imaging[,N_number_st:=gsub("_|-| |A|B|C|D|F","",N_number, perl=TRUE),]
-imaging_auto[,N_number_st:=gsub("\\.|_|-| |A|B|C|D|F","",N_number, perl=TRUE),]
+prep[,N_number_st:=gsub("14v","14",N_number_st, perl=TRUE),]
+histo[,N_number_st:=gsub("\\.|_|-| |A|B|C|D|E|F|G1|G2|G3|Z2|Z","",N_number, perl=TRUE),]
+histo_description[,N_number_st:=gsub("\\.|_|-| |A|B|C|D|E|F|G1|G2|G3|Z2|Z","",N_number, perl=TRUE),]
+clinical[,N_number_st:=gsub("\\.|_|-| |A|B|C|D|E|F|G1|G2|G3|Z2|Z","",N_number, perl=TRUE),]
+imaging[,N_number_st:=gsub("_|-| |A|B|C|D|E|F|G1|G2|G3|Z2|Z","",N_number, perl=TRUE),]
+imaging_auto[,N_number_st:=gsub("\\.|_|-| |A|B|C|D|E|F|G1|G2|G3|Z2|Z","",N_number, perl=TRUE),]
 imaging_prog[,patientID:=gsub(" ","",patientID, perl=TRUE),]
 #for now remove entries without N_number (progression without surgery)
 clinical=clinical[!is.na(N_number_st)]
 segmentation[,N_number_seg:=gsub(" .*","",FileName)]
-segmentation[,N_number_st:=gsub("\\.|_|-| |A|B|C|D|F","",N_number_seg, perl=TRUE)]
+segmentation[,N_number_st:=gsub("\\.|_|-| |A|B|C|D|E|F|G1|G2|G3|Z2|Z","",N_number_seg, perl=TRUE)]
 
 
 #remove GPO samples
@@ -61,6 +75,8 @@ sequencing=sequencing[!grepl("GPO",N_number_st)]
 #change TCGA to GLASS
 psa[category=="TCGA",category:="GLASS"]
 
+#add cohort category
+psa[,cohort:=ifelse(category%in%c("GBmatch_val","GBmatch_valF"),"validation","primary"),]
 
 #remove N669-06A because not sequenced
 histo=histo[N_number!="N669-06A"]
@@ -141,12 +157,24 @@ merge1.1[N_number_psa=="N1131-12_f",N_number_st:="N113212f",]
 merge1.1[N_number_psa=="N1154/55-13_f",N_number_st:="N115413f",]
 merge1.1[N_number_psa=="N1592-95-12_f",N_number_st:="N159312f",]
 merge1.1[N_number_psa=="N1575-78-12_f",N_number_st:="N157612f",]
+#adjust names of frozen revision samples in psa sothat they find their ffpe counterparts
+merge1.1[N_number_psa=="N1164-14_fv",N_number_st:="N116514fv",]
+merge1.1[N_number_psa=="N1196-13_fv",N_number_st:="N119513fv",]
+merge1.1[N_number_psa=="N1917-12_fv",N_number_st:="N191612fv",]
+merge1.1[N_number_psa=="N1934-14_fv",N_number_st:="N193514fv",]
+merge1.1[N_number_psa=="N486-13_fv",N_number_st:="N49013fv",]
+merge1.1[N_number_psa=="N724-16_fv",N_number_st:="N72716fv",]
+merge1.1[N_number_psa=="N838-13_fv",N_number_st:="N84513fv",]
+merge1.1[N_number_psa=="N879-12_fv",N_number_st:="N88612fv",]
+
 merge1.1[,N_number_st:=gsub("rk","",N_number_st, perl=TRUE)]
+merge1.1[,N_number_st:=gsub("fv","",N_number_st, perl=TRUE)]
 merge1.1[,N_number_st:=gsub("f","",N_number_st, perl=TRUE)]
+
 merge2=merge(merge1.1,histo , all=TRUE,by="N_number_st",suffixes = c(".x",".y"))
 merge2[,N_number_st:=gsub("I|II|III","",N_number_st, perl=TRUE)]
 merge2.1=merge(merge2,histo_description , all=TRUE,by="N_number_st",suffixes = c(".x",".y"))
-merge2.1[,N_number_st:=gsub("A|B|C|D|E","",N_number_st, perl=TRUE)]
+merge2.1[,N_number_st:=gsub("A|B|C|D|E","",N_number_st, perl=TRUE)] #because of N986 samples
 merge2.1[,N_number_st:=gsub("^N66906$","N66806",N_number_st, perl=TRUE)]
 merge3=merge(clinical,imaging , all=TRUE,by="N_number_st",suffixes = c(".x",".y"))
 merge3.1=merge(merge3,imaging_auto , all=TRUE,by="N_number_st",suffixes = c(".x",".y"))
@@ -165,6 +193,8 @@ merge4[is.na(category),category:="Missing"]
 sub=merge4[category=="GBmatch_add"]
 sub=merge4[category=="GBmatch_rcl"]
 sub=merge4[category=="GBMatch"]
+sub=merge4[category=="GBmatch_valF"]
+sub=merge4[category=="GBmatch_val"]
 sub=merge4[category=="multiselector"]
 sub=merge4[category=="Missing"]
 
@@ -176,8 +206,12 @@ write.table(merge4[,c(grep("N_number_",names(merge4),value=TRUE),"category"),wit
 #merge4[category!="GBmatch_add"][!is.na(N_number_imgA),c(grep("N_number_",names(merge4),value=TRUE),"category"),with=FALSE]
 
 
-#remove all entries without N_number_seq
-merge4=merge4[!is.na(N_number_seq)]
+#remove all entries without N_number_seq (samples included in the annotation but not prepped because sample was used up/ missing)
+merge4=merge4[!is.na(N_number_prep)]
+
+#remove sample N591-10 because it is a recurrency in the validation cohort (primary tumor was oparated on in Turkey)
+merge4=merge4[N_number_clin!="N591-10"]
+
 
 #preliminarily use "individual" as patientID and patID
 message(paste0("Missing patID:\n",paste0(merge4[is.na(patID)]$N_number_seq,collapse=",")))
@@ -213,7 +247,7 @@ for (i in 1:length(translations)){
 merge4
 
 #calculate time to first progression
-merge4[,timeToFirstProg:=as.numeric(as.Date(unique(ProgressionDate[surgery.x==2]))-as.Date(unique(SurgeryDate[surgery.x==1]))),by=patID]
+merge4[,timeToFirstProg:=as.numeric(unique(as.Date(na.omit(c(ProgressionDate[surgery.x==2],FirstProgressionDate))))-as.Date(unique(SurgeryDate[surgery.x==1]))),by=patID]
 merge4[,timeToSecSurg:=as.numeric(as.Date(unique(SurgeryDate[surgery.x==2]))-as.Date(unique(SurgeryDate[surgery.x==1]))),by=patID]
 
 #now make sure that there is only one entry per sample and category (some samples were sequenced more thatn once)
@@ -223,16 +257,16 @@ merge4[N_number_seq%in%dubl$N_number_seq]$N_number_seq
 merge4=merge4[grep("_tr3$",N_number_seq,invert=TRUE)]
 
 #Change IDH status from samples that show G-CIMP methylation pattern (previous analysis)
-#candidate samples: "N706_15","N536_07","N554_03B","N1814_09A","N127_05A"
+#candidate samples: "N706_15","N536_07","N554_03B","N1814_09A","N127_05A","N307_08C"
 #validated samples: "N536_07","N554_03B"
-#exclude nevertheless??? N706_15
+#exclude nevertheless??? N706_15, N307_08C
 
-IDH_pat=merge4[N_number_seq%in%c("N536_07","N554_03B","N706_15")]$patID
+IDH_pat=merge4[N_number_seq%in%c("N536_07","N554_03B","N706_15","N307_08C")]$patID
 merge4[patID%in%IDH_pat,list(patID,N_number_seq,surgery.x)]
 merge4[patID%in%IDH_pat,genotype:="mtIDH1"]
 merge4[patID%in%IDH_pat,IDH:="mut"]
 
-#Cick out secundary GBM
+#Kick out secundary GBM
 merge4=merge4[phenotype!="Secondary GBM"]
 
 #remove patients with no relapse
@@ -242,6 +276,7 @@ merge4=merge4[!patID%in%surg_check[(min!=1|max<2)&categories=="GBMatch"]$patID]
 
 #complement complement Sex with sex
 merge4[is.na(Sex),Sex:=sex]
+
 
 write.table(merge4,paste0(our_dir,"/annotation_combined.tsv"),row.names = FALSE,sep="\t",quote=FALSE)
 

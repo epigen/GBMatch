@@ -134,3 +134,25 @@ simpleCache("rrbsCGI", {
   sampleSummaryLong # Cache this.
 }, recreate=TRUE, noload=TRUE)
 
+
+#enhancers in astrocytes
+enhancers<- LOLA::getRegionSet("/data/groups/lab_bock/shared/resources/regions/customRegionDB/hg38", collections="roadmap_segmentation", "E027_15_coreMarks_segments_E7.bed")
+
+enhancers=enhancers[!duplicated(enhancers)]
+
+simpleCache("rrbsEnhancers", {
+  sampleSummaryList = lapplyAlias(BSSamples, sampleSummaryByRegion,
+                                  regions=enhancers, excludeGR = NULL,
+                                  SV$psa, idColumn = "sample_name", fileColumn="BSFile", 
+                                  cachePrepend="Enhancers.", cacheSubDir="meth/Enhancers", 
+                                  jCommand=jCommand, 
+                                  readFunction=function(x) {
+                                    ino = BSreadBiSeq(x);
+                                    ino[,methyl:=hitCount/readCount]
+                                  }, mc.preschedule=FALSE)
+  sampleSummaryLong = rbindlist(sampleSummaryList)
+  sampleSummaryLong # Cache this.
+}, recreate=TRUE, noload=TRUE)
+
+
+

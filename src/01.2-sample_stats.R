@@ -21,10 +21,11 @@ pdf("rand_frag_RCL.pdf",height=5,width=6)
 ggplot(annotation[!is.na(sample_group)&!material=="frozen"],aes(x=material,y=rand_frag_perc,fill=sample_group,group=sample_group))+geom_line(alpha=0.6)+geom_point(alpha=0.5,shape=21,size=3)+ylim(c(0,100))
 dev.off()
 
-annotation[,time_to_prep:=as.numeric(as.Date("2016-10-30")-as.Date(SurgeryDate)),]
-cor_time=annotation[,list(date=min(SurgeryDate),y=rand_frag_perc[which.min(as.Date(SurgeryDate))],time_cor=cor(rand_frag_perc,-time_to_prep)),by="material"]
+annotation[,time_to_prep:=as.numeric(as.Date("2016-12-01")-as.Date(SurgeryDate)),]
+cor_time=annotation[,list(date=min(SurgeryDate),y=rand_frag_perc[which.min(as.Date(SurgeryDate))],time_cor=cor(rand_frag_perc,-time_to_prep)),by=c("material")]
+
 pdf("rand_fragVStime.pdf",height=3.5,width=4.5)
-ggplot(annotation,aes(x=as.Date(SurgeryDate),y=rand_frag_perc,col=material,fill=material,group=material))+geom_point(alpha=0.5,shape=21,size=3)+geom_text(hjust=0,data=cor_time,aes(x=as.Date(date),y=y,label=paste0(material,": r=",round(time_cor,3))))+ylim(c(0,100))+geom_smooth(method="lm")+ylab("% randomly fragmented reads")+xlab("Surgery date")
+ggplot(annotation,aes(x=as.Date(SurgeryDate),y=rand_frag_perc,fill=material,group=material))+geom_point(alpha=0.5,shape=21,size=3,aes(col=cohort))+geom_text(hjust=0,data=cor_time,aes(x=as.Date(date),y=y,label=paste0(material,": r=",round(time_cor,3))))+ylim(c(0,100))+geom_smooth(method="lm")+scale_color_manual(values=c("validation"="black","primary"="transparent")) +ylab("% randomly fragmented reads")+xlab("Surgery date")
 dev.off()
 
 #use FFPE necrosis values because they are not available for frozen
@@ -37,7 +38,7 @@ dev.off()
 
 cor_CpG=annotation[,list(Raw_reads=max(Raw_reads),Unique_CpGs=Unique_CpGs[which.max(Raw_reads)],cor=cor(Raw_reads,Unique_CpGs)),by="material"]
 pdf("readsVSCpG.pdf",height=3.5,width=4.5)
-ggplot(annotation,aes(x=Raw_reads/1000000,y=Unique_CpGs/1000000,col=material,fill=material,group=material))+geom_point(alpha=0.5,shape=21,size=3)+geom_text(data=cor_CpG,hjust=1,aes(label=paste0(material,": r=",round(cor,3))))+geom_smooth(method="lm")+ylab("Unique CpGs (Million)")+xlab("Raw reads (Million)")
+ggplot(annotation,aes(x=Raw_reads/1000000,y=Unique_CpGs/1000000,fill=material,group=material))+geom_point(alpha=0.5,shape=21,size=3,aes(col=cohort))+geom_text(data=cor_CpG,hjust=1,aes(label=paste0(material,": r=",round(cor,3))))+geom_smooth(method="lm")+scale_color_manual(values=c("validation"="black","primary"="transparent"))+ylab("Unique CpGs (Million)")+xlab("Raw reads (Million)")
 dev.off()
 
 #bisylfite conversion
@@ -50,16 +51,23 @@ dev.off()
 ########################
 
 #Supplementary Table 1 (patients)
-pat_stats=annotation[,list(N_number_1st=N_number_seq[order(category,surgery.x)][1],AgeAtDiag=min(Age),categories=paste0(unique(category),collapse=","),materials=paste0(unique(material),collapse=","),WHO2016_classification=paste0(unique(WHO2016_classification[order(surgery.x)]),collapse=","),Nsamples=.N),by=c("patID","Center","Sex","IDH","NoOfSurgeries","timeToFirstProg","Follow-up_years", "VitalStatus","StuppComplete")]
-setcolorder(pat_stats,c("N_number_1st","patID","Center","Sex","AgeAtDiag","IDH","WHO2016_classification","NoOfSurgeries","Nsamples","timeToFirstProg","Follow-up_years", "VitalStatus","StuppComplete","categories","materials"))
-setnames(pat_stats,names(pat_stats),c("Sample ID","Patient ID","Center","Sex","Age (Diagnosis)","IDH status","WHO2016 Classifications","Number of Surgeries","Number of Samples","Time to Progression (m)","Follow-up Time (m)","Status","Stupp Complete","Categories","Materials"))
+pat_stats=annotation[,list(N_number_1st=N_number_seq[order(category,surgery.x)][1],AgeAtDiag=min(Age),categories=paste0(unique(category),collapse=","),cohorts=paste0(unique(cohort),collapse=","),materials=paste0(unique(material),collapse=","),WHO2016_classification=paste0(unique(WHO2016_classification[order(surgery.x)]),collapse=","),Nsamples=.N),by=c("patID","Center","Sex","IDH","NoOfSurgeries","timeToFirstProg","Follow-up_years", "VitalStatus","StuppComplete")]
+setcolorder(pat_stats,c("N_number_1st","patID","Center","Sex","AgeAtDiag","IDH","WHO2016_classification","NoOfSurgeries","Nsamples","timeToFirstProg","Follow-up_years", "VitalStatus","StuppComplete","cohorts","categories","materials"))
+setnames(pat_stats,names(pat_stats),c("Sample ID","Patient ID","Center","Sex","Age (Diagnosis)","IDH status","WHO2016 Classifications","Number of Surgeries","Number of Samples","Time to Progression (m)","Follow-up Time (m)","Status","Stupp Complete","Cohorts","Categories","Materials"))
 pat_stats[,`Time to Progression (m)`:=round(`Time to Progression (m)`/30.4,1),]
 pat_stats[,`Follow-up Time (m)`:=round(`Follow-up Time (m)`*12,1),]
 write.table(pat_stats,file="Pat_stats.tsv",sep="\t",quote=FALSE,row.names=FALSE)
 
 #calculate basic pat stats
-pat_stats_summary=pat_stats[grepl("GBMatch",Categories),list(mean_ttp=mean(`Time to Progression (m)`),mean_followup=mean(`Follow-up Time (m)`),sd_ttp=mean(`Time to Progression (m)`),sd_followup=mean(`Follow-up Time (m)`),median_ttp=median(`Time to Progression (m)`),median_followup=median(`Follow-up Time (m)`),male=sum(Sex=="m"),female=sum(Sex=="f"),median_age=as.double(median(`Age (Diagnosis)`)),mean_age=mean(`Age (Diagnosis)`),sd_age=sd(`Age (Diagnosis)`)),by="IDH status"]
-write.table(pat_stats_summary,file="Pat_stats_summary.tsv",sep="\t",quote=FALSE,row.names=FALSE)
+#GBMatch (primary cohort)
+pat_stats_summary_GBMatch=pat_stats[grepl("GBMatch",Categories),list(mean_ttp=mean(`Time to Progression (m)`),mean_followup=mean(`Follow-up Time (m)`),sd_ttp=mean(`Time to Progression (m)`),sd_followup=mean(`Follow-up Time (m)`),median_ttp=median(`Time to Progression (m)`),median_followup=median(`Follow-up Time (m)`),male=sum(Sex=="m"),female=sum(Sex=="f"),median_age=as.double(median(`Age (Diagnosis)`)),mean_age=mean(`Age (Diagnosis)`),sd_age=sd(`Age (Diagnosis)`)),by="IDH status"]
+write.table(pat_stats_summary_GBMatch,file="Pat_stats_summary_GBMatch.tsv",sep="\t",quote=FALSE,row.names=FALSE)
+
+#GBmatch_val (vaidation cohort)
+pat_stats_summary_GBmatch_val=pat_stats[grepl("GBmatch_val([^F]|$)",Categories,perl=TRUE),list(mean_ttp=mean(`Time to Progression (m)`,na.rm=TRUE),mean_followup=mean(`Follow-up Time (m)`,na.rm=TRUE),sd_ttp=mean(`Time to Progression (m)`,na.rm=TRUE),sd_followup=mean(`Follow-up Time (m)`,na.rm=TRUE),median_ttp=median(`Time to Progression (m)`,na.rm=TRUE),median_followup=median(`Follow-up Time (m)`,na.rm=TRUE),male=sum(Sex=="m"),female=sum(Sex=="f"),median_age=as.double(median(`Age (Diagnosis)`)),mean_age=mean(`Age (Diagnosis)`),sd_age=sd(`Age (Diagnosis)`)),by="IDH status"]
+write.table(pat_stats_summary_GBmatch_val,file="Pat_stats_summary_GBMatch_val.tsv",sep="\t",quote=FALSE,row.names=FALSE)
+
+
 
 
 #Supplementary Table 2 (RRBS stats)
@@ -143,7 +151,7 @@ dev.off()
 #plot locations
 mapWorld <- borders("world","austria", colour="gray50", fill="white") # create a layer of borders
 
-centers=pat_stats[grepl("GBMatch|GBmatch_add",Categories),list(N=.N,IDH_count=paste0(length(`IDH status`[`IDH status`=="wt"]),"/",IDHwt=length(`IDH status`[`IDH status`=="mut"]))),by="Center"]
+centers=pat_stats[grepl("GBMatch|GBmatch_add|GBmatch_val",Categories),list(N=.N,IDH_count=paste0(length(`IDH status`[`IDH status`=="wt"]),"/",IDHwt=length(`IDH status`[`IDH status`=="mut"]))),by="Center"]
 centers[Center=="Rudolfstiftung",Center:="Rudolfstiftung Vienna",]
 centers[,Center_simpl:=gsub("MedUni |Rudolfstiftung ","",Center),]
 centers=cbind(centers,as.data.table(geocode(centers$Center_simpl)))

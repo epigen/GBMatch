@@ -5,8 +5,12 @@ library(ggplot2)
 #functions
 
 #prep histo table
-prep_histo=function(input){
-  histo=fread(input)
+prep_histo=function(input1,input2){
+  histo=fread(input1)
+  histo_add=fread(input2)
+  histo=merge(histo,histo_add,by="N_number",all.x=TRUE)
+  
+  
   histo[histo==""]=NA
   histo=histo[!is.na(N_number)]
   
@@ -73,31 +77,32 @@ prep_clin_annot=function(input){
   #Sample centered
   clinical_annot_long1=melt(clinical_annot,measure.vars = c("1st surgery N-No","2nd surgery N-No","3rd surgery N-No","4th surgery N-No","5th surgery N-No","6th surgery N-No","7th surgery N-No"),variable.name="SampleEvent",value.name = "N_number")
   
-  mapping=list("1st surgery N-No"=c(NA,"1st surgery","Age at 1st surg",NA,NA,NA),
-               "2nd surgery N-No"=c("Date of 1st progression","2nd surgery","Age at 2nd surg","First-line treatment","RTX","Dose (Gy)"),
-               "3rd surgery N-No"=c("Date of 2nd progression","3rd surgery","Age at 3rd surg","2nd line CTX","2nd line RTX","Dose (Gy).1"),
-               "4th surgery N-No"=c("Date of 3rd progression","4th surgery","Age at 4th surg","3rd line CTX","3rd line RTX","Dose (Gy).2"),
-               "5th surgery N-No"=c("Date of 4th progression","5th surgery","Age at 5th surg","4th line CTX","4th line RTX","Dose (Gy).3"),
-               "6th surgery N-No"=c("Date of 5th progression","6th surgery","Age at 6th surg","5th line CTX","5th line RTX","Dose (Gy).4"),
-               "7th surgery N-No"=c("Date of 6th progression","7th surgery","Age at 7th surg","6th line CTX","6th line RTX","Dose (Gy).5"))
+  mapping=list("1st surgery N-No"=c(NA,"Date of 1st progression","1st surgery","Age at 1st surg",NA,NA,NA),
+               "2nd surgery N-No"=c("Date of 1st progression",NA,"2nd surgery","Age at 2nd surg","First-line treatment","RTX","Dose (Gy)"),
+               "3rd surgery N-No"=c("Date of 2nd progression",NA,"3rd surgery","Age at 3rd surg","2nd line CTX","2nd line RTX","Dose (Gy).1"),
+               "4th surgery N-No"=c("Date of 3rd progression",NA,"4th surgery","Age at 4th surg","3rd line CTX","3rd line RTX","Dose (Gy).2"),
+               "5th surgery N-No"=c("Date of 4th progression",NA,"5th surgery","Age at 5th surg","4th line CTX","4th line RTX","Dose (Gy).3"),
+               "6th surgery N-No"=c("Date of 5th progression",NA,"6th surgery","Age at 6th surg","5th line CTX","5th line RTX","Dose (Gy).4"),
+               "7th surgery N-No"=c("Date of 6th progression",NA,"7th surgery","Age at 7th surg","6th line CTX","6th line RTX","Dose (Gy).5"))
   
-  addComumns=c("ProgressionDate","SurgeryDate","Age","CTXTreatment","RTXTreatment","RTXDose")
+  addComumns=c("ProgressionDate","FirstProgressionDate","SurgeryDate","Age","CTXTreatment","RTXTreatment","RTXDose")
   clinical_annot_long1[,eval(addComumns):="NA",]
   
   
   for (i in 1:length(mapping)){
     print(names(mapping[i]))
     if (with(clinical_annot_long1,is(try(get(mapping[[i]][1]),TRUE)))[1]!="try-error"){clinical_annot_long1[SampleEvent==names(mapping[i]),eval(addComumns[1]):=as.character(get(mapping[[i]][1])),]}else{clinical_annot_long1[SampleEvent==names(mapping[i]),ProgressionDate:="NA",]}
-    if (with(clinical_annot_long1,is(try(get(mapping[[i]][2]),TRUE)))[1]!="try-error"){clinical_annot_long1[SampleEvent==names(mapping[i]),eval(addComumns[2]):=as.character(get(mapping[[i]][2])),]}else{clinical_annot_long1[SampleEvent==names(mapping[i]),SurgeryDate:="NA",]}
-    if (with(clinical_annot_long1,is(try(get(mapping[[i]][3]),TRUE)))[1]!="try-error"){clinical_annot_long1[SampleEvent==names(mapping[i]),eval(addComumns[3]):=as.character(get(mapping[[i]][3])),]}else{clinical_annot_long1[SampleEvent==names(mapping[i]),Age:="NA",]}
-    if (with(clinical_annot_long1,is(try(get(mapping[[i]][4]),TRUE)))[1]!="try-error"){clinical_annot_long1[SampleEvent==names(mapping[i]),eval(addComumns[4]):=as.character(get(mapping[[i]][4])),]}else{clinical_annot_long1[SampleEvent==names(mapping[i]),CTXTreatment:="NA",]}
-    if (with(clinical_annot_long1,is(try(get(mapping[[i]][5]),TRUE)))[1]!="try-error"){clinical_annot_long1[SampleEvent==names(mapping[i]),eval(addComumns[5]):=as.character(get(mapping[[i]][5])),]}else{clinical_annot_long1[SampleEvent==names(mapping[i]),RTXTreatment:="NA",]}
-    if (with(clinical_annot_long1,is(try(get(mapping[[i]][6]),TRUE)))[1]!="try-error"){clinical_annot_long1[SampleEvent==names(mapping[i]),eval(addComumns[6]):=as.character(get(mapping[[i]][6])),]}else{clinical_annot_long1[SampleEvent==names(mapping[i]),RTXDose:="NA",]}
+    if (with(clinical_annot_long1,is(try(get(mapping[[i]][2]),TRUE)))[1]!="try-error"){clinical_annot_long1[SampleEvent==names(mapping[i]),eval(addComumns[2]):=as.character(get(mapping[[i]][2])),]}else{clinical_annot_long1[SampleEvent==names(mapping[i]),FirstProgressionDate:="NA",]}
+    if (with(clinical_annot_long1,is(try(get(mapping[[i]][3]),TRUE)))[1]!="try-error"){clinical_annot_long1[SampleEvent==names(mapping[i]),eval(addComumns[3]):=as.character(get(mapping[[i]][3])),]}else{clinical_annot_long1[SampleEvent==names(mapping[i]),SurgeryDate:="NA",]}
+    if (with(clinical_annot_long1,is(try(get(mapping[[i]][4]),TRUE)))[1]!="try-error"){clinical_annot_long1[SampleEvent==names(mapping[i]),eval(addComumns[4]):=as.character(get(mapping[[i]][4])),]}else{clinical_annot_long1[SampleEvent==names(mapping[i]),Age:="NA",]}
+    if (with(clinical_annot_long1,is(try(get(mapping[[i]][5]),TRUE)))[1]!="try-error"){clinical_annot_long1[SampleEvent==names(mapping[i]),eval(addComumns[5]):=as.character(get(mapping[[i]][5])),]}else{clinical_annot_long1[SampleEvent==names(mapping[i]),CTXTreatment:="NA",]}
+    if (with(clinical_annot_long1,is(try(get(mapping[[i]][6]),TRUE)))[1]!="try-error"){clinical_annot_long1[SampleEvent==names(mapping[i]),eval(addComumns[6]):=as.character(get(mapping[[i]][6])),]}else{clinical_annot_long1[SampleEvent==names(mapping[i]),RTXTreatment:="NA",]}
+   if (with(clinical_annot_long1,is(try(get(mapping[[i]][7]),TRUE)))[1]!="try-error"){clinical_annot_long1[SampleEvent==names(mapping[i]),eval(addComumns[7]):=as.character(get(mapping[[i]][7])),]}else{clinical_annot_long1[SampleEvent==names(mapping[i]),RTXDose:="NA",]}
   }
   
   #clean up
   clinical_annot_long1[clinical_annot_long1=="NA"]=NA
-  clinical_annot_long1[,na.omit(unlist(mapping)):=NULL,]
+  clinical_annot_long1[,unique(na.omit(unlist(mapping))):=NULL,]
   clinical_annot_long1[,grep("Re-resection",names(clinical_annot_long1),value = TRUE):=NULL,]
   clinical_annot_long1=clinical_annot_long1[!(is.na(N_number)&is.na(ProgressionDate)&is.na(CTXTreatment))]
   
@@ -107,6 +112,7 @@ prep_clin_annot=function(input){
   clinical_annot_long1[is.na(Age),Age:=round((as.Date(ProgressionDate,format="%d.%m.%Y")-as.Date(DateOfBirth,format="%d.%m.%Y"))/365),]
   
   clinical_annot_long1[,ProgressionDate:=as.Date(ProgressionDate,'%d.%m.%Y'),]
+  clinical_annot_long1[,FirstProgressionDate:=as.Date(FirstProgressionDate,'%d.%m.%Y'),]
   clinical_annot_long1[,SurgeryDate:=as.Date(SurgeryDate,'%d.%m.%Y'),]
   clinical_annot_long1[,`DateOfDeath_LastFollow-up`:=as.Date(`DateOfDeath_LastFollow-up`,'%d.%m.%Y'),]
   clinical_annot_long1[,DateOfBirth:=as.Date(DateOfBirth,'%d.%m.%Y'),]

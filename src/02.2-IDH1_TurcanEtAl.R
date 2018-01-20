@@ -96,7 +96,7 @@ for(x.nam in c("table6_pnFC")){
 	annot_red=annot_red[match(colnames(x1),N_number_seq),]
 
 	# Column annotation
-	annot_col=with(annot_red[!is.na(N_number_seq)&!duplicated(N_number_seq)&!category%in%c("GLASS","control","GBmatch_rcl")], data.frame(Cycles=round(enrichmentCycles),IDH=IDH,sex=sex,row.names=N_number_seq))
+	annot_col=with(annot_red[!is.na(N_number_seq)&!duplicated(N_number_seq)&!category%in%c("GLASS","control","GBmatch_rcl")], data.frame(Cycles=round(enrichmentCycles),IDH=IDH,sex=sex,cohort=cohort,row.names=N_number_seq))
   
 	# Row annotation
 	annot_row=data.frame(foldchange= turcan[[x.nam]][match(x1$regionID, turcan[[x.nam]]$cPos)]$Foldchange)
@@ -107,6 +107,7 @@ for(x.nam in c("table6_pnFC")){
 		IDH=c(mut="#ff9289",wt="#00d8e0"),
 		Cycles=colorRampPalette(c("green", "red"))( 11 ),
 		sex=c(m="#00d8e0",f="#ff9289"),
+		cohort=c(primary="#00d8e0",validation="#ff9289"),
 		foldchange=c("blue", "red")
 	)
 
@@ -127,7 +128,7 @@ for(x.nam in c("table6_pnFC")){
   xPlot <- xPlot[turcan[[x.nam]][cPos %in% rownames(xPlot)][order(-Foldchange)]$cPos,]	
 
 	# HEATMAP
-	pdf(dirout(out,"IDH_heatmap_", x.nam,".pdf"),width=30,height=22)
+	pdf(dirout(out,"IDH_heatmap_", x.nam,".pdf"),width=50,height=22)
 	pheatmap(xPlot,
 		show_rownames=F,
 		annotation_col=annot_col,
