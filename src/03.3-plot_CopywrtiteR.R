@@ -123,7 +123,11 @@ genome(mySession) <- "hg38"
 cytoband <- as.data.table(getTable( ucscTableQuery(mySession, track="cytoBand", table="cytoBand")))
 cytoband[,chrom:=gsub("chr","",chrom),]
 cytoband[,chromArm:=substr(name,1,1),]
+cytoband[,chromArm_length:=max(chromEnd)-min(chromStart),by=c("chrom","chromArm")]
 cytoband_gr=with(cytoband,GRanges(seqnames = Rle(chrom), IRanges(start=chromStart, end=chromEnd),strand=Rle("*"),name=name))
+cytoband_annot=list(gr=cytoband_gr,dt=cytoband)
+save(cytoband_annot,file="summary/cytoband_annot.RData")
+
 ov=as.data.frame(findOverlaps(sig_CNA_gr,cytoband_gr,type="any",select="all"))
 sig_CNA_cb=unique(cbind(sig_CNA[ov$queryHits],cytoband[ov$subjectHits,c("chromArm"),with=FALSE]))
 

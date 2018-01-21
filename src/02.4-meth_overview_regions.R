@@ -22,13 +22,16 @@ simpleCache("rrbsProm1kb")
 rrbsProm1kb[,regions:="prom_1kb",]
 simpleCache("rrbsCGI")
 rrbsCGI[,regions:="CGI",]
+simpleCache("rrbsEnhancers")
+rrbsEnhancers[,regions:="Enhancers",]
+
 #actually combine
-meth_combined=rbindlist(list(rrbsTiled1ksub,rrbsTiled5ksub,rrbsProm1kb,rrbsCGI))
-rm(list=c("rrbsTiled1ksub","rrbsTiled5ksub","rrbsProm1kb","rrbsCGI"))
+meth_combined=rbindlist(list(rrbsTiled1ksub,rrbsTiled5ksub,rrbsProm1kb,rrbsCGI,rrbsEnhancers))
+rm(list=c("rrbsTiled1ksub","rrbsTiled5ksub","rrbsProm1kb","rrbsCGI","rrbsEnhancers"))
 
 
 #annotate
-annot_sub=annotation[,c("N_number_seq","patID","category","material","Center","Siteofsurgery","surgery.x","qualTier","enrichmentCycles","IDH"),with=FALSE]
+annot_sub=annotation[,c("N_number_seq","patID","category","cohort","material","Center","Siteofsurgery","surgery.x","qualTier","enrichmentCycles","IDH"),with=FALSE]
 setnames(annot_sub,"N_number_seq","id")
 
 meth_combined_annot=merge(annot_sub,meth_combined,by="id")
@@ -43,31 +46,49 @@ core_regions[,sum(select),by="regions"]
 
 
 # check out correlations with enrichment cycles separately for each region
-sub=meth_combined_annot[category=="GBMatch"&IDH=="wt"]
-sub[,cycles_cor:=cor(x=methyl,y=enrichmentCycles),by=c("regionID_ext","regions")]
+sub=meth_combined_annot[category%in%c("GBMatch","GBmatch_val")&IDH=="wt"]
+sub[,cycles_cor:=cor(x=methyl,y=enrichmentCycles),by=c("regionID_ext","regions","category")]
 sub[,cycles_cor_class:=cut(cycles_cor,10),]
 
-sub_unique=sub[,list(readCount=mean(readCount), methyl=mean(methyl), CpGcount=mean(CpGcount),cycles_cor=unique(cycles_cor) ,cycles_cor_class=unique(cycles_cor_class) ),by=c("regionID_ext","regions")]
+sub_unique=sub[,list(readCount=mean(readCount), methyl=mean(methyl), CpGcount=mean(CpGcount),cycles_cor=unique(cycles_cor) ,cycles_cor_class=unique(cycles_cor_class) ),by=c("regionID_ext","regions","category")]
 
-pdf("methylation_cycle_correlation.pdf",width=4,height=3)
-ggplot(sub_unique[readCount/CpGcount>10],aes(x=cycles_cor,col=regions))+geom_density()+ggtitle(">10 reads per CpG")
-ggplot(sub_unique[CpGcount>25],aes(x=cycles_cor,col=regions))+geom_density()+ggtitle(">25 CpGs")
-ggplot(sub_unique[readCount/CpGcount>50],aes(x=cycles_cor,col=regions))+geom_density()+ggtitle(">50 reads per CpG")
+pdf("methylation_cycle_correlation.pdf",width=8,height=3)
+ggplot(sub_unique[readCount/CpGcount>10],aes(x=cycles_cor,col=regions))+geom_density()+ggtitle(">10 reads per CpG")+facet_wrap(~category)
+ggplot(sub_unique[CpGcount>25],aes(x=cycles_cor,col=regions))+geom_density()+ggtitle(">25 CpGs")+facet_wrap(~category)
+ggplot(sub_unique[readCount/CpGcount>50],aes(x=cycles_cor,col=regions))+geom_density()+ggtitle(">50 reads per CpG")+facet_wrap(~category)
 dev.off()
 
 
 #now plot overview
-pdf("methylation_overview_material.pdf",width=6,height=5)
-ggplot(meth_combined_annot[(readCount/CpGcount)>10],aes(x=material,y=methyl,group=material))+geom_violin(fill="black")+geom_boxplot(outlier.size=NA,width=0.2)+facet_wrap(~regions,scale="free")+ylab("% DNA methylation")+xlab("")+ggtitle("> 10 reads per CpG")
 
-ggplot(meth_combined_annot[CpGcount>25],aes(x=material,y=methyl,group=material))+geom_violin(fill="black")+geom_boxplot(outlier.size=NA,width=0.2)+facet_wrap(~regions,scale="free")+ylab("% DNA methylation")+xlab("")+ggtitle("> 10 reads per CpG")+ggtitle(">25 CpGs per region")
+#for primary cohort
+pdf("methylation_overview_material_prim.pdf",width=7,height=5)
+ggplot(meth_combined_annot[(readCount/CpGcount)>10&cohort=="primary"],aes(x=material,y=methyl,group=material))+geom_violin(fill="black")+geom_boxplot(outlier.size=NA,width=0.2)+facet_wrap(~regions,scale="free")+ylab("% DNA methylation")+xlab("")+ggtitle("> 10 reads per CpG")
+
+ggplot(meth_combined_annot[CpGcount>25&cohort=="primary"],aes(x=material,y=methyl,group=material))+geom_violin(fill="black")+geom_boxplot(outlier.size=NA,width=0.2)+facet_wrap(~regions,scale="free")+ylab("% DNA methylation")+xlab("")+ggtitle("> 10 reads per CpG")+ggtitle(">25 CpGs per region")
 dev.off()
 
-pdf("methylation_overview_qualTier.pdf",width=8,height=5)
-ggplot(meth_combined_annot[(readCount/CpGcount)>10],aes(y=methyl,x=as.factor(qualTier),group=as.factor(qualTier)))+geom_violin(fill="black")+geom_boxplot(outlier.size=NA,width=0.2)+facet_wrap(~regions,scale="free")+ylab("% DNA methylation")+ggtitle("> 10 reads per CpG")
+pdf("methylation_overview_qualTier_prim.pdf",width=9,height=5)
+ggplot(meth_combined_annot[(readCount/CpGcount)>10&cohort=="primary"],aes(y=methyl,x=as.factor(qualTier),group=as.factor(qualTier)))+geom_violin(fill="black")+geom_boxplot(outlier.size=NA,width=0.2)+facet_wrap(~regions,scale="free")+ylab("% DNA methylation")+ggtitle("> 10 reads per CpG")
 
-ggplot(meth_combined_annot[CpGcount>25],aes(y=methyl,x=as.factor(qualTier),group=as.factor(qualTier)))+geom_violin(fill="black")+geom_boxplot(outlier.size=NA,width=0.2)+facet_wrap(~regions,scale="free")+ylab("% DNA methylation")+ggtitle(">25 CpGs per region")
+ggplot(meth_combined_annot[CpGcount>25&cohort=="primary"],aes(y=methyl,x=as.factor(qualTier),group=as.factor(qualTier)))+geom_violin(fill="black")+geom_boxplot(outlier.size=NA,width=0.2)+facet_wrap(~regions,scale="free")+ylab("% DNA methylation")+ggtitle(">25 CpGs per region")
 dev.off()
+
+
+#for validation cohort
+pdf("methylation_overview_material_val.pdf",width=7,height=5)
+ggplot(meth_combined_annot[(readCount/CpGcount)>10&cohort=="validation"],aes(x=material,y=methyl,group=material))+geom_violin(fill="black")+geom_boxplot(outlier.size=NA,width=0.2)+facet_wrap(~regions,scale="free")+ylab("% DNA methylation")+xlab("")+ggtitle("> 10 reads per CpG")
+
+ggplot(meth_combined_annot[CpGcount>25&cohort=="validation"],aes(x=material,y=methyl,group=material))+geom_violin(fill="black")+geom_boxplot(outlier.size=NA,width=0.2)+facet_wrap(~regions,scale="free")+ylab("% DNA methylation")+xlab("")+ggtitle("> 10 reads per CpG")+ggtitle(">25 CpGs per region")
+dev.off()
+
+pdf("methylation_overview_qualTier_val.pdf",width=9,height=5)
+ggplot(meth_combined_annot[(readCount/CpGcount)>10&cohort=="validation"],aes(y=methyl,x=as.factor(qualTier),group=as.factor(qualTier)))+geom_violin(fill="black")+geom_boxplot(outlier.size=NA,width=0.2)+facet_wrap(~regions,scale="free")+ylab("% DNA methylation")+ggtitle("> 10 reads per CpG")
+
+ggplot(meth_combined_annot[CpGcount>25&cohort=="validation"],aes(y=methyl,x=as.factor(qualTier),group=as.factor(qualTier)))+geom_violin(fill="black")+geom_boxplot(outlier.size=NA,width=0.2)+facet_wrap(~regions,scale="free")+ylab("% DNA methylation")+ggtitle(">25 CpGs per region")
+dev.off()
+
+
 
 
 #scatter plot (first vs. second samples)
