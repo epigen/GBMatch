@@ -196,6 +196,7 @@ sub=merge4[category=="GBMatch"]
 sub=merge4[category=="GBmatch_valF"]
 sub=merge4[category=="GBmatch_val"]
 sub=merge4[category=="multiselector"]
+sub=merge4[category=="control"]
 sub=merge4[category=="Missing"]
 
 sub[is.na(N_number_psa)|is.na(N_number_seq)|is.na(N_number_seg)|is.na(N_number_hist)|is.na(N_number_hDesc)|is.na(N_number_clin)|is.na(N_number_img)|is.na(N_number_prep),c(grep("N_number_",names(merge4),value=TRUE),"category"),with=FALSE]
@@ -207,10 +208,10 @@ write.table(merge4[,c(grep("N_number_",names(merge4),value=TRUE),"category"),wit
 
 
 #remove all entries without N_number_seq (samples included in the annotation but not prepped because sample was used up/ missing)
-merge4=merge4[!is.na(N_number_prep)]
+merge4=merge4[!is.na(N_number_seq)]
 
-#remove sample N591-10 because it is a recurrency in the validation cohort (primary tumor was oparated on in Turkey)
-merge4=merge4[N_number_clin!="N591-10"]
+#remove sample N591_10 because it is a recurrency in the validation cohort (primary tumor was oparated on in Turkey)
+merge4=merge4[N_number_seq!="N591_10"]
 
 
 #preliminarily use "individual" as patientID and patID
