@@ -33,7 +33,7 @@ annotation[,`Relative share necrosis`:=ifelse(is.na(`Relative share necrosis`),`
 
 cor_nec=annotation[,list(`Relative share necrosis`=max(`Relative share necrosis`,na.rm=TRUE),rand_frag_perc=rand_frag_perc[which.max(`Relative share necrosis`)],cor=cor(`Relative share necrosis`,rand_frag_perc,use="pairwise.complete")),by="material"]
 pdf("rand_fragVSnecrosis.pdf",height=3.5,width=4.5)
-ggplot(annotation,aes(x=`Relative share necrosis`,y=rand_frag_perc,col=material,fill=material,group=material))+geom_point(alpha=0.5,shape=21,size=3)+geom_text(data=cor_nec,hjust=1,aes(label=paste0(material,": r=",round(cor,3))))+ylim(c(0,100))+geom_smooth(method="lm")+ylab("% randomly fragmented reads")+xlab("Relative share necrosis")
+ggplot(annotation,aes(x=`Relative share necrosis`,y=rand_frag_perc,fill=material,group=material))+geom_point(alpha=0.5,shape=21,size=3,aes(col=cohort))+geom_text(data=cor_nec,hjust=1,aes(label=paste0(material,": r=",round(cor,3))))+ylim(c(0,100))+geom_smooth(method="lm")+scale_color_manual(values=c("validation"="black","primary"="transparent"))+ylab("% randomly fragmented reads")+xlab("Relative share necrosis")
 dev.off()
 
 cor_CpG=annotation[,list(Raw_reads=max(Raw_reads),Unique_CpGs=Unique_CpGs[which.max(Raw_reads)],cor=cor(Raw_reads,Unique_CpGs)),by="material"]
@@ -151,10 +151,15 @@ dev.off()
 #plot locations
 mapWorld <- borders("world","austria", colour="gray50", fill="white") # create a layer of borders
 
-centers=pat_stats[grepl("GBMatch|GBmatch_add|GBmatch_val",Categories),list(N=.N,IDH_count=paste0(length(`IDH status`[`IDH status`=="wt"]),"/",IDHwt=length(`IDH status`[`IDH status`=="mut"]))),by="Center"]
+centers=pat_stats[grepl("GBMatch|GBmatch_add|GBmatch_val([^F]|$)",Categories),list(N=.N,IDH_count=paste0(length(`IDH status`[`IDH status`=="wt"]),"/",IDHwt=length(`IDH status`[`IDH status`=="mut"]))),by="Center"]
 centers[Center=="Rudolfstiftung",Center:="Rudolfstiftung Vienna",]
 centers[,Center_simpl:=gsub("MedUni |Rudolfstiftung ","",Center),]
 centers=cbind(centers,as.data.table(geocode(centers$Center_simpl)))
+while(any(is.na(c(centers$lon,centers$lat)))){
+try(centers[is.na(lon),c("lon","lat"):=try(geocode(Center_simpl),silent=TRUE),],silent=TRUE)
+}
+centers
+
 
 pdf(paste0("centers_locations.pdf"),height=3,width=7)
 ggplot(centers)+mapWorld+geom_point(aes(x=as.numeric(lon),y=as.numeric(lat),size=N,col=N),alpha=0.6)+geom_text(aes(x=as.numeric(lon),y=as.numeric(lat),label=Center))+geom_text(aes(x=as.numeric(lon),y=as.numeric(lat),label=IDH_count))+scale_size(range=c(6,20))+scale_color_gradient(low="blue",high="red")+theme_bw()
