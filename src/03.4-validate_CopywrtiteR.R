@@ -5,7 +5,7 @@ library(gtools)
 library(ggrepel)
 
 
-CNA_dir="CNAprofiles_single_100kb_missingSamples"
+CNA_dir="CNAprofiles_single_100kb"
 wd=file.path(getOption("PROCESSED.PROJECT"),"results_analysis/03-CopywriteR/results",CNA_dir,"validation")
 dir.create(wd)
 setwd(wd)
@@ -15,6 +15,13 @@ annotation=fread(file.path(getOption("PROCESSED.PROJECT"),"results_analysis/01.1
 
 ##get cytoband
 load(file="../summary/cytoband_annot.RData")
+
+#get RRBS CNVs
+RRBS_CNV_wide=fread("../summary/CNA_Chromosome.tsv")
+RRBS_CNV=melt(RRBS_CNV_wide[category=="GBmatch_valF"],id.vars=c("sample","date","category","IDH","surgery"),value.name="total_size_RRBS")
+RRBS_CNV[,c("chromosome","chromArm","variant"):=as.list(unlist(strsplit(as.character(variable),split="_"))),by=1:nrow(RRBS_CNV)]
+RRBS_CNV[,sample:=sub("_fv","",sample)]
+
 
 ##get WGS CNV calls ("gold standard")
 WGS_CNV_dir=file.path(getOption("PROCESSED.PROJECT"),"WGS_CNV/cnvkit_vs_pga")
@@ -41,6 +48,15 @@ CNV_all_cb[,variant:=ifelse(significant==TRUE & log2>0,"amplification",ifelse(si
 CNV_all_red=CNV_all_cb[significant==TRUE,list(total_size=sum(seg_width),mean_log2=mean(log2)),by=c("chromosome","chromArm","chromArm_length","variant","sample")]
 CNV_all_red[,variant_ratio:=total_size/chromArm_length,]
 CNV_all_red[variant_ratio>0.6]
+
+
+#now combine RRBS and WGS CNVs
+CNV_combined=merge(CNV_all_red,RRBS_CNV,by=c("sample","chromosome","chromArm","variant"),all=TRUE)
+CNV_combined=CNV_combined[!(is.na(variant_ratio)&total_size_RRBS==0)]
+CNV_combined[,variant_ratio_RRBS:=total_size_RRBS/chromArm_length,]
+
+ggplot(CNV_combined,aes(x=variant_ratio,y=variant_ratio_RRBS,col=variant))+geom_point()
+
 
 
 #plot
