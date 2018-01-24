@@ -19,7 +19,7 @@ annotation[,aligned_bam:=paste0(resolveLink("results_pipeline_bismark"),"/",N_nu
 annotation[category=="control",patID:=paste0("ctr_",1:length(category)),]
 annotation[,surgery:=ifelse(!is.na(surgery.x),as.character(surgery.x),as.character(resectionNo)),]
 annotation[category=="control",surgery:=patID,]
-
+annotation[category=="GBmatch_valF"&is.na(surgery),surgery:=patID,]
 
 #function that actually submits the comparisons
 submit=function(job,logdir,run_methclone,bam1,bam2,out_dir,sleep){
@@ -45,7 +45,7 @@ test_combinations=annotation[order(surgery)][!is.na(patID)&category%in%c("GBMatc
 
 ##samples vs. controls
 controls=annotation[category=="control"&`Unique_CpGs`>1000000]
-test_combinations_ctr=annotation[order(surgery)][!is.na(patID)&category%in%c("GBMatch","GBmatch_add","GLASS","control")&surgery%in%c(1:2),data.table(patID=patID,f2=aligned_bam,f1=controls$aligned_bam,s2=N_number_seq,s1=controls$N_number_seq,surg1=controls$patID,surg2=surgery),by=1:length(N_number_seq)]
+test_combinations_ctr=annotation[order(surgery)][!is.na(patID)&category%in%c("GBMatch","GBmatch_add","GBmatch_val","GBmatch_valF","GLASS","control")&surgery%in%c(1:2),data.table(patID=patID,f2=aligned_bam,f1=controls$aligned_bam,s2=N_number_seq,s1=controls$N_number_seq,surg1=controls$patID,surg2=surgery),by=1:length(N_number_seq)]
 test_combinations_ctr=test_combinations_ctr[surg1!=surg2]    
 
 ##samples vs. self
@@ -72,7 +72,9 @@ test_combinations_ctrVSctr[,comparisonID:=paste0(patID,"__",s1,"vs",s2,"__",surg
 ### NOTE:if indices have to be created for samples that are used by multiple comparisons indexing will be called multiple times. Only submit one job that creates the index.
 
 commands=test_combinations[,submit(job=comparisonID,logdir,run_methclone,bam1=f1,bam2=f2,out_dir),by=1:nrow(test_combinations)]
+
 commands_ctr=test_combinations_ctr[,submit(job=comparisonID,logdir,run_methclone,bam1=f1,bam2=f2,out_dir,sleep=30),by=1:nrow(test_combinations_ctr)]
 commands_self=test_combinations_self[,submit(job=comparisonID,logdir,run_methclone,bam1=f1,bam2=f2,out_dir,sleep=30),by=1:nrow(test_combinations_self)]
+
 commands_ctrVSctr=test_combinations_ctrVSctr[,submit(job=comparisonID,logdir,run_methclone,bam1=f1,bam2=f2,out_dir,sleep=30),by=1:nrow(test_combinations_ctrVSctr)]
 
