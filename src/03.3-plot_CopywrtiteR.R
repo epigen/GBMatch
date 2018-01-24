@@ -55,6 +55,9 @@ segments_ctr_dt=segments_dt[normalized==TRUE&num.mark>=8]
 segments_ctr_dt[,Feature:=paste0("seg_",1:nrow(segments_ctr_dt)),]
 segments_ctr_gr=with(segments_ctr_dt, GRanges(seqnames = Rle(chrom), IRanges(start=loc.start, end=loc.end),strand=Rle("*"),ID=Feature))
 
+segments_ctr_annot=list(dt=segments_ctr_dt,gr=segments_ctr_gr)
+save(segments_ctr_annot,file="summary/segments_ctr_annot.RData")
+
 #load tiles
 load("log2_counts_summary.Rdata")
 counts_stats=log2_counts_summary
@@ -138,14 +141,14 @@ sig_CNA_cb[,frag_len_corr:=min(loc.end,chromEnd_max)-max(loc.start,chromStart_mi
 #check frag_len_corr calculation
 #sig_CNA_cb[,c("chrom","chromArm","sample","loc.start", "loc.end","chromStart_min","chromEnd_max","frag_len","frag_len_corr"),with=FALSE]
 
-amp_del_dt=sig_CNA_cb[,list(var_bases=sum(frag_len_corr)),by=c("sample","date","chrom","chromArm","set_sig","surgery","category","IDH")]
+amp_del_dt=sig_CNA_cb[,list(var_bases=sum(frag_len_corr)),by=c("sample","date","chrom","chromArm","chromArm_length","set_sig","surgery","category","IDH")]
 amp_del_wide=dcast(amp_del_dt,sample+date+category+IDH+surgery~chrom+chromArm+set_sig,value.var="var_bases")
 amp_del_wide[is.na(amp_del_wide)]=0
 
 write.table(amp_del_wide,file.path("summary/CNA_Chromosome.tsv"),sep="\t",row.names=FALSE,quote=FALSE)
 
 
-#also annoatete complete table with chromosome arm (1p 19q plot)
+#also annoatete complete table with chromosome arm (for 1p 19q plot)
 segments_ctr_annot_mean_gr=with(segments_ctr_annot_mean, GRanges(seqnames = Rle(chrom), IRanges(start=loc.start, end=loc.end),strand=Rle("*")))
 ov_all=as.data.frame(findOverlaps(segments_ctr_annot_mean_gr,cytoband_gr,type="any",select="all"))
 segments_ctr_annot_mean_cb=unique(cbind(segments_ctr_annot_mean[ov_all$queryHits],cytoband[ov_all$subjectHits,c("chromArm","chromStart_min","chromEnd_max","chromArm_length"),with=FALSE]))
@@ -163,7 +166,6 @@ segments_ctr_annot_mean_cb_1p19q=segments_ctr_annot_mean_cb[(chrom==1&chromArm==
 segments_ctr_annot_mean_cb_1p19q[,region:=paste0(chrom,"_",chromArm),]
 segments_ctr_annot_mean_cb_1p19q_red=segments_ctr_annot_mean_cb_1p19q[,list(loc.len_corr=sum(loc.len_corr)),by=c("sample_short","WHO2016_classification","category","IDH","region","chromArm_length","set_sig")]
 
-#segments_ctr_annot_mean_cb_1p19q_red=segments_ctr_annot_mean_cb_1p19q_red[,list(dom_set=ifelse((max(c(0,loc.len[set_sig=="deletion"]))/sum(loc.len)>0.1),"deletion",set_sig[which.max(loc.len)]),percent=ifelse((max(c(0,loc.len[set_sig=="deletion"]))/sum(loc.len)>0.1),loc.len[set_sig=="deletion"]/sum(loc.len),max(loc.len)/sum(loc.len))),by=c("sample_short","WHO2016_classification","category","IDH","region")]
 
 segments_ctr_annot_mean_cb_1p19q_red=unique(segments_ctr_annot_mean_cb_1p19q_red[,list(dom_set=ifelse((max(c(0,loc.len_corr[set_sig=="deletion"]))/chromArm_length>0.2),"deletion",set_sig[which.max(loc.len_corr)]),percent=ifelse((max(c(0,loc.len_corr[set_sig=="deletion"]))/chromArm_length>0.2),loc.len_corr[set_sig=="deletion"]/chromArm_length,max(loc.len_corr)/chromArm_length)),by=c("sample_short","WHO2016_classification","category","IDH","region")])
 
@@ -176,7 +178,6 @@ segments_ctr_annot_mean_cb_1p19q_wide[,mean_len_perc:=mean(c(percent.1_p,percent
 pdf(file.path("summary/1p19q.pdf"),height=5,width=8)
 ggplot(segments_ctr_annot_mean_cb_1p19q_wide[category%in%c("GBMatch","GBmatch_add","GBmatch_val")],aes(x=dom_set.1_p,y=dom_set.19_q,col=category,fill=WHO2016_classification,size=mean_len_perc))+geom_point(shape=21,position=position_jitterdodge(jitter.width = 0.6, jitter.height = 0.35, dodge.width = NULL),alpha=0.5)+xlab(label="Chromosome 1p")+ylab(label="Chromosome 19q")+scale_color_manual(values=c("white","white","black"))+scale_fill_manual(values=c("red","grey","grey","grey","grey","red","grey"))+scale_size_continuous(range=c(1,3))
 dev.off()
-
 
 #overlap significant CNVs with genes
 overlap=as.data.table(findOverlaps(genes_gr,sig_CNA_gr,type="within"))
@@ -252,7 +253,7 @@ ggplot(sig_CNA[surgery%in%c(1,2)&category=="GBMatch"&IDH=="wt"])+geom_segment(ae
 dev.off()
 
 pdf(file.path("summary/CNA_combiProfile_genes_validation.pdf"),height=height*0.15,width=30)
-ggplot(sig_CNA[surgery%in%c(1)&category=="GBmatch_val"&IDH=="wt"])+geom_segment(aes(col=set_sig,y=length_rank_sep_val,yend=length_rank_sep_val,x = loc.start, xend = loc.end))+geom_point(data=GOIs_comb,aes(x=transc_start,y=ifelse(ypos<0,ypos-100,ypos+100)))+geom_text_repel(data=GOIs_comb,force=20,aes(x=transc_start,y=ifelse(ypos<0,ypos-100,ypos+100),label=gene,col=classification))+facet_wrap(~chrom,scales="free_x",ncol=24)+xlab("")+ylab("")+theme(axis.ticks = element_blank(), axis.text.x = element_blank())+scale_color_manual(values=c("ND"="black","DRG"="blue","OG"="red","TSG"="green","amplification"="red","deletion"="green","nc"="black"))+ylim(c(-350,350))
+ggplot(sig_CNA[surgery%in%c(1)&category=="GBmatch_val"&IDH=="wt"])+geom_segment(aes(col=set_sig,y=length_rank_sep_val,yend=length_rank_sep_val,x = loc.start, xend = loc.end))+geom_point(data=GOIs_comb[surgery==1],aes(x=transc_start,y=ifelse(ypos<0,ypos-100,ypos+100)))+geom_text_repel(data=GOIs_comb[surgery==1],force=20,aes(x=transc_start,y=ifelse(ypos<0,ypos-100,ypos+100),label=gene,col=classification))+facet_wrap(~chrom,scales="free_x",ncol=24)+xlab("")+ylab("")+theme(axis.ticks = element_blank(), axis.text.x = element_blank())+scale_color_manual(values=c("ND"="black","DRG"="blue","OG"="red","TSG"="green","amplification"="red","deletion"="green","nc"="black"))+ylim(c(-350,350))
 dev.off()
 
 
