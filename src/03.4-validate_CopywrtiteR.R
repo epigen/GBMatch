@@ -20,6 +20,8 @@ load(file="../summary/cytoband_annot.RData")
 cytoband_red=unique(cytoband_annot$dt[,list(chromStart=min(chromStart),chromEnd=max(chromEnd)),c("chrom","chromArm","chromArm_length"),])
 setnames(cytoband_red,"chrom","chromosome")
 cytoband_red_gr=with(cytoband_red,GRanges(seqnames = Rle(chromosome), IRanges(start=chromStart, end=chromEnd),strand=Rle("*")))
+centromere=cytoband_red[chromArm=="p",c("chromosome","chromEnd"),with=FALSE]
+setnames(centromere,"chromEnd","centromerePos")
 
 
 #get RRBS CNV segments and annotate with cytoband
@@ -60,6 +62,66 @@ WGS_segments_cb_red=WGS_segments_cb[,list(frag_len_corr_WGS=sum(frag_len_corr_WG
 WGS_segments_cb_red[,sample:=paste0(sample,"_fv")]
 
 
+# combine RRBS and WGS results as segments to plot into one chromosome plot
+WGS_segments_cb_uni=WGS_segments_cb[,c("sample","chromosome","chromArm","chromStart","chromEnd", "chromArm_length","start","end","log2","frag_len_WGS", "frag_len_corr_WGS"),with=FALSE]
+setnames(WGS_segments_cb_uni,c("start","end","frag_len_WGS", "frag_len_corr_WGS","log2"),c("seg_start","seg_end","seg_len", "seg_len_corr","log2FC"))
+WGS_segments_cb_uni[,sample:=paste0(sample,"_fv"),]
+WGS_segments_cb_uni[,assay:="WGS",]
+
+
+RRBS_segments_cb_uni=RRBS_segments_cb[,c("sample","chromosome","chromArm","chromStart","chromEnd", "chromArm_length","loc.start","loc.end","log2","frag_len_RRBS", "frag_len_corr_RRBS"),with=FALSE]
+setnames(RRBS_segments_cb_uni,c("loc.start","loc.end","frag_len_RRBS", "frag_len_corr_RRBS","log2"),c("seg_start","seg_end","seg_len", "seg_len_corr","log2FC"))
+RRBS_segments_cb_uni[,assay:="RRBS",]
+
+segments_uni=rbindlist(list(WGS_segments_cb_uni,RRBS_segments_cb_uni),use.names=TRUE)
+segments_uni=segments_uni[sample!="N1390_13_fv",,]
+segments_uni=merge(segments_uni,centromere,by="chromosome")
+segments_uni[,meanLog2FC:=weighted.mean(log2FC,seg_len),by=c("chromosome","sample","assay")]
+
+pdf("chrom_foldChange.pdf",height=6,width=6)
+for (chr in c(as.character(1:22),"X","Y")){
+  sub=segments_uni[chromosome==chr]
+  sub[,sample:=factor(sample,levels=unique(sample[assay=="WGS"][order(meanLog2FC[assay=="WGS"])])),]
+  h_col="red";l_col="blue";m_col="white"
+
+  range=max(sub$log2FC)-min(sub$log2FC)
+  mini=min(sub$log2FC)
+  lowValue=-1.0
+  midValue=0.0
+  higValue=1.0
+  low=(lowValue-mini)/range
+  mid=(midValue-mini)/range
+  hig=(higValue-mini)/range
+  print(c(low, mid, hig))
+  if(low<=0 & hig>=1) {
+    colors=c("green","gray96","gold")
+    values=c(0,mid,1)
+    print("01")
+  } else if(hig>=1) {
+    colors=c("blue","green","gray96","gold")
+    values=c(0,low,mid,1)
+    print("?1")
+  } else if(low<=0) {
+    colors=c("green","gray96","gold","red")
+    values=c(0,mid,hig,1)
+    print("0?")
+  } else {
+    colors=c("blue","green","gray96","gold","red")
+    values=c(0,low,mid,hig,1)
+    print("??")
+  } 
+  
+  pl1=ggplot(sub)+geom_segment(aes(y=sample,x=seg_start/1000000,yend=sample,xend=seg_end/1000000,col=log2FC,group=assay),size=3)+geom_point(aes(y=0,x=unique(centromerePos/1000000)),shape=4,size=3)+facet_wrap(~assay)+scale_color_gradient2(high=h_col,mid=m_col,low=l_col)+ylab("")+xlab("Chromosome position [Mb]")+ggtitle(paste0("Chromosome ", chr))
+  
+  pl2=ggplot(sub)+geom_segment(aes(y=sample,x=seg_start/1000000,yend=sample,xend=seg_end/1000000,col=log2FC,group=assay),size=3)+geom_point(aes(y=0,x=unique(centromerePos/1000000)),shape=4,size=3)+facet_wrap(~assay)+scale_color_gradientn(colours=colors,values=values)+ylab("")+xlab("Chromosome position [Mb]")+ggtitle(paste0("Chromosome ", chr))
+
+
+  print(pl1)
+  print(pl2)
+}
+dev.off()
+
+
 #combine RRBS and WGS results on the basis of chromosome arms and variant
 segments_cb_combined=merge(WGS_segments_cb_red,RRBS_segments_cb_red[sample%in%WGS_segments_cb_red$sample],by=c("sample","chromosome","chromArm","chromArm_length","variant"),all=TRUE)
 segments_cb_combined[is.na(segments_cb_combined)]=0
@@ -75,16 +137,39 @@ dev.off()
 
 ##ROC analysis
 
-# for selected variants and significance thresholds
-segments_cb_combined[,c("sig_0.1_WGS","sig_0.3_WGS","sig_0.5_WGS","sig_0.1_RRBS","sig_0.3_RRBS","sig_0.5_RRBS"):=list(abs(log2_mean_WGS)>=0.1,abs(log2_mean_WGS)>=0.3,abs(log2_mean_WGS)>=0.5,abs(log2_mean_RRBS)>=0.1,abs(log2_mean_RRBS)>=0.3,abs(log2_mean_RRBS)>=0.5),]
+# for selected variants and significance thresholds (focus on sig_0.5 because that is also what CNVkit selects)
 
+#expand sothat all variants in all chromosome arms are represented in all samples with log2FC=0
+exp=as.data.table(with(segments_cb_combined,expand.grid(sample=unique(sample),chromosome=unique(chromosome),chromArm=unique(chromArm),variant=unique(variant))))
+segments_cb_combined_exp=merge(segments_cb_combined,exp,by=c("sample","chromArm","chromosome","variant"),all=TRUE)
+segments_cb_combined_exp[is.na(log2_mean_WGS),log2_mean_WGS:=0]
+segments_cb_combined_exp[is.na(log2_mean_RRBS),log2_mean_RRBS:=0]
+
+segments_cb_combined_exp[,c("sig_0.1_WGS","sig_0.3_WGS","sig_0.5_WGS","sig_0.1_RRBS","sig_0.3_RRBS","sig_0.5_RRBS"):=list(abs(log2_mean_WGS)>=0.1,abs(log2_mean_WGS)>=0.3,abs(log2_mean_WGS)>=0.5,abs(log2_mean_RRBS)>=0.1,abs(log2_mean_RRBS)>=0.3,abs(log2_mean_RRBS)>=0.5),]
+
+segments_cb_combined_exp[,c("sig_0.5_true","sig_0.5_false"):=list(sum(sig_0.5_WGS==TRUE),sum(sig_0.5_WGS==FALSE)),by=c("chromosome","variant")]
+
+get_ROC=function(target,values){
+  ROC=roc(target,values)
+  dt=data.table(TPR=ROC$sensitivities,FPR=1-ROC$specificities,AUC=ROC$auc)
+  dt=dt[order(FPR)]
+  dt=dt[order(TPR)]
+  return(dt)
+}
+
+ROC_sig_0.5=segments_cb_combined_exp[sig_0.5_true>0&sig_0.5_false>0,get_ROC(sig_0.5_WGS,log2_mean_RRBS),by=c("chromosome","variant","sig_0.5_true","sig_0.5_false")]
+
+pdf("chromArm_foldChange_ROC_sig_0.5.pdf",height=10,width=20)
+ggplot(ROC_sig_0.5,aes(x=FPR,y=TPR))+geom_line(col="blue",size=1.5)+facet_wrap(~paste0("Chr",chromosome," ",variant)+paste0("AUC=",round(AUC,3),"\nture=",sig_0.5_true," false=",sig_0.5_false),nrow=4,scale="free")
+dev.off()
+
+#plot individually
 sub=segments_cb_combined[chromosome=="19"&variant=="deletion"]
-
 plot(roc(sub$sig_0.1_WGS,sub$log2_mean_RRBS))
 plot(roc(sub$sig_0.3_WGS,sub$log2_mean_RRBS))
 plot(roc(sub$sig_0.5_WGS,sub$log2_mean_RRBS))
 
-#more automated way
+#more automated way (select sange of significance levels based on actual lo2FC values)
 
 create_roc_family=function(data,chrom,var){
   sub=data[chromosome==chrom&variant==var]
