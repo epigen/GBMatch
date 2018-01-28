@@ -136,7 +136,7 @@ print_res=function(plots,title){
   }
 }
 
-pdf(file.path(paste0("roc_auc_",sub,"_predRRBS_new.pdf")),height=4,width=4.5)
+pdf(file.path(paste0("roc_auc_",sub,"_predRRBS.pdf")),height=4,width=4.5)
 test_res_prob[,print_res(check[1][[1]],paste0(sample[1]," ",prediction[[1]][1]," prob:",round(prediction[[2]][which(colnames(prediction[[2]])==prediction[[1]][1])],3)," auc:",round(auc,2))),by="sampleName"]
 dev.off()
 
