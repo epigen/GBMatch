@@ -3,6 +3,7 @@ project.init2("GBMatch")
 library(simpleCache)
 library(pheatmap)
 library(ggtern)
+library(pROC)
 
 out_dir=file.path(getOption("PROCESSED.PROJECT"),"results_analysis/08.1-GBM_classifier")
 dir.create(out_dir)
@@ -114,11 +115,14 @@ RNA_data_uniq_wide=reshape(RNA_data_uniq,idvar="gene",timevar="sample_name",drop
 RNA_data_uniq_mat=as.matrix(RNA_data_uniq_wide[gene%in%concordant_genes_noNeur,-c("gene"),with=FALSE])
 row.names(RNA_data_uniq_mat)=RNA_data_uniq_wide[gene%in%concordant_genes_noNeur]$gene
 
+pdf("subtype_validation_samples_heatmap.pdf",height=10,width=14)
 pheatmap(RNA_data_uniq_mat,annotation_row=row_annot[row.names(row_annot)%in%row.names(RNA_data_uniq_mat),,drop=FALSE])
-
+dev.off()
 #TCGA data common geans available in both datasets, only neural
-pheatmap(TCGA_genes_mat[row.names(TCGA_genes_mat)%in%concordant_genes_noNeur,!colnames(TCGA_genes_mat)%in%row.names(col_annot[col_annot$subtype=="Neural",,drop=FALSE])], annotation_col=col_annot[col_annot$subtype!="Neural",,drop=FALSE],annotation_row=row_annot[row.names(row_annot)%in%concordant_genes_noNeur,,drop=FALSE])
-
+pdf("subtype_validation_TCGA_heatmap.pdf",height=10,width=14)
+pheatmap(TCGA_genes_mat[row.names(TCGA_genes_mat)%in%concordant_genes_noNeur,!colnames(TCGA_genes_mat)%in%row.names(col_annot[col_annot$subtype=="Neural",,drop=FALSE])], 
+annotation_col=col_annot[col_annot$subtype!="Neural",,drop=FALSE],annotation_row=row_annot[row.names(row_annot)%in%concordant_genes_noNeur,,drop=FALSE])
+dev.off()
 
 ##Now perform real classification based on mix profiles
 
@@ -163,12 +167,10 @@ mix_profiles_cor_max=mix_profiles_cor[mixID==max_cor_mixID][order(sample_name)]
 RRBS_classification=fread("class_probs_annot_27_noNeural_predRRBS.tsv")
 setnames(RRBS_classification,"sample","sample_name")
 compare=merge(RRBS_classification,mix_profiles_cor_max,by="sample_name")
-
-
-compare[sub_group==majority_sybtype]
-
 compare[,prob_dist:=dist(rbind(c(Classical,Proneural,Mesenchymal),c(cla/100,pro/100,mes/100))),by="sample_name"]
-
+#check same classification
+compare[sub_group==majority_sybtype]
+write.table(compare,"subtype_validation_compare.tsv",sep="\t",row.names=FALSE,quote=FALSE)
 
 #plot correlations for each sample
 RRBS_probs=compare[,c("sample_name","Classical","Proneural", "Mesenchymal","sub_group","majority_sybtype"),with=FALSE]
@@ -181,6 +183,48 @@ pdf("subtype_validation_correlations.pdf",height=16,width=18)
 ggtern(data=mix_profiles_cor_RRBS,aes(mes,cla,pro)) + geom_tri_tern(bins=15,fun=mean,aes(value=cor,fill=..stat..))+geom_point(data=RRBS_probs,col="black",size=4,shape=13)+facet_wrap(~facet_label,ncol=7)+scale_fill_gradient2(name="RNA profile\ncorrelation",high="green",mid="lightgrey",low="red")
 dev.off()
 
-#[sample_name%in%c("N940_16_fv","N1290_12_fv","N2207_13_fv")]
+
+#ROC curves
+
+get_ROC=function(target,values){
+  ROC=roc(target,values)
+  dt=data.table(TPR=ROC$sensitivities,FPR=1-ROC$specificities,AUC=ROC$auc,run=0,rand=FALSE)
+  dt=dt[order(FPR)]
+  dt=dt[order(TPR)]
+  
+  set.seed(234)
+  rand_labs=lapply(seq_len(10), function(x) sample(target))
+  i=1
+  for (rand_lab in rand_labs){
+    print(i)
+    ROC=roc(rand_lab,values)
+    rand_dt=data.table(TPR=ROC$sensitivities,FPR=1-ROC$specificities,AUC=ROC$auc,run=i,rand=TRUE)
+    rand_dt=rand_dt[order(FPR)]
+    rand_dt=rand_dt[order(TPR)]
+    i=i+1
+    dt=rbindlist(list(dt,rand_dt))
+  }
+  return(dt)
+}
+
+compare[,c("isMesenchymal","isClassical","isProneural"):=list(majority_sybtype=="Mesenchymal",majority_sybtype=="Classical",majority_sybtype=="Proneural"),]
+
+#relaxed categories
+compare[,c("isMesenchymal_rel","isClassical_rel","isProneural_rel"):=list(mes>30,cla>30,pro>30),]
+
+compare_long=melt(compare,id.vars=c("sample_name","sub_group","Classical","Proneural","Mesenchymal"),measure.vars=c("isMesenchymal", "isClassical", "isProneural","isMesenchymal_rel","isClassical_rel","isProneural_rel"),value.name="is.subgroup",variable.name="subgroup_class")
+compare_long[,class_prob:=ifelse(subgroup_class%in%c("isMesenchymal","isMesenchymal_rel"),Mesenchymal,ifelse(subgroup_class%in%c("isClassical","isClassical_rel"),Classical,Proneural)),]
+compare_long[,Ntrue:=sum(is.subgroup),by="subgroup_class"]
+compare_long[,Nfalse:=sum(!is.subgroup),by="subgroup_class"]
+
+ROC_subgroups=compare_long[,get_ROC(is.subgroup,class_prob),by=c("subgroup_class","Ntrue","Nfalse")]
+
+ROC_subgroups[,facet_label:=paste0(subgroup_class,"\nAUC=",unique(round(AUC[rand==FALSE],2)),"/",round(mean(AUC[rand==TRUE]),2),"\nTRUE=",Ntrue,"\nFALSE=",Nfalse),by=c("subgroup_class")]
+
+pdf("ROC_subgroups_rand.pdf",height=10,width=8)
+ggplot(ROC_subgroups,aes(x=FPR,y=TPR,col=rand,group=run,alpha=rand))+geom_line()+facet_wrap(~facet_label,nrow=3,scale="free")+scale_color_manual(values=c("TRUE"="grey","FALSE"="blue"))+scale_alpha_manual(values=c("TRUE"=0.7,"FALSE"=1))
+dev.off()
+
+
 
 
