@@ -111,12 +111,12 @@ for (chr in c(as.character(1:22),"X","Y")){
     print("??")
   } 
   
-  pl1=ggplot(sub)+geom_segment(aes(y=sample,x=seg_start/1000000,yend=sample,xend=seg_end/1000000,col=log2FC,group=assay),size=3)+geom_point(aes(y=0,x=unique(centromerePos/1000000)),shape=4,size=3)+facet_wrap(~assay)+scale_color_gradient2(high=h_col,mid=m_col,low=l_col)+ylab("")+xlab("Chromosome position [Mb]")+ggtitle(paste0("Chromosome ", chr))
+#  pl1=ggplot(sub)+geom_segment(aes(y=sample,x=seg_start/1000000,yend=sample,xend=seg_end/1000000,col=log2FC,group=assay),size=3)+geom_point(aes(y=0,x=unique(centromerePos/1000000)),shape=4,size=3)+facet_wrap(~assay)+scale_color_gradient2(high=h_col,mid=m_col,low=l_col)+ylab("")+xlab("Chromosome position [Mb]")+ggtitle(paste0("Chromosome ", chr))
   
   pl2=ggplot(sub)+geom_segment(aes(y=sample,x=seg_start/1000000,yend=sample,xend=seg_end/1000000,col=log2FC,group=assay),size=3)+geom_point(aes(y=0,x=unique(centromerePos/1000000)),shape=4,size=3)+facet_wrap(~assay)+scale_color_gradientn(colours=colors,values=values)+ylab("")+xlab("Chromosome position [Mb]")+ggtitle(paste0("Chromosome ", chr))
 
 
-  print(pl1)
+#  print(pl1)
   print(pl2)
 }
 dev.off()
@@ -151,16 +151,31 @@ segments_cb_combined_exp[,c("sig_0.5_true","sig_0.5_false"):=list(sum(sig_0.5_WG
 
 get_ROC=function(target,values){
   ROC=roc(target,values)
-  dt=data.table(TPR=ROC$sensitivities,FPR=1-ROC$specificities,AUC=ROC$auc)
+  dt=data.table(TPR=ROC$sensitivities,FPR=1-ROC$specificities,AUC=ROC$auc,run=0,rand=FALSE)
   dt=dt[order(FPR)]
   dt=dt[order(TPR)]
+  
+  set.seed(1234)
+  rand_labs=lapply(seq_len(10), function(x) sample(target))
+  i=1
+  for (rand_lab in rand_labs){
+    print(i)
+    ROC=roc(rand_lab,values)
+    rand_dt=data.table(TPR=ROC$sensitivities,FPR=1-ROC$specificities,AUC=ROC$auc,run=i,rand=TRUE)
+    rand_dt=rand_dt[order(FPR)]
+    rand_dt=rand_dt[order(TPR)]
+    i=i+1
+    dt=rbindlist(list(dt,rand_dt))
+  }
   return(dt)
 }
 
 ROC_sig_0.5=segments_cb_combined_exp[sig_0.5_true>0&sig_0.5_false>0,get_ROC(sig_0.5_WGS,log2_mean_RRBS),by=c("chromosome","variant","sig_0.5_true","sig_0.5_false")]
 
-pdf("chromArm_foldChange_ROC_sig_0.5.pdf",height=10,width=20)
-ggplot(ROC_sig_0.5,aes(x=FPR,y=TPR))+geom_line(col="blue",size=1.5)+facet_wrap(~paste0("Chr",chromosome," ",variant)+paste0("AUC=",round(AUC,3),"\nture=",sig_0.5_true," false=",sig_0.5_false),nrow=4,scale="free")
+ROC_sig_0.5[,facet_label:=paste0("Chr",chromosome," ",variant,"\nAUC=",unique(round(AUC[rand==FALSE],2)),"/",round(mean(AUC[rand==TRUE]),2),"\nture=",sig_0.5_true," false=",sig_0.5_false),by=c("chromosome","variant")]
+
+pdf("chromArm_foldChange_ROC_sig_0.5_rand.pdf",height=10,width=24)
+ggplot(ROC_sig_0.5,aes(x=FPR,y=TPR,col=rand,group=run,alpha=rand))+geom_line()+facet_wrap(~facet_label,nrow=4,scale="free")+scale_color_manual(values=c("TRUE"="grey","FALSE"="blue"))+scale_alpha_manual(values=c("TRUE"=0.5,"FALSE"=1))
 dev.off()
 
 #plot individually
