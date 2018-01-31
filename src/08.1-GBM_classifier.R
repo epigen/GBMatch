@@ -155,9 +155,16 @@ class_probs_all=test_res_prob[,list(sub_group=prediction[[1]][1],Classical=predi
 
 class_probs_all_annot=class_probs_all[annotation[,c("N_number_seq","patID","category","IDH","surgery.x","WHO2016_classification","Follow-up_years"),with=FALSE], on=c(sample="N_number_seq")]
 
+class_probs_all_annot[is.na(sub_group)]
+class_probs_all_annot=class_probs_all_annot[!is.na(sub_group)]
+
+class_probs_all_annot[,sub_group:=as.character(sub_group),]
+class_probs_all_annot[,sub_group_prob:=get(sub_group),by=1:nrow(class_probs_all_annot)]
+class_probs_all_annot[,switching:=ifelse(length(unique(sub_group[category=="GBMatch"&surgery.x%in%c(1,2)]))==1,FALSE,TRUE),by="patID"]
+
 write.table(class_probs_all_annot,paste0("class_probs_annot_",sub,"_predRRBS.tsv"),sep="\t",quote=FALSE,row.names=FALSE)
 
-class_probs_all_annot_long=melt(class_probs_all_annot,id.vars=c("sampleName","sample","patID","category","sub_group","auc","auc_rand","surgery.x","WHO2016_classification","Follow-up_years","IDH"),value.name="prob")
+class_probs_all_annot_long=melt(class_probs_all_annot,id.vars=c("sampleName","sample","patID","category","sub_group","sub_group_prob","switching","auc","auc_rand","surgery.x","WHO2016_classification","Follow-up_years","IDH"),value.name="prob")
 
 
 class_probs_all_annot_long[,variable:=factor(variable,levels=c("Classical","Mesenchymal","Proneural")),]
@@ -165,31 +172,50 @@ pdf(file.path(paste0("multisel_",sub,"_predRRBS.pdf")),height=3,width=8.5)
 ggplot(class_probs_all_annot_long[category=="multiselector"&!is.na(prob)],aes(x=paste0(surgery.x,"_",gsub(".*[_BCA675]","",sample)),y=prob,fill=variable,alpha=auc))+geom_bar(stat="identity")+facet_grid(~.~patID,space="free",scale="free")+theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust=0.5))+xlab("")+ylab("Class probability")+scale_alpha_continuous(range=c(0.35,1))
 dev.off()
 
-class_probs_all_annot_long[,sub_group_prob:=prob[sub_group==variable],by="sample"]
+#class_probs_all_annot_long[,sub_group_prob:=prob[sub_group==variable],by="sample"]
 class_probs_all_annot_long[,sample:=factor(sample,levels=unique(sample[order(sub_group_prob,decreasing=TRUE)])),]
-class_probs_all_annot_long[,switching:=ifelse(length(unique(sub_group[category=="GBMatch"&surgery.x%in%c(1,2)]))==1,FALSE,TRUE),by="patID"]
+#class_probs_all_annot_long[,switching:=ifelse(length(unique(sub_group[category=="GBMatch"&surgery.x%in%c(1,2)]))==1,FALSE,TRUE),by="patID"]
 
-pdf(file.path(paste0("class_probs_stack",sub,"_predRRBS.pdf")),height=3,width=6)
+pdf(file.path(paste0("class_probs_stack",sub,"_predRRBS_prim.pdf")),height=3,width=6)
 ggplot(class_probs_all_annot_long[!is.na(prob)&category=="GBMatch"&IDH=="wt",],aes(x=sample,y=prob,fill=variable))+geom_bar(stat="identity",position="stack")+facet_grid(.~sub_group,scales="free",space="free")+ ylab("Class probability")+theme(axis.text.x = element_blank(),axis.ticks = element_blank())
 dev.off()
 
-#for IDH mut
-pdf(file.path(paste0("class_probs_stack_IDHmut",sub,"_predRRBS.pdf")),height=3,width=7)
-ggplot(class_probs_all_annot_long[!is.na(prob)&IDH=="mut"&category%in%c("GBMatch","GBmatch_add")],aes(x=paste0(patID,"_",surgery.x),y=prob,fill=variable,alpha=auc))+geom_bar(stat="identity",position="stack")+facet_grid(~.~patID,scales="free",space="free")+ ylab("Class probability")+theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust=0.5))+scale_alpha_continuous(range=c(0.6,1))
+pdf(file.path(paste0("class_probs_stack",sub,"_predRRBS_bySurg_prim.pdf")),height=3,width=7)
+ggplot(class_probs_all_annot_long[!is.na(prob)&category=="GBMatch"&IDH=="wt"&surgery.x%in%c(1,2),],aes(x=sample,y=prob,fill=variable))+geom_bar(stat="identity",position="stack")+facet_grid(~sub_group+surgery.x,scales="free",space="free")+ ylab("Class probability")+theme(axis.text.x = element_blank(),axis.ticks = element_blank())
 dev.off()
 
-class_probs_all_annot_stat=class_probs_all_annot[surgery.x%in%c(1,2)&IDH=="mut"&category%in%c("GBMatch","GBmatch_add"),.N,by=c("sub_group","surgery.x")]
+pdf(file.path(paste0("class_probs_stack",sub,"_predRRBS_val.pdf")),height=3,width=6)
+ggplot(class_probs_all_annot_long[!is.na(prob)&category=="GBmatch_val"&IDH=="wt",],aes(x=sample,y=prob,fill=variable))+geom_bar(stat="identity",position="stack")+facet_grid(.~sub_group,scales="free",space="free")+ ylab("Class probability")+theme(axis.text.x = element_blank(),axis.ticks = element_blank())
+dev.off()
+
+#compare subtype composition between primary and validation cohort
+pdf(file.path(paste0("sub_group_composition",sub,"_predRRBS.pdf")),height=3,width=4.5)
+ggplot(class_probs_all_annot[!is.na(sub_group)&category%in%c("GBMatch","GBmatch_val")&IDH=="wt"&surgery.x%in%c(1,2),],aes(x=paste0(category,"\n","Surgery:",surgery.x),fill=sub_group))+geom_bar()+xlab("")+ggtitle("All")
+ggplot(class_probs_all_annot[!is.na(sub_group)&category%in%c("GBMatch","GBmatch_val")&IDH=="wt"&surgery.x%in%c(1,2),],aes(x=paste0(category,"\n","Surgery:",surgery.x),fill=sub_group))+geom_bar(position="fill")+xlab("")+ggtitle("All")
+
+ggplot(class_probs_all_annot[!is.na(sub_group)&auc>0.8&sub_group_prob>0.65&category%in%c("GBMatch","GBmatch_val")&IDH=="wt"&surgery.x%in%c(1,2),],aes(x=paste0(category,"\n","Surgery:",surgery.x),fill=sub_group))+geom_bar()+xlab("")+ggtitle("High fidelity assignments")
+ggplot(class_probs_all_annot[!is.na(sub_group)&auc>0.8&sub_group_prob>0.65&category%in%c("GBMatch","GBmatch_val")&IDH=="wt"&surgery.x%in%c(1,2),],aes(x=paste0(category,"\n","Surgery:",surgery.x),fill=sub_group))+geom_bar(position="fill")+xlab("")+ggtitle("High fidelity assignments")
+dev.off()
+
+
+
+#for IDH mut
+pdf(file.path(paste0("class_probs_stack_IDHmut",sub,"_predRRBS.pdf")),height=3,width=7.5)
+ggplot(class_probs_all_annot_long[!is.na(prob)&IDH=="mut"&category%in%c("GBMatch","GBmatch_add","GBmatch_val")],aes(x=paste0(patID,"_",surgery.x),y=prob,fill=variable,alpha=auc))+geom_bar(stat="identity",position="stack")+facet_grid(~.~patID,scales="free",space="free")+ ylab("Class probability")+theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust=0.5))+scale_alpha_continuous(range=c(0.6,1))
+dev.off()
+
+class_probs_all_annot_stat=class_probs_all_annot[surgery.x%in%c(1,2)&IDH=="mut"&category%in%c("GBMatch","GBmatch_add","GBmatch_val"),.N,by=c("sub_group","surgery.x")]
 pdf(file.path(paste0("class_probs_pie_IDHmut",sub,"_predRRBS.pdf")),height=3,width=3.5)
 ggplot(class_probs_all_annot_stat[surgery.x==1],aes(x="", y=N, fill=sub_group))+geom_bar(stat="identity",width=1)+ ylab("Class probability")+ coord_polar("y", start=0)+ggtitle("Primary tumor")+scale_fill_manual(values=c("Classical"="#F8766D","Mesenchymal"="#00BA38","Proneural"="#619CFF"))
 ggplot(class_probs_all_annot_stat[surgery.x==2],aes(x="", y=N, fill=sub_group))+geom_bar(stat="identity",width=1)+ ylab("Class probability")+ coord_polar("y", start=0)+ggtitle("Relapsed tumor")+scale_fill_manual(values=c("Classical"="#F8766D","Mesenchymal"="#00BA38","Proneural"="#619CFF"))
 dev.off()
 
 pdf(file.path(paste0("class_probs_switch",sub,"_predRRBS.pdf")),height=3,width=6)
-ggplot(class_probs_all_annot_long[!is.na(sub_group)&auc>0.8&category=="GBMatch"&IDH=="wt"&surgery.x%in%c(1,2),],aes(x=surgery.x,y=sub_group_prob,group=patID))+geom_line()+geom_point(aes(fill=sub_group),pch=21)+facet_wrap(~switching)
+ggplot(class_probs_all_annot[!is.na(sub_group)&auc>0.8&category=="GBMatch"&IDH=="wt"&surgery.x%in%c(1,2),],aes(x=surgery.x,y=sub_group_prob,group=patID))+geom_line()+geom_point(aes(fill=sub_group),pch=21)+facet_wrap(~switching)
 dev.off()
 
-pdf(file.path(paste0("sub_group_follow-up",sub,"_predRRBS.pdf")),height=3,width=6)
-ggplot(class_probs_all_annot_long[!is.na(sub_group)&auc>0.8&sub_group_prob>0.65&category=="GBMatch"&IDH=="wt"&surgery.x%in%c(2),],aes(x=sub_group,y=`Follow-up_years`))+geom_boxplot()+geom_point(aes(fill=sub_group),pch=21)
+pdf(file.path(paste0("sub_group_follow-up",sub,"_predRRBS.pdf")),height=3,width=9)
+ggplot(class_probs_all_annot[!is.na(sub_group)&auc>0.8&sub_group_prob>0.65&category%in%c("GBMatch","GBmatch_val")&IDH=="wt"&surgery.x%in%c(1,2),],aes(x=sub_group,y=`Follow-up_years`))+geom_boxplot(outlier.shape=NA)+geom_point(aes(fill=sub_group),alpha=0.6,position=position_jitter(width=0.25),pch=21)+facet_wrap(surgery.x~category)
 dev.off()
 
 

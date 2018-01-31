@@ -77,18 +77,18 @@ bissnp_var_samp=bissnp_var[,list(all_count=.N,H_count=sum(H_count>0),M_count=sum
 bissnp_var_samp_long=melt(bissnp_var_samp,id.vars=c("patID", "sample_name","surgery","bg_calls","category"))
 bissnp_var_samp_long[,mut_norm:=value/bg_calls*1000000,]
 
-bissnp_var_pat=bissnp_var_samp[category=="GBMatch"&IDH=="wt",list(all_count=all_count[which.max(bg_calls)], H_count=H_count[which.max(bg_calls)], M_count=M_count[which.max(bg_calls)], bg_calls=bg_calls[which.max(bg_calls)]),by=c("patID","surgery")]
-bissnp_var_pat_long=melt(bissnp_var_pat,id.vars=c("patID","surgery","bg_calls"))
+bissnp_var_pat=bissnp_var_samp[category%in%c("GBMatch","GBmatch_val"),list(all_count=all_count[which.max(bg_calls)], H_count=H_count[which.max(bg_calls)], M_count=M_count[which.max(bg_calls)], bg_calls=bg_calls[which.max(bg_calls)]),by=c("patID","surgery","category")]
+bissnp_var_pat_long=melt(bissnp_var_pat,id.vars=c("patID","surgery","category","bg_calls"))
 bissnp_var_pat_long[,mut_norm:=value/bg_calls*1000000,]
 
 annot_age=unique(annotation[,list(age=age,surgery=surgery.x,patID=patID,IDH=IDH,sex=sex,timeToSecSurg=timeToSecSurg),])
 bissnp_var_pat_annot=merge(bissnp_var_pat_long,annot_age,by=c("patID","surgery"))
 
-bissnp_var_pat_annot[surgery%in%c(1,2),list(cor=cor(mut_norm,age)),by=c("variable","sex","IDH","surgery")]
+bissnp_var_pat_annot[surgery%in%c(1,2),list(cor=cor(mut_norm,age)),by=c("variable","sex","IDH","surgery","category")]
 bissnp_var_pat_annot[,cor(bg_calls,value),by=c("variable")]
 
 pdf("norm_mutvsAge.pdf",height=4,width=10.5)
-ggplot(bissnp_var_pat_annot[surgery%in%c(1,2)&IDH=="wt"],aes(x=age,y=mut_norm))+geom_point(aes(fill=sex),pch=21,alpha=0.6)+geom_smooth(method="lm")+facet_wrap(~variable,scale="free")
+ggplot(bissnp_var_pat_annot[surgery%in%c(1,2)&IDH=="wt"],aes(x=age,y=mut_norm,col=category,group=category))+geom_point(aes(fill=sex),pch=21,alpha=0.6)+geom_smooth(method="lm")+scale_color_manual(values=c("GBMatch"="grey","GBmatch_val"="black"))+facet_wrap(~variable,scale="free")
 dev.off()
 
 pdf("norm_mutvsTime.pdf",height=4,width=10.5)
@@ -101,8 +101,8 @@ write.table(bissnp_var_pat,"bissnp_var_pat.tsv",sep="\t",quote=FALSE,row.names=F
 write.table(bissnp_var,"bissnp_var_combined.tsv",sep="\t",quote=FALSE,row.names=FALSE)
 
 bissnp_var_pat_long[,variable:=factor(variable,levels=c("all_count","M_count","H_count")),]
-pdf("norm_mut.pdf",height=3,width=6)
-ggplot(bissnp_var_pat_long[surgery<4],aes(y=mut_norm,x=factor(surgery)))+geom_point(col="grey",alpha=1,pch=21,position=position_jitter(width=0.2))+geom_boxplot(outlier.shape=NA,fill="transparent")+facet_wrap(~variable,scale="free_y")+xlab("")+ylab("Mutations per 1M called bases")
+pdf("norm_mut.pdf",height=3,width=7)
+ggplot(bissnp_var_pat_long[surgery<3],aes(y=mut_norm,x=paste0(category,"\nSurgery:",surgery)))+geom_point(col="grey",alpha=1,pch=21,position=position_jitter(width=0.2))+geom_boxplot(outlier.shape=NA,fill="transparent")+facet_wrap(~variable,scale="free_y")+xlab("")+ylab("Mutations per 1M called bases")
 dev.off()
 
 bissnp_var_pat_long_wide=reshape(bissnp_var_pat_long[!is.na(surgery)],idvar=c("patID","variable"),timevar="surgery",direction="wide")
@@ -138,8 +138,8 @@ bissnp_var_hit_long[,recurrent:=ifelse(1%in%surgery&2%in%surgery,TRUE,FALSE),by=
 unique(bissnp_var_hit_long$gene)
 
 #needs to be SVG because in pdf the dots don't have the right size
-svg("high_GOI.svg",height=3,width=6)
-ggplot(bissnp_var_hit_long[surgery%in%c(1,2)&category=="GBMatch"],aes(y=gene,x=as.factor(surgery),fill=classification,alpha=QUAL))+geom_dotplot(binaxis="y",stackdir = "center",dotsize=0.8,binwidth=1)+scale_fill_manual(values=c("ND"="black","DRG"="blue","OG"="red","TSG"="green"))+scale_alpha_continuous()+coord_flip()+theme(axis.text.x=element_text(angle = -90, hjust = 0,vjust=0.5))+theme(legend.position="bottom")
+pdf("high_GOI.pdf",height=4.5,width=9,useDingbats=FALSE)
+ggplot(bissnp_var_hit_long[surgery%in%c(1,2)&category%in%c("GBMatch","GBmatch_val")],aes(y=gene,x=as.factor(surgery),fill=classification,alpha=QUAL))+geom_dotplot(binaxis="y",stackdir = "center",dotsize=0.8,binwidth=1)+scale_fill_manual(values=c("ND"="black","DRG"="blue","OG"="red","TSG"="green"))+scale_alpha_continuous()+coord_flip()+theme(axis.text.x=element_text(angle = -90, hjust = 0,vjust=0.5))+theme(legend.position="bottom",panel.grid.major = element_blank(), panel.grid.minor = element_blank())+facet_wrap(~category,nrow=2,scale="free_y")
 dev.off()
 
 
