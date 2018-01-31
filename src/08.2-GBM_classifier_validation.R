@@ -1,9 +1,9 @@
 library(project.init)
-project.init2("GBMatch")
 library(simpleCache)
 library(pheatmap)
 library(ggtern)
 library(pROC)
+project.init2("GBMatch")
 
 out_dir=file.path(getOption("PROCESSED.PROJECT"),"results_analysis/08.1-GBM_classifier")
 dir.create(out_dir)
@@ -85,7 +85,7 @@ setnames(TCGA_genes_wide,names(TCGA_genes_wide),sub("value.","",names(TCGA_genes
 ggplot(TCGA_genes_long[gene%in%unique(gene)[1:10]],aes(x=value,color=gene))+geom_density()
 #plot TCGA heatmap
 TCGA_genes_mat=as.matrix(TCGA_genes_wide[,-c(1),with=FALSE,])
-row.names(TCGA_genes_mat)=TCGA_genes$gene
+row.names(TCGA_genes_mat)=TCGA_genes_wide$gene
 col_annot=data.frame(subtype=TCGA_samples_annot$sample_subtype,row.names=TCGA_samples_annot$TCGA_sample)
 row_annot=data.frame(subtype=TCGA_genes_annot$gene_subtype,row.names=TCGA_genes_annot$gene)
 
@@ -100,28 +100,56 @@ pheatmap(TCGA_genes_mat[row.names(TCGA_genes_mat)%in%concordant_genes,], annotat
 
 RNA_data[gene%in%concordant_genes]
 
-#some of the genes (~50) have different names in the TCGA data set (for now ignore, add manually later)
-concordant_genes[!concordant_genes%in%unique(RNA_data_uniq$gene)]
+#some of the genes (51) have different names in the TCGA data set match synonyms
+missing_genes=concordant_genes[!concordant_genes%in%unique(RNA_data_uniq$gene)]
+NCBI_gene_names=fread(file.path(getOption("PROJECT.DIR"),"metadata/gene_lists/Homo_sapiens.gene_info_NCBI"),select=c("GeneID","Symbol","Synonyms"))
+
+synonyms_dt=data.table(missing_gene=missing_genes)
+synonyms_dt[,c("GeneID","Symbol","Synonyms"):=NCBI_gene_names[grepl(paste0("\\|",missing_gene,"\\|"),paste0("|",Symbol,"|",Synonyms,"|"))],by=1:nrow(synonyms_dt)]
+
+#check genes with multiple hits
+synonyms_dt[25]
+NCBI_gene_names[grepl(paste0("\\|EDG1\\|"),paste0("|",Symbol,"|",Synonyms,"|"))]
+synonyms_dt[49]
+NCBI_gene_names[grepl(paste0("\\|ECGF1\\|"),paste0("|",Symbol,"|",Synonyms,"|"))]
+#exclude these two genes, because they are not unambiguously assignable
+synonyms_dt=synonyms_dt[-c(25,49)]
+
+#exclude genes that don't have matches
+synonyms_dt=synonyms_dt[!is.na(GeneID)]
+
+#match synonyms to RNA table
+synonyms_dt[,matching_gene:=paste0(c(Symbol, unlist(strsplit(Synonyms,"\\|")))[c(Symbol, unlist(strsplit(Synonyms,"\\|")))%in%RNA_data_uniq$gene],collapse="|"),by=1:nrow(synonyms_dt)]
+#exclude genes with multiple matching genes
+synonyms_dt=synonyms_dt[!grepl("\\|",matching_gene)]
+
+#exchange matching genes in RNA_data_uniq to match the TCGA data
+#first check if matching genes are already there (should be empty)
+TCGA_genes[gene%in%synonyms_dt$matching_gene]
+RNA_data_uniq=merge(RNA_data_uniq,setnames(synonyms_dt[,c("missing_gene","matching_gene"),with=FALSE],"matching_gene","gene"),all.x=TRUE)
+RNA_data_uniq[!is.na(missing_gene),gene:=missing_gene,]
 
 
 #Now cluster data according to selected and annotated genes
 #discard neural genes
 concordant_genes_noNeur=unique(subtype_expression[gene_subtype==gene_subtype_ass&gene_subtype!="Neural"&gene%in%RNA_data_uniq$gene]$gene)
-
 RNA_data_uniq[,RPKM_scaled:=scale(log(RPKM),center=TRUE,scale=TRUE),by="gene"]
 
-RNA_data_uniq_wide=reshape(RNA_data_uniq,idvar="gene",timevar="sample_name",drop="RPKM",direction="wide")
+RNA_data_uniq_wide=reshape(RNA_data_uniq,idvar="gene",timevar="sample_name",drop=c("RPKM","missing_gene"),direction="wide")
 
 RNA_data_uniq_mat=as.matrix(RNA_data_uniq_wide[gene%in%concordant_genes_noNeur,-c("gene"),with=FALSE])
 row.names(RNA_data_uniq_mat)=RNA_data_uniq_wide[gene%in%concordant_genes_noNeur]$gene
 
+sel_row_annot=row_annot[row.names(row_annot)%in%row.names(RNA_data_uniq_mat),,drop=FALSE]
+
+RNA_data_uniq_mat=RNA_data_uniq_mat[row.names(sel_row_annot),]
+
 pdf("subtype_validation_samples_heatmap.pdf",height=10,width=14)
-pheatmap(RNA_data_uniq_mat,annotation_row=row_annot[row.names(row_annot)%in%row.names(RNA_data_uniq_mat),,drop=FALSE])
+pheatmap(RNA_data_uniq_mat,annotation_row=sel_row_annot,cluster_rows=FALSE)
 dev.off()
 #TCGA data common geans available in both datasets, only neural
 pdf("subtype_validation_TCGA_heatmap.pdf",height=10,width=14)
-pheatmap(TCGA_genes_mat[row.names(TCGA_genes_mat)%in%concordant_genes_noNeur,!colnames(TCGA_genes_mat)%in%row.names(col_annot[col_annot$subtype=="Neural",,drop=FALSE])], 
-annotation_col=col_annot[col_annot$subtype!="Neural",,drop=FALSE],annotation_row=row_annot[row.names(row_annot)%in%concordant_genes_noNeur,,drop=FALSE])
+pheatmap(TCGA_genes_mat[row.names(TCGA_genes_mat)%in%concordant_genes_noNeur,!colnames(TCGA_genes_mat)%in%row.names(col_annot[col_annot$subtype=="Neural",,drop=FALSE])],annotation_col=col_annot[col_annot$subtype!="Neural",,drop=FALSE],annotation_row=row_annot[row.names(row_annot)%in%concordant_genes_noNeur,,drop=FALSE])
 dev.off()
 
 ##Now perform real classification based on mix profiles
@@ -167,10 +195,31 @@ mix_profiles_cor_max=mix_profiles_cor[mixID==max_cor_mixID][order(sample_name)]
 RRBS_classification=fread("class_probs_annot_27_noNeural_predRRBS.tsv")
 setnames(RRBS_classification,"sample","sample_name")
 compare=merge(RRBS_classification,mix_profiles_cor_max,by="sample_name")
-compare[,prob_dist:=dist(rbind(c(Classical,Proneural,Mesenchymal),c(cla/100,pro/100,mes/100))),by="sample_name"]
+compare[,prob_dist:=as.numeric(dist(rbind(c(Classical,Proneural,Mesenchymal),c(cla/100,pro/100,mes/100)))),by="sample_name"]
 #check same classification
 compare[sub_group==majority_sybtype]
 write.table(compare,"subtype_validation_compare.tsv",sep="\t",row.names=FALSE,quote=FALSE)
+
+
+
+##now analyze the comparison
+
+pdf("subtype_validation_pred_quality.pdf",height=3,width=5,useDingbats=FALSE)
+RRBS_cor=compare[,cor(prob_dist,auc),]
+ggplot(compare,aes(x=auc,y=prob_dist))+geom_smooth(method="lm",col="black")+geom_point(size=2.5,stroke=1.5,shape=21,aes(col=majority_sybtype,fill=sub_group))+geom_text(label=paste0("r=",round(RRBS_cor,3)),hjust=0,x=0.909,y=1.2)+xlab("RRBS based subtype prediction AUC")+ylab("Distance between RNA and RRBS\nbased subtype composition")+scale_fill_discrete(name="RRBS subtype")+scale_color_discrete(name="RNA subtype")
+RNA_cor=compare[,cor(prob_dist,cor),]
+ggplot(compare,aes(x=cor,y=prob_dist))+geom_smooth(method="lm",col="black")+geom_point(size=2.5,stroke=1.5,pch=21,aes(col=majority_sybtype,fill=sub_group))+geom_text(label=paste0("r=",round(RNA_cor,3)),hjust=0,x=0.2,y=1.2)+xlab(" Maximum RNA profile correlation")+ylab("Distance between RNA and RRBS\nbased subtype composition")+scale_fill_discrete(name="RRBS subtype")+scale_color_discrete(name="RNA subtype")
+dev.off()
+
+#boxplot RNA klassification quality vs. concordant/discordant classification 
+compare[,subtype_classification:=ifelse(majority_sybtype==sub_group,"concordant","discordant"),]
+wilcox_diff=compare[,wilcox.test(x=cor[subtype_classification=="concordant"],y=cor[subtype_classification=="discordant"],alternative="g"),]
+ttest_diff=compare[,t.test(x=cor[subtype_classification=="concordant"],y=cor[subtype_classification=="discordant"],alternative="g"),]
+
+pdf("subtype_validation_pred_quality_boxpl.pdf",height=3,width=4,useDingbats=FALSE)
+ggplot(compare,aes(x=subtype_classification,y=cor))+geom_boxplot()+geom_point(position=position_jitter(width=0.25),alpha=0.8,size=2.5,stroke=1.5,shape=21,aes(col=majority_sybtype,fill=sub_group))+geom_text(label=paste0("p.wil=",round(wilcox_diff$p.value,3),"\np.ttest=",round(ttest_diff$p.value,3)),hjust=0,x=1.5,y=0.7)+ylab(" Maximum RNA profile correlation")+scale_fill_discrete(name="RRBS subtype")+scale_color_discrete(name="RNA subtype")
+dev.off()
+
 
 #plot correlations for each sample
 RRBS_probs=compare[,c("sample_name","Classical","Proneural", "Mesenchymal","sub_group","majority_sybtype"),with=FALSE]
@@ -179,7 +228,7 @@ RRBS_probs[,facet_label:=paste0(sample_name,"\nRNA:",majority_sybtype,"\nRRBS:",
 mix_profiles_cor_RRBS=merge(mix_profiles_cor,RRBS_probs[,c("sample_name","facet_label"),],by="sample_name")
 
 
-pdf("subtype_validation_correlations.pdf",height=16,width=18)
+pdf("subtype_validation_correlations.pdf",height=16,width=18,useDingbats=FALSE)
 ggtern(data=mix_profiles_cor_RRBS,aes(mes,cla,pro)) + geom_tri_tern(bins=15,fun=mean,aes(value=cor,fill=..stat..))+geom_point(data=RRBS_probs,col="black",size=4,shape=13)+facet_wrap(~facet_label,ncol=7)+scale_fill_gradient2(name="RNA profile\ncorrelation",high="green",mid="lightgrey",low="red")
 dev.off()
 
@@ -187,6 +236,21 @@ dev.off()
 #ROC curves
 
 get_ROC=function(target,values){
+#try to improve curves by bootstrapping but diesn't really work  
+#  dt=data.table()
+#  set.seed(234)
+#  bootstraps=lapply(seq_len(100), function(x) sample(c(1:length(target)),size=length(target),replace=TRUE))
+#  i=0
+#  for (boot in bootstraps){
+#   
+#    ROC=roc(target[boot],values[boot])
+#    dt_boot=data.table(TPR=ROC$sensitivities,FPR=1-ROC$specificities,AUC=ROC$auc,run=0,rand=FALSE)
+#    dt=rbindlist(list(dt,dt_boot))
+#    i=i+1
+#  }
+#  dt=dt[order(FPR)]
+#  dt=dt[order(TPR)]
+  
   ROC=roc(target,values)
   dt=data.table(TPR=ROC$sensitivities,FPR=1-ROC$specificities,AUC=ROC$auc,run=0,rand=FALSE)
   dt=dt[order(FPR)]
@@ -219,9 +283,9 @@ compare_long[,Nfalse:=sum(!is.subgroup),by="subgroup_class"]
 
 ROC_subgroups=compare_long[,get_ROC(is.subgroup,class_prob),by=c("subgroup_class","Ntrue","Nfalse")]
 
-ROC_subgroups[,facet_label:=paste0(subgroup_class,"\nAUC=",unique(round(AUC[rand==FALSE],2)),"/",round(mean(AUC[rand==TRUE]),2),"\nTRUE=",Ntrue,"\nFALSE=",Nfalse),by=c("subgroup_class")]
+ROC_subgroups[,facet_label:=paste0(subgroup_class,"\nAUC=",unique(round(mean(AUC[rand==FALSE]),2)),"/",round(mean(AUC[rand==TRUE]),2),"\nTRUE=",Ntrue,"\nFALSE=",Nfalse),by=c("subgroup_class")]
 
-pdf("ROC_subgroups_rand.pdf",height=10,width=8)
+pdf("ROC_subgroups_rand.pdf",height=8,width=6)
 ggplot(ROC_subgroups,aes(x=FPR,y=TPR,col=rand,group=run,alpha=rand))+geom_line()+facet_wrap(~facet_label,nrow=3,scale="free")+scale_color_manual(values=c("TRUE"="grey","FALSE"="blue"))+scale_alpha_manual(values=c("TRUE"=0.7,"FALSE"=1))
 dev.off()
 
