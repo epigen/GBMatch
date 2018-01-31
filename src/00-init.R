@@ -7,6 +7,7 @@ library(yaml, quietly=TRUE)
 
 cfg = load.config("GBMatch")
 theme_set(theme_bw())
+pdf.options(useDingbats=FALSE)
 cfg
 nenv()
 genome = cfg$genome$human
