@@ -50,7 +50,7 @@ simpleCache("rrbsCgNoMin", {
 }, recreate=TRUE, noload=TRUE)
 
 
-### TILES 
+### TILES and REGIONS
 # Choose regions across which to summarize
 eload(loadTiles(genomeBuild=genome, tileSize=5000))
 eload(loadTiles(genomeBuild=genome, tileSize=1000))
@@ -136,7 +136,7 @@ simpleCache("rrbsCGI", {
 
 
 #enhancers in astrocytes
-enhancers<- LOLA::getRegionSet("/data/groups/lab_bock/shared/resources/regions/customRegionDB/hg38", collections="roadmap_segmentation", "E027_15_coreMarks_segments_E7.bed")
+enhancers<- LOLA::getRegionSet("/data/groups/lab_bock/shared/resources/regions/customRegionDB/hg38", collections="roadmap_segmentation", "E125_15_coreMarks_segments_E7.bed")
 
 enhancers=enhancers[!duplicated(enhancers)]
 
