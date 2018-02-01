@@ -10,6 +10,13 @@ setwd(out_dir)
 ##get annotation
 annotation=fread(file.path(getOption("PROCESSED.PROJECT"),"results_analysis/01.1-combined_annotation/annotation_combined.tsv"))
 
+#get enhancer data to select interesting regions
+simpleCache("rrbsEnhancers")
+rrbsEnhancers_regions=rrbsEnhancers[,list(samples_covered=.N,mean_readCount=mean(readCount),mean_CpGcount=mean(CpGcount),mean_methyl=mean(methyl),sd_methyl=sd(methyl)),by=c("regionID","chr","start","end")]
+rrbsEnhancers_regions[samples_covered>500&mean_readCount>200&mean_CpGcount>40][order(sd_methyl)]
+
+
+
 #only single CpGs (separately, because so big)
 simpleCache("rrbsCg")
 rrbsCg[,regions:="CG",]
@@ -28,7 +35,9 @@ rm(rrbsCg)
 #plot tracks 
 
 #regions to plot
-POIs=list(BCL2L11=c("chr2",111113953,111169264),SFRP2=c("chr4",153780540,153794943),MGMT=c("chr10",129445717,129773284))
+POIs=list(PLXNB2c("chr22",50274644,50309283),enhancer51330=c("chr22", 50298971,50304771),enhancer88653=c("chr7", 151114913,151115513),enhancer84097=c("chr7", 1667764,1669964),enhancer49388=c("chr21", 45016885, 45020285),BCL2L11=c("chr2",111113953,111169264),SFRP2=c("chr4",153780540,153794943),MGMT=c("chr10",129445717,129773284))
+
+POIs=list(PLXNB2=c("chr22",50274644,50309283))
 
 #now plot
 for (POI in POIs){
