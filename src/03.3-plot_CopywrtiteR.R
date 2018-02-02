@@ -179,6 +179,16 @@ pdf(file.path("summary/1p19q.pdf"),height=5,width=8)
 ggplot(segments_ctr_annot_mean_cb_1p19q_wide[category%in%c("GBMatch","GBmatch_add","GBmatch_val")],aes(x=dom_set.1_p,y=dom_set.19_q,col=category,fill=WHO2016_classification,size=mean_len_perc))+geom_point(shape=21,position=position_jitterdodge(jitter.width = 0.6, jitter.height = 0.35, dodge.width = NULL),alpha=0.5)+xlab(label="Chromosome 1p")+ylab(label="Chromosome 19q")+scale_color_manual(values=c("white","white","black"))+scale_fill_manual(values=c("red","grey","grey","grey","grey","red","grey"))+scale_size_continuous(range=c(1,3))
 dev.off()
 
+
+# numeric 1p/19q validation plot
+#excluded samples (due to quality)
+unique(segments_ctr_annot_mean_cb[category%in%c("GBMatch","GBmatch_add","GBmatch_val")&status=="fail"]$sample_short)
+
+numeric_1p19q_val=segments_ctr_annot_mean_cb_1p19q_wide[category%in%c("GBMatch","GBmatch_add","GBmatch_val"),list(total_samples=.N,del_1p19q=length(sample_short[dom_set.1_p=="deletion"&dom_set.19_q=="deletion"])),by=c("category")]
+pdf(file.path("summary/1p19q_num.pdf"),height=2,width=2)
+ggplot(numeric_1p19q_val,aes(y=category,x="del_1p19q"))+geom_text(aes(label=paste0(del_1p19q,"/",total_samples)))+xlab("")+ylab("")
+dev.off()
+
 #overlap significant CNVs with genes
 overlap=as.data.table(findOverlaps(genes_gr,sig_CNA_gr,type="within"))
 sig_CNA_annot=cbind(sig_CNA[overlap$subjectHits],genes_red[overlap$queryHits])
