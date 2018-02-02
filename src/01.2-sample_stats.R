@@ -91,7 +91,7 @@ cat(paste0("\n\nFFPE samples\nIDHwt patients: ",nrow(sub[`Patient ID`%in%pat_sta
 
 #Cohort over time
 
-clinical_annot_long_date=melt(annotation[category=="GBMatch"],measure.vars =c("DateOfBirth","DateOfDeath_LastFollow-up","ProgressionDate","SurgeryDate","TreatmentDate"),variable.name="Event",value.name = "Date_form")
+clinical_annot_long_date=melt(annotation[category%in%c("GBMatch","GBmatch_val")&IDH=="wt"&!is.na(VitalStatus)],measure.vars =c("DateOfBirth","DateOfDeath_LastFollow-up","ProgressionDate","SurgeryDate","TreatmentDate"),variable.name="Event",value.name = "Date_form")
 clinical_annot_long_date[Event!="DateOfDeath_LastFollow-up",VitalStatus:="alive",]
 clinical_annot_long_date[Event=="SurgeryDate",Event:=paste0("Surgery ",surgery.x),]
 clinical_annot_long_date[Event=="ProgressionDate",Event:=paste0("Progression ",surgery.x-1),]
@@ -108,23 +108,18 @@ pl=ggplot(clinical_annot_long_date[Event!="DateOfBirth"],aes(x=Date_form,y=patID
   geom_point(data=clinical_annot_long_date[grepl("DateOfDeath_LastFollow-up",Event)],aes(x=Date_form,y=patID,fill=factor(VitalStatus)),col="black",shape=22,size=3)+
   geom_point(data=clinical_annot_long_date[grepl("Progression",Event)],aes(x=Date_form,y=patID),fill="white",shape=21,size=4)+
   geom_point(data=clinical_annot_long_date[grepl("Surgery",Event)],aes(x=Date_form,y=patID),shape=3,size=2)+
-  scale_fill_manual(values=c("white","black","grey"))+
+  scale_fill_manual(values=c("white","black","grey","grey"))+
   scale_color_manual(values=c("#e41a1c", "#377eb8","#4daf4a","#984ea3","#ff7f00","#f781bf","black"))+
   theme(axis.text.x=element_text(angle=90, vjust=0.5))+
-  coord_flip()+facet_grid(~IDH,scales="free",space="free")
+  coord_flip()+facet_grid(~category,scales="free",space="free")
 
-pdf("timeline_prog_surg.pdf",height=5,width=16)
+pdf("timeline_prog_surg.pdf",height=5,width=35)
 print(pl)
 dev.off()
-#needed as SVG for inkskape
-svg("timeline_prog_surg.svg",height=5,width=16)
-print(pl)
-dev.off()
-
 
 pl2=pl+geom_point(data=clinical_annot_long_date[grepl("Surgery",Event)&!is.na(N_number_seq)],aes(x=Date_form,y=patID),shape=16,size=4)
 
-pdf("timeline_Nno.pdf",height=8,width=17)
+pdf("timeline_Nno.pdf",height=8,width=36)
 print(pl2)
 dev.off()
 
