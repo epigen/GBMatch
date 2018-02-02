@@ -2,6 +2,8 @@ library(project.init)
 project.init2("GBMatch")
 library(LOLA)
 library(RGenomeUtils)
+library(MASS)
+library(gridExtra)
 
 
 ##set directories
@@ -24,6 +26,41 @@ simpleCache("rrbsCGI")
 rrbsCGI[,regions:="CGI",]
 simpleCache("rrbsEnhancers")
 rrbsEnhancers[,regions:="Enhancers",]
+
+
+#assess batch effects by MDS
+rrbsTiled5ksub_wide=as.data.table(dcast(rrbsTiled5ksub,regionID~id,value.var="methyl"))
+rrbsTiled5ksub_wide_mat=as.matrix(rrbsTiled5ksub_wide[,-c("regionID"),with=FALSE])
+row.names(rrbsTiled5ksub_wide_mat)=rrbsTiled5ksub_wide$regionID
+
+simpleCache(cacheName="rrbsTiled5ksub_dist",instruction="dist(t(rrbsTiled5ksub_wide_mat))",cacheDir=getwd(),assignToVariable="d")
+##save(d,file="rrbsTiled5ksub_dist.RData") ##only needed first time when run without simpleCache
+mds=isoMDS(d, k=2)
+mds_annot_pre=data.table(N_number_seq=row.names(mds$points),MDS1=mds$points[,1],MDS2=mds$points[,2])
+mds_annot=merge(mds_annot_pre,annotation,by="N_number_seq")
+
+batch_variables=c("SurgeryDate","material","category","cohort","batch","adapter","flowcell.y")
+
+mds_annot[,SurgeryDate:=as.Date(SurgeryDate,format="%Y-%m-%d"),]
+mds_annot[,batch:=as.factor(batch),]
+
+
+g_legend<-function(a.gplot){
+  tmp <- ggplot_gtable(ggplot_build(a.gplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+}
+
+
+pdf("MDS_batch_color.pdf",height=6,width=4)
+for (batch_variable in batch_variables){
+  pl=ggplot(mds_annot,aes(x=MDS1,y=MDS2,fill=get(batch_variable),col=get(batch_variable)))+geom_point(alpha=0.6)+ggtitle(batch_variable)
+  print(pl+ theme(legend.position="none")+ coord_fixed())  
+  grid.arrange(g_legend(pl))
+}
+dev.off()
+
 
 #actually combine
 meth_combined=rbindlist(list(rrbsTiled5ksub,rrbsProm1kb,rrbsCGI,rrbsEnhancers))
