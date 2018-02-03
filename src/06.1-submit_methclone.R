@@ -4,8 +4,8 @@ library(data.table)
 library("Rsamtools")
 
 ##set it up
-#min_reads=60
-min_reads=20
+min_reads=60
+#min_reads=20
 out_dir=file.path(getOption("PROCESSED.PROJECT"),paste0("results_analysis/06-methclone/data_minReads",min_reads))
 dir.create(out_dir,recursive=TRUE)
 logdir=file.path(out_dir,"log")
