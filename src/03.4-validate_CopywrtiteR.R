@@ -38,7 +38,7 @@ RRBS_segments_cb_red=RRBS_segments_cb[,list(frag_len_corr_RRBS=sum(frag_len_corr
 
 
 ##get WGS CNV calls
-WGS_CNV_dir=file.path(getOption("PROCESSED.PROJECT"),"WGS_CNV/cnvkit_vs_pga")
+WGS_CNV_dir=file.path(getOption("PROCESSED.PROJECT"),"WGS_CNV/cnvkit_vs_pga_hg38")
 WGS_CNV_files=list.files(WGS_CNV_dir,pattern="call.cns",full.names=TRUE)
 
 WGS_segments_all=data.table()
@@ -48,7 +48,7 @@ for (path in WGS_CNV_files){
   CNV[,sample:=sample]
   WGS_segments_all=rbindlist(list(WGS_segments_all,CNV))
 }
-
+WGS_segments_all[,chromosome:=gsub("chr","",chromosome),]
 
 #annotate WGS CNV with cytoband (chromosome arms)
 WGS_segments_all_gr=with(WGS_segments_all,GRanges(seqnames = Rle(chromosome), IRanges(start=start, end=end),strand=Rle("*"),sample=sample))
@@ -174,7 +174,7 @@ ROC_sig_0.5=segments_cb_combined_exp[sig_0.5_true>0&sig_0.5_false>0,get_ROC(sig_
 
 ROC_sig_0.5[,facet_label:=paste0("Chr",chromosome," ",variant,"\nAUC=",unique(round(AUC[rand==FALSE],2)),"/",round(mean(AUC[rand==TRUE]),2),"\nture=",sig_0.5_true," false=",sig_0.5_false),by=c("chromosome","variant")]
 
-pdf("chromArm_foldChange_ROC_sig_0.5_rand.pdf",height=10,width=24)
+pdf("chromArm_foldChange_ROC_sig_0.5_rand.pdf",height=10,width=27)
 ggplot(ROC_sig_0.5,aes(x=FPR,y=TPR,col=rand,group=run,alpha=rand))+geom_line()+facet_wrap(~facet_label,nrow=4,scale="free")+scale_color_manual(values=c("TRUE"="grey","FALSE"="blue"))+scale_alpha_manual(values=c("TRUE"=0.5,"FALSE"=1))
 dev.off()
 
@@ -199,6 +199,8 @@ create_roc_family=function(data,chrom,var){
   all_ROCs=data.table()
   for (thres in sig_thres){
     print(thres)
+    if (length(unique(abs(sub_exp$log2_mean_WGS)>=thres))<2){print("Skipping");next}
+    
     ROC=roc(as.numeric(abs(sub_exp$log2_mean_WGS)>=thres),sub_exp$log2_mean_RRBS)
     ROC_dt=data.table(Sensitivity=ROC$sensitivities,`1-Specificity`=1-ROC$specificities,AUC=ROC$auc,N_true=length(ROC$cases),N_false=length(ROC$controls),sig_thres=thres,variant=paste0("chrom ",chrom," ",var))
     ROC_dt=ROC_dt[order(c(Sensitivity))]
