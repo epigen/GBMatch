@@ -35,8 +35,7 @@ setnames(imaging_auto,"N-Nummer","N_number")
 #prep=fread("GBMatch_libraryPrep.csv")
 prep=fread("GBMatch_libraryPrep_rev.csv")
 
-segmentation=fread("GBMatch_histo_part4_02142017.tsv")
-
+segmentation=fread("GBMatch_histo_segmentation_rev.csv")
 #include fragmentation check
 ############bash######################################
 #Run this command in results_pipeline
@@ -199,7 +198,7 @@ sub=merge4[category=="multiselector"]
 sub=merge4[category=="control"]
 sub=merge4[category=="Missing"]
 
-sub[is.na(N_number_psa)|is.na(N_number_seq)|is.na(N_number_seg)|is.na(N_number_hist)|is.na(N_number_hDesc)|is.na(N_number_clin)|is.na(N_number_img)|is.na(N_number_prep),c(grep("N_number_",names(merge4),value=TRUE),"category"),with=FALSE]
+sub[is.na(N_number_psa)|is.na(N_number_seq)|is.na(N_number_seg)|is.na(N_number_hist)|is.na(N_number_hDesc)|is.na(N_number_clin)|is.na(N_number_img)|is.na(N_number_prep),c(grep("N_number_",names(merge4),value=TRUE),"category"),with=FALSE][is.na(N_number_seg)]
 
 write.table(merge4[,c(grep("N_number_",names(merge4),value=TRUE),"category"),with=FALSE],paste0(our_dir,"/combine_check_table.tsv"),sep="\t",quote=FALSE,row.names=FALSE)
 
