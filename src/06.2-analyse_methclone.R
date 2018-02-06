@@ -14,7 +14,7 @@ annot_ASC=annotation[IDH=="wt"&category=="GBMatch",list(cycles.1=enrichmentCycle
 setnames(annot_ASC,"patID","patient")
 
 ##set it up
-min_reads=20  #20 or 60 (use for furtehr analyses)
+min_reads=40  #20 or 60 or 40 (use for furtehr analyses)
 
 
 out_dir=file.path(getOption("PROCESSED.PROJECT"),paste0("results_analysis/06-methclone/summary_minReads",min_reads))
@@ -65,12 +65,14 @@ simpleCache(paste0("rrbsAgEntropy_min",min_reads,"_1k"),tiled_entropy(get(paste0
 simpleCache(paste0("rrbsAgEntropy_min",min_reads,"_5k"),tiled_entropy(get(paste0("rrbs_entropy_min",min_reads)),SV$tiles5000hg38),cacheSubDir="entropy",recreate=FALSE)
 simpleCache(paste0("rrbsAgEntropy_min",min_reads,"_prom1k"),tiled_entropy(get(paste0("rrbs_entropy_min",min_reads)),prom1k),cacheSubDir="entropy",recreate=FALSE)
 
-#now get rid of the frozen samples
-methclone=methclone[!(sample_1%in%annotation[material=="frozen"]$N_number_seq|sample_2%in%annotation[material=="frozen"]$N_number_seq)]
+
 
 ##########################################
 ##patient centered eloci/ shift analyses##
 ##########################################
+#now get rid of the frozen samples
+methclone=methclone[!(sample_1%in%annotation[material=="frozen"]$N_number_seq|sample_2%in%annotation[material=="frozen"]$N_number_seq)]
+
 ##annotate the methclone resuls with genetic features
 methclone_gr=with(methclone,GRanges(GRanges(seqnames = Rle(chr), IRanges(start=start, end=end),strand=Rle(strand),sample=sample,entropy=entropy)))
 anno=annotatePeakInBatch(methclone_gr, AnnotationData=TSS.human.GRCh38)
@@ -79,6 +81,8 @@ anno_dt=as.data.table(as.data.frame(anno))
 setnames(anno_dt,"seqnames","chr")
 methclone_anno=merge(anno_dt,methclone,by=c("chr","start","end","entropy","sample","strand"))
 methclone_anno[,distancetoFeature_log10:=ifelse(distancetoFeature>0,log10(distancetoFeature+1),-log10(abs(distancetoFeature)+1)),]
+methclone_anno=merge(methclone_anno,annot_ASC,by="patient",all.x=TRUE)
+
 
 #create GRanges list for all comparisons (LOLA analysis)
 methclone_grl=GRangesList()
@@ -165,7 +169,7 @@ dev.off()
 
 
 pdf("distance_loci_tss_1vs2.pdf",height=5,width=6)
-print(ggplot(methclone_anno[comparison_simpl%in%c("1vs2","0vs0")],aes(x=distancetoFeature_log10,linetype=entropy<(entropy_cutoff),col=comparison_simpl=="0vs0"))+geom_density()+scale_color_discrete(name="Control")+scale_linetype_discrete(name="Eloci"))
+print(ggplot(methclone_anno[comparison_simpl%in%c("1vs2","0vs0")&((cycles.1<16&cycles.2<16&cycles.1>12&cycles.2>12)|comparison_simpl%in%c("0vs0"))],aes(x=distancetoFeature_log10,linetype=entropy<(entropy_cutoff),col=comparison_simpl=="0vs0"))+geom_density()+scale_color_discrete(name="Control")+scale_linetype_discrete(name="Eloci"))
 dev.off()
 
 
@@ -174,7 +178,7 @@ dev.off()
 uset_all=unique(subset(methclone_gr,entropy<(entropy_cutoff)&grepl("__1vs2",sample)))
 univ_all=unique(subset(methclone_gr,grepl("__1vs2",sample)))
 
-simpleCache(cacheName=paste0("allEloci_",min_reads,"epy",abs(entropy_cutoff)),{df=runLOLA(userSets=GRangesList(allEloci__all1vsall2__1vs2all=uset_all),userUniverse=univ_all,regionDB=regionDB_core);return(df)},cacheSubDir="methcloneLOLA",recreate=TRUE)
+simpleCache(cacheName=paste0("allEloci_",min_reads,"epy",abs(entropy_cutoff)),{df=runLOLA(userSets=GRangesList(allEloci__all1vsall2__1vs2all=uset_all),userUniverse=univ_all,regionDB=regionDB_core);return(df)},cacheSubDir="methcloneLOLA",recreate=FALSE)
 
 locResults=get(paste0("allEloci_",min_reads,"epy",abs(entropy_cutoff)))
 locResults[,sample:="allEloci__all1vsall2__1vs2all",]
@@ -213,18 +217,17 @@ locResults[,target:=toupper(sub("-","",unlist(lapply(antibody,function(x){spl=un
 locResults=locResults[!is.na(userSet)]
 locResults_red=locResults[,list(p.adjust=min(p.adjust),logOddsRatio=logOddsRatio[which.min(p.adjust)]),by=c("sample","patient","cellType_corr","target","comparison_simpl")]
 locResults_red[,dbSet:=paste0(target,":",cellType_corr),]
-locResults_red[,N_comparisons:=length(unique(sample)),by="comparison_simpl"]
-locResults_red[,facet_label:=paste0(comparison_simpl,"\n",N_comparisons," comparisons"),]
+locResults_red_annot=merge(locResults_red,annot_ASC,by="patient",all.x=TRUE)
+write.table(locResults_red_annot,"LOLA_locResults_condensed.tsv",quote=FALSE,sep="\t",row.names=FALSE)
 
-write.table(locResults_red,"LOLA_locResults_condensed.tsv",quote=FALSE,sep="\t",row.names=FALSE)
-
-sub=locResults_red[dbSet%in%locResults_red[p.adjust<0.001]$dbSet]
+sub=locResults_red_annot[dbSet%in%locResults_red_annot[p.adjust<0.001]$dbSet&((cycles.1<16&cycles.2<16&cycles.1>12&cycles.2>12)|comparison_simpl%in%c("0vs0","1vs2all"))]
 sub[,p.adjust:=ifelse(p.adjust==0,min(p.adjust[p.adjust>0]),p.adjust)]
+sub[,N_comparisons:=length(unique(sample)),by="comparison_simpl"]
+sub[,facet_label:=paste0(comparison_simpl,"\n",N_comparisons," comparisons"),]
 
 pdf("LOLA_signif_all.pdf",height=7,width=9)
 print(ggplot(sub,aes(x=dbSet,y=-log10(p.adjust),col=target))+geom_boxplot()+geom_abline(intercept=-log10(0.001),slope=0,lty=2)+facet_wrap(~facet_label,scale = "free_x")+coord_flip())
 dev.off()
-
 
 setwd("../")
 }
