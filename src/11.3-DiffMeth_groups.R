@@ -53,31 +53,45 @@ if(!file.exists(dirout(out, "Matrix.RData"))){
 }
 
 # Prepare annotation for diff analysis
-annotation=fread(paste0(dirout(),"01.1-combined_annotation/","annotation_combined_final.tsv"))
-annotation <- annotation[category == "GBMatch" & IDH == "wt"]
-colnames(annotation)
+annotation_orig=fread(paste0(dirout(),"01.1-combined_annotation/","annotation_combined_final.tsv"))
+annotation_orig <- annotation_orig[category %in% c("GBMatch","GBmatch_val") & IDH == "wt"]
+colnames(annotation_orig)
 (load(paste0(dirout(),"01.1-combined_annotation/","column_annotation_combined.RData")))
 immuno <- column_annotation_combined_clean$histo_immuno
-fcts <- c("classic T1",
-  "cT1 flare up",
-  "T2 diffus", 
-  "T2 circumscribed",
-  "Siteofsurgery", 
-  "progression_location", 
-  "WHO2016_classification", 
-  "surgery",
-  "sub_group",
-  "Sex")
+#fcts <- c("category","classic T1",
+#  "cT1 flare up",
+#  "T2 diffus", 
+#  "T2 circumscribed",
+#  "Siteofsurgery", 
+#  "progression_location", 
+#  "WHO2016_classification", 
+#  "surgery",
+#  "sub_group",
+#  "Sex")
+
+fcts <- c("category",
+          "sub_group")
+
 fcts <- c(immuno, fcts)
 
 
 # Do differential analysis
 res <- data.table(cpg=gsub("_$", "",rownames(meth_data_mat)))
-factorOfInterest <- "CD68"
+#factorOfInterest <- "CD68"
+
+cohorts=c("GBMatch","GBmatch_val",c("GBMatch","GBmatch_val"))
+
+for (sel_cohort in cohorts){ 
 for(factorOfInterest in fcts){
-  message(factorOfInterest)
+  message(factorOfInterest) 
   tryCatch({
     # ANNOTATION --------------------------------------------------------------
+    annotation=annotation_orig[cohort%in%sel_cohort]
+    
+    if (sel_cohort==c("GBMatch","GBmatch_val")){
+      annotation=annotation_orig[cohort%in%sel_cohort&surgery==1]
+    }
+    
     aDat <- annotation[!is.na(get(factorOfInterest)),c(factorOfInterest, "N_number_seq"), with=F]
     if(factorOfInterest == "sub_group"){
       aDat <- annotation[!is.na(get(factorOfInterest))][sub_group_prob >= 0.8][,c(factorOfInterest, "N_number_seq"), with=F]
@@ -127,7 +141,6 @@ for(factorOfInterest in fcts){
     }
   }, error = function(e) print(e))
 }
-
-write.table(res, file=dirout(out,"Pvalues.tsv"),sep="\t", quote=F, row.names=F)
-
+write.table(res, file=dirout(out,paste0("Pvalues_",paste0(cohort,collapse="_"),".tsv")),sep="\t", quote=F, row.names=F)
+}
 print("DONE")
