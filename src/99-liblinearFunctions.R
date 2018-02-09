@@ -229,7 +229,14 @@ prepare_data=function(meth_data_dt,annotation_all,min_na_ratio=0.999){
   
   region_na_ratios=apply(meth_data_mat,2,function(x){sum(!is.na(x))/length(x)})
   min_na_ratio=min_na_ratio
-  meth_data_imputed=t(impute.knn(t(meth_data_mat[,region_na_ratios>min_na_ratio]),k=5)$data)
+  
+  #check for low coverage regions --> select regions to include
+  meth_data_mat_sel=meth_data_mat[,region_na_ratios>min_na_ratio]
+  #check for low coverage sample --> select samples to include
+  sample_na_ratios=apply(meth_data_mat_sel,1,function(x){sum(!is.na(x))/length(x)})
+  meth_data_mat_sel=meth_data_mat_sel[sample_na_ratios>0.8,]
+  
+  meth_data_imputed=t(impute.knn(t(meth_data_mat_sel),k=5)$data)
   region_na_ratios_red=region_na_ratios[region_na_ratios>min_na_ratio]
   
   #reduce annotation to selected samples in meth data
@@ -246,6 +253,42 @@ prepare_data=function(meth_data_dt,annotation_all,min_na_ratio=0.999){
   stopifnot(all(annotation$N_number_seq==row.names(meth_data_imputed)))
   return(list(meth_data_imputed=meth_data_imputed,annotation=annotation))
 }
+
+#########prepare the data for predefined features#################
+prepare_data_fixed=function(meth_data_dt,annotation_all,features){
+  meth_data_mat=dcast(meth_data_dt[region%in%features],id~region,value.var="methyl")
+  row.names(meth_data_mat)=meth_data_mat$id
+  meth_data_mat$id=NULL
+  
+  #region_na_ratios=apply(meth_data_mat,2,function(x){sum(!is.na(x))/length(x)})
+  #min_na_ratio=min_na_ratio
+  
+  #check for low coverage regions --> select regions to include
+  #meth_data_mat_sel=meth_data_mat[,region_na_ratios>min_na_ratio]
+  #check for low coverage sample --> select samples to include
+  sample_na_ratios=apply(meth_data_mat,1,function(x){sum(!is.na(x))/length(x)})
+  meth_data_mat=meth_data_mat[sample_na_ratios>0.8,]
+  
+  meth_data_imputed=t(impute.knn(t(meth_data_mat),k=5)$data)
+  
+  #reduce annotation to selected samples in meth data
+  annotation=annotation_all[N_number_seq%in%row.names(meth_data_imputed)]
+  
+  #make sure annotation is in the same order as the matrix
+  sample_match=match(annotation$N_number_seq,row.names(meth_data_imputed))
+  stopifnot(length(row.names(meth_data_imputed)[!row.names(meth_data_imputed)%in%annotation$N_number_seq])==0)
+  stopifnot(length(annotation$N_number_seq[!annotation$N_number_seq%in%row.names(meth_data_imputed)])==0)
+  stopifnot(nrow(annotation[N_number_seq%in%annotation[duplicated(N_number_seq)]$N_number_seq])==0)
+  stopifnot(all(annotation$N_number_seq[order(sample_match)]==row.names(meth_data_imputed)))
+  annotation=annotation[order(sample_match)]
+  annotation[annotation==""]=NA
+  stopifnot(all(annotation$N_number_seq==row.names(meth_data_imputed)))
+  return(list(meth_data_imputed=meth_data_imputed,annotation=annotation))
+}
+
+
+
+
 
 
 #############prediction##########################################

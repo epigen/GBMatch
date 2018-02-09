@@ -27,8 +27,25 @@ meth_data_dt_all[,region:=paste0(chr,"_",start,"_",end),]
 #select samples to use
 #beta value
 meth_data_dt=meth_data_dt_all[id%in%annotation_all[category=="GBMatch"&IDH=="wt"]$N_number_seq]
+
+#for validation cohort
+meth_data_dt=meth_data_dt_all[id%in%annotation_all[category=="GBmatch_val"&IDH=="wt"]$N_number_seq]
+
 #only for clinical (IDH and Sex discrimination)
-#meth_data_dt=meth_data_dt_all[id%in%annotation_all[category%in%c("GBMatch","GBmatch_add")]$N_number_seq]
+#meth_data_dt=meth_data_dt_all[id%in%annotation_all[category%in%c("GBMatch","GBmatch_val","GBmatch_add")]$N_number_seq]
+
+#for predicting the cohort
+meth_data_dt=meth_data_dt_all[id%in%annotation_all[category%in%c("GBMatch","GBmatch_val")&IDH=="wt"]$N_number_seq]
+
+#for predicting survival and other relevant features from the primary tumor GBMatch
+meth_data_dt=meth_data_dt_all[id%in%annotation_all[category=="GBMatch"&IDH=="wt"&surgery.x==1]$N_number_seq]
+
+#for predicting survival and other relevant features from the recurring tumor GBMatch
+meth_data_dt=meth_data_dt_all[id%in%annotation_all[category=="GBMatch"&IDH=="wt"&surgery.x==2]$N_number_seq]
+
+#for predicting survival and other relevant features from the primary tumor in GBMatch and GBMatch_val (to have more samples)
+meth_data_dt=meth_data_dt_all[id%in%annotation_all[category%in%c("GBMatch","GBmatch_val")&IDH=="wt"&surgery.x==1]$N_number_seq]
+
 
 set_scale=FALSE
 prepped_data=prepare_data(meth_data_dt=meth_data_dt,annotation_all=annotation_all,min_na_ratio=0.9)
@@ -36,15 +53,22 @@ cost=heuristicC(prepped_data$meth_data_imputed)
 
 
 ##############test stuff########################
-meth_sel="_bval_notscaled_0.999"
-meth_pred_analysis(meth_data_imputed=prepped_data$meth_data_imputed,annotation=prepped_data$annotation,column_annotation=column_annotation,to_analyse=c("histo_immuno","histo_segmentation","imaging_segmentation","clinical_annotation","histo_classification"),meth_sel=meth_sel,set_scale=set_scale,type=4,cost=1)
+meth_sel=paste0("_bval_notscaled_0.9_0.8_val+orig_",round(cost,2))
+meth_pred_analysis(meth_data_imputed=prepped_data$meth_data_imputed,annotation=prepped_data$annotation,column_annotation=column_annotation,to_analyse=c("histo_immuno"),set_targets=c("MIB","CD68","CD163"),meth_sel=meth_sel,set_scale=set_scale,type=4,cost=cost)
 
-meth_sel="_bval_notscaled_0.999_varCost"
-meth_pred_analysis(meth_data_imputed=prepped_data$meth_data_imputed,annotation=prepped_data$annotation,column_annotation=column_annotation,to_analyse=c("histo_immuno","histo_segmentation","imaging_segmentation","clinical_annotation","histo_classification"),meth_sel=meth_sel,set_scale=set_scale,type=4,cost=c(0.01,1,100))
+
+#meth_sel="_bval_notscaled_0.999"
+#meth_pred_analysis(meth_data_imputed=prepped_data$meth_data_imputed,annotation=prepped_data$annotation,column_annotation=column_annotation,to_analyse=c("histo_immuno","histo_segmentation","imaging_segmentation","clinical_annotation","histo_classification"),meth_sel=meth_sel,set_scale=set_scale,type=4,cost=1)
+
+#meth_sel="_bval_notscaled_0.999_varCost"
+#meth_pred_analysis(meth_data_imputed=prepped_data$meth_data_imputed,annotation=prepped_data$annotation,column_annotation=column_annotation,to_analyse=c("histo_immuno","histo_segmentation","imaging_segmentation","clinical_annotation","histo_classification"),meth_sel=meth_sel,set_scale=set_scale,type=4,cost=c(0.01,1,100))
 
 
 ################use this############################
 meth_sel=paste0("_bval_notscaled_0.9_",round(cost,3))
+meth_pred_analysis(meth_data_imputed=prepped_data$meth_data_imputed,annotation=prepped_data$annotation,column_annotation=column_annotation,to_analyse=c("histo_immuno","histo_segmentation","imaging_segmentation","clinical_annotation","histo_classification"),meth_sel=meth_sel,set_scale=set_scale,type=4,cost=cost)
+
+meth_sel=paste0("_bval_notscaled_0.9_val",round(cost,3))
 meth_pred_analysis(meth_data_imputed=prepped_data$meth_data_imputed,annotation=prepped_data$annotation,column_annotation=column_annotation,to_analyse=c("histo_immuno","histo_segmentation","imaging_segmentation","clinical_annotation","histo_classification"),meth_sel=meth_sel,set_scale=set_scale,type=4,cost=cost)
 
 meth_sel=paste0("_bval_notscaled_IDH_sel_0.9_",round(cost,3))
@@ -56,24 +80,24 @@ meth_pred_analysis(meth_data_imputed=prepped_data$meth_data_imputed,annotation=p
 
 
 #m value
-meth_data_dt=meth_data_dt_all[id%in%annotation_all[category=="GBMatch"&IDH=="wt"]$N_number_seq]
-meth_data_dt[,methyl:=log2((methyl+0.001)/(1-methyl+0.001)),]
-set_scale=TRUE
-prepped_data=prepare_data(meth_data_dt=meth_data_dt,annotation_all=annotation_all,min_na_ratio=0.9)
-cost=heuristicC(prepped_data$meth_data_imputed)
+#meth_data_dt=meth_data_dt_all[id%in%annotation_all[category=="GBMatch"&IDH=="wt"]$N_number_seq]
+#meth_data_dt[,methyl:=log2((methyl+0.001)/(1-methyl+0.001)),]
+#set_scale=TRUE
+#prepped_data=prepare_data(meth_data_dt=meth_data_dt,annotation_all=annotation_all,min_na_ratio=0.9)
+#cost=heuristicC(prepped_data$meth_data_imputed)
 ##############test stuff################################
-meth_sel="_mval_scaled_0.999"
-meth_pred_analysis(meth_data_imputed=prepped_data$meth_data_imputed,annotation=prepped_data$annotation,column_annotation=column_annotation,to_analyse=c("histo_immuno","histo_segmentation","imaging_segmentation","clinical_annotation","histo_classification"),meth_sel=meth_sel,set_scale=set_scale,type=4,cost=1)
+#meth_sel="_mval_scaled_0.999"
+#meth_pred_analysis(meth_data_imputed=prepped_data$meth_data_imputed,annotation=prepped_data$annotation,column_annotation=column_annotation,to_analyse=c("histo_immuno","histo_segmentation","imaging_segmentation","clinical_annotation","histo_classification"),meth_sel=meth_sel,set_scale=set_scale,type=4,cost=1)
 
-meth_sel="_mval_scaled_0.999_0.1"
-meth_pred_analysis(meth_data_imputed=prepped_data$meth_data_imputed,annotation=prepped_data$annotation,column_annotation=column_annotation,to_analyse=c("histo_immuno","histo_segmentation","imaging_segmentation","clinical_annotation","histo_classification")[1],meth_sel=meth_sel,set_scale=set_scale,type=4,cost=0.1)
+#meth_sel="_mval_scaled_0.999_0.1"
+#meth_pred_analysis(meth_data_imputed=prepped_data$meth_data_imputed,annotation=prepped_data$annotation,column_annotation=column_annotation,to_analyse=c("histo_immuno","histo_segmentation","imaging_segmentation","clinical_annotation","histo_classification")[1],meth_sel=meth_sel,set_scale=set_scale,type=4,cost=0.1)
 
-meth_sel=paste0("_mval_scaled_0.99_",round(cost,3))
-meth_pred_analysis(meth_data_imputed=prepped_data$meth_data_imputed,annotation=prepped_data$annotation,column_annotation=column_annotation,to_analyse=c("histo_immuno","histo_segmentation","imaging_segmentation","clinical_annotation","histo_classification"),meth_sel=meth_sel,set_scale=set_scale,type=4,cost=cost)
+#meth_sel=paste0("_mval_scaled_0.99_",round(cost,3))
+#meth_pred_analysis(meth_data_imputed=prepped_data$meth_data_imputed,annotation=prepped_data$annotation,column_annotation=column_annotation,to_analyse=c("histo_immuno","histo_segmentation","imaging_segmentation","clinical_annotation","histo_classification"),meth_sel=meth_sel,set_scale=set_scale,type=4,cost=cost)
 
 ##############use this########################################
-meth_sel=paste0("_mval_scaled_sel_0.9_",round(cost,3))
-meth_pred_analysis(meth_data_imputed=prepped_data$meth_data_imputed,annotation=prepped_data$annotation,column_annotation=column_annotation,to_analyse=c("histo_segmentation"),set_targets=c("Median AVG Eccentricity Tumor","Median COV Eccentricity Tumor","Mean AVG Eccentricity Tumor","Mean COV Eccentricity Tumor"),meth_sel=meth_sel,set_scale=set_scale,type=4,cost=cost)
+#meth_sel=paste0("_mval_scaled_sel_0.9_",round(cost,3))
+#meth_pred_analysis(meth_data_imputed=prepped_data$meth_data_imputed,annotation=prepped_data$annotation,column_annotation=column_annotation,to_analyse=c("histo_segmentation"),set_targets=c("Median AVG Eccentricity Tumor","Median COV Eccentricity Tumor","Mean AVG Eccentricity Tumor","Mean COV Eccentricity Tumor"),meth_sel=meth_sel,set_scale=set_scale,type=4,cost=cost)
 
 
 
@@ -85,17 +109,20 @@ get_features=function(pl,prepped_data,factor,rank_cutoff=50){
   weights_dt=as.data.table(weights_df)
   
   annotation_sel=prepped_data$annotation[!is.na(get(factor))]
-  annotation_sel[,bin:=binarize(get(factor),0.2,0.8)]
+ # annotation_sel[,bin:=binarize(get(factor),0.2,0.8)]
+  annotation_sel[,bin:=binarize(get(factor),0.5,0.5)]
   
   weights_dt[,rank:=rank(-abs(high),ties.method="random"),]
   
   #now continue the analysis
-  sel_weights=weights_dt[rank<=rank_cutoff]
+  #sel_weights=weights_dt[rank<=rank_cutoff]
+  sel_weights=weights_dt[rank<=rank_cutoff&region%in%colnames(prepped_data$meth_data_imputed)]
   sel=prepped_data$meth_data_imputed[row.names(prepped_data$meth_data_imputed)%in%annotation_sel[!is.na(bin)]$N_number_seq,sel_weights$region]
-  annot_row=data.frame(cont=annotation_sel[!is.na(bin),factor,with=FALSE],bin=annotation_sel[!is.na(bin)]$bin,row.names=annotation_sel[!is.na(bin)]$N_number_seq)
+  
+  annot_row=data.frame(cont=annotation_sel[!is.na(bin),factor,with=FALSE],bin=annotation_sel[!is.na(bin)]$bin,bin=annotation_sel[!is.na(bin)]$category,row.names=annotation_sel[!is.na(bin)]$N_number_seq)
   
   #order samples by annotation
-  sel=sel[rownames(annot_row[order(annot_row[,1]),]),]
+  sel=sel[rownames(annot_row[order(annot_row[,3],annot_row[,1]),]),]
   sel=sel[,sel_weights[order(high)]$region]
   annot_col=data.frame(weight=weights_dt[region%in%colnames(sel)]$high,row.names=weights_dt[region%in%colnames(sel)]$region)
   
@@ -129,7 +156,7 @@ for (rank_cutoff in seq(100,200,by=2)){
   features_res=get_features(pl=pl,prepped_data=prepped_data,factor=factor,rank_cutoff=rank_cutoff)
 
   colors=list(bin=c("high"="#ff9289","low"="#00d8e0"),weight=c("#af8dc3","#f7f7f7","#7fbf7b"))
-  ph=pheatmap(t(features_res$data),clustering_distance_rows=dist(t(scale(features_res$data,center=TRUE,scale=TRUE))),clustering_distance_cols=dist(scale(features_res$data,center=TRUE,scale=TRUE)),cluster_rows=TRUE,annotation_col=features_res$annot_row,annotation_row=features_res$annot_col,color=colorRampPalette(c("blue" ,"red"))(20),border_color=NA,annotation_colors=features_res$colors,main=paste0(factor," ", rank_cutoff))
+  ph=pheatmap(t(features_res$data),clustering_distance_rows=dist(t(scale(features_res$data,center=TRUE,scale=TRUE))),clustering_distance_cols=dist(scale(features_res$data,center=TRUE,scale=TRUE)),cluster_rows=FALSE,cluster_cols=FALSE,annotation_col=features_res$annot_row,annotation_row=features_res$annot_col,color=colorRampPalette(c("blue" ,"red"))(20),border_color=NA,annotation_colors=features_res$colors,main=paste0(factor," ", rank_cutoff))
 
   print(ph)
 }
