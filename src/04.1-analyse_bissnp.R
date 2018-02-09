@@ -4,7 +4,7 @@ library("VariantAnnotation")
 
 annotation=fread(file.path(getOption("PROCESSED.PROJECT"),"results_analysis/01.1-combined_annotation/annotation_combined.tsv"))
 
-out_dir=file.path(getOption("PROCESSED.PROJECT"),"results_analysis/05-bissnp")
+out_dir=file.path(getOption("PROCESSED.PROJECT"),"results_analysis/04-bissnp")
 dir.create(out_dir)
 setwd(out_dir)
 
