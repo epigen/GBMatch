@@ -34,8 +34,12 @@ transc_subgroups=transc_subgroups[,-c("sampleName","patID","category","surgery.x
 setnames(transc_subgroups,"sample","N_number_seq")
 
 #get DipScores
-dip_scores=fread(file.path(getOption("PROCESSED.PROJECT"),"results_analysis/09-dipScore/dipScores_Astrocyte|ESC_sel.tsv"))
-setnames(dip_scores,"id","N_number_seq")
+dip_scores_1=fread(file.path(getOption("PROCESSED.PROJECT"),"results_analysis/09-dipScore/dipScores_Astrocyte|ESC_sel.tsv"))
+setnames(dip_scores_1,"id","N_number_seq")
+dip_scores_2=fread(file.path(getOption("PROCESSED.PROJECT"),"results_analysis/09-dipScore/dipScores_Astrocyte|H1_Cell_Line|H9_Cell_Line_sel_seg.tsv"))
+setnames(dip_scores_2,"id","N_number_seq")
+dip_scores=merge(dip_scores_1,dip_scores_2,by="N_number_seq")
+
 
 #get MGMT status
 mgmt_status=fread(file.path(getOption("PROCESSED.PROJECT"),"results_analysis/02-meth_overview/mgmt_status_all.tsv"))
