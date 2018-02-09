@@ -28,7 +28,10 @@ test_difference=function(values,groups,ntests){
   combinations[,id:=paste0(sort(c(substr(V1,1,3),substr(V2,1,3))),collapse="_"),1:nrow(combinations)]
   combinations=combinations[!duplicated(id)]
   
-  combinations[,p.value:=as.numeric(p.adjust(wilcox.test(x=values[groups==V1],y=values[groups==V2])$p.value),n=ntests,method="BH"),by=1:nrow(combinations)]
+  if (length(na.omit(values))>5){
+  combinations[,p.value:=ifelse(sum(!is.na(values[groups==V2]))>0&sum(!is.na(values[groups==V1]))>0,try(as.numeric(p.adjust(wilcox.test(x=values[groups==V1],y=values[groups==V2])$p.value,n=ntests,method="BH")),silent=TRUE),1),by=1:nrow(combinations)]}else{
+    combinations[,p.value:=1]
+  }
   combinations[,p.value.round:=ifelse(p.value<0.001,"<0.001",as.character(round(p.value,3))),]
   combinations[,annot:=paste0(id,": ",p.value.round),]
   combinations[,meanV1:=mean(values[groups==V1],na.rm=TRUE),by=1:nrow(combinations)]
@@ -37,6 +40,28 @@ test_difference=function(values,groups,ntests){
   combinations[,sdV2:=sd(values[groups==V2],na.rm=TRUE),by=1:nrow(combinations)]
   return(combinations)
 }
+
+plot_boxplots=function(sub,test,test_category,transc_stats){
+  
+  message(test)
+  ties=table(sub[,get(test),])[table(sub[,get(test),])>1]
+  if(length(ties>1)){print(ties)}
+  
+  sig=sub[,test_difference(get(test),get(classes),ntests=length(test_list)),by="category"]
+  sig[,test:=test,]
+  sig[,test_category:=test_category,]
+  transc_stats=rbindlist(list(transc_stats,sig))
+  ypos=max(as.numeric(unlist(sub[,test,with=FALSE])),na.rm=TRUE)
+  ypos=ypos+0.2*(ypos-min(as.numeric(unlist(sub[,test,with=FALSE])),na.rm=TRUE))
+  sig_annot=sig[,list(annot=paste0(annot,collapse="\n")),by="category"]
+  sig_annot[,ypos:=ypos]  
+  sig_annot[,xpos:=0.5]
+  
+  pl=ggplot()+geom_point(data=sub,aes(x=substr(get(classes),1,3),y=get(test),group=get(classes)),shape=21,color="grey",alpha=1,size=3,position=position_jitter(width=0.2,height=0))+geom_text(data=sig_annot,aes(x=xpos,y=ypos,label=annot),hjust=0,vjust=1)+geom_boxplot(data=sub,aes(x=substr(get(classes),1,3),y=get(test),group=get(classes)),outlier.size=NA,fill="transparent")+ylab(test)+xlab("")+facet_wrap(~category)
+  print(pl)
+  return(transc_stats)
+}
+
 
 
 ##############transc subgroups###########
@@ -48,30 +73,23 @@ test_list=c("CTCF__H1-hESC_None_66533","CTCF__NH-A_None_38465" ,"CHD1_(A301-218A
 class_prob=0.8
 classes="sub_group"
 
-pdf("transcSG-dip.pdf",height=3,width=2.5)
+pdf("transcSG-dip.pdf",height=3,width=4.5)
 for (test in test_list){
-  sub=unique(annotation[sub_group_prob>class_prob&category=="GBMatch"&IDH=="wt",c("N_number_st",test,classes,"surgery"),with=FALSE])
-  
-  sig=with(sub,test_difference(get(test),get(classes),ntests=length(test_list)))
-  sig[,test:=test,]
-  sig[,category:="dip-score",]
-  transc_stats=rbindlist(list(transc_stats,sig))
-  ypos=max(as.numeric(unlist(sub[,test,with=FALSE])),na.rm=TRUE)+0.2
-  pl=ggplot(sub, aes(x=substr(get(classes),1,3),y=get(test),group=get(classes)))+geom_point(shape=21,color="grey",alpha=1,size=3,position=position_jitter(width=0.2,height=0))+annotate(geom="text",x=0.5,y=ypos,hjust=0,vjust=1,label=paste0(sig$annot,collapse="\n"))+geom_boxplot(outlier.size=NA,fill="transparent")+ylab(test)+xlab("")
-  print(pl)
+  sub=unique(annotation[sub_group_prob>class_prob&category%in%c("GBMatch","GBmatch_val")&IDH=="wt",c("N_number_st",test,classes,"surgery","category"),with=FALSE])
+  plot_boxplots(sub,test,"dip-score",transc_stats)
 }
 dev.off()
 
 
 auc_thres=0.8
 classes=c("Classical","Mesenchymal","Proneural")
-pdf("transcSG-dip_cor.pdf",height=3,width=7)
+pdf("transcSG-dip_cor.pdf",height=6,width=7)
 for (test in test_list){
-  sub=unique(annotation[auc>auc_thres&category=="GBMatch"&IDH=="wt",c("N_number_seq",test,classes,"surgery"),with=FALSE])
-  sub_long=melt(sub,id.vars=c("N_number_seq",test),measure.vars=c("Classical","Mesenchymal","Proneural"))
-  my_cors=sub_long[,list(xpos=min(value,na.rm=TRUE)+0.1,ypos=max(get(test),na.rm=TRUE)+0.1,cor=cor(get(test),value,use="complete.obs"),cor.test=cor.test(get(test),value,use="complete.obs")$p.value),by=variable]
+  sub=unique(annotation[auc>auc_thres&category%in%c("GBMatch","GBmatch_val")&IDH=="wt",c("N_number_seq",test,classes,"surgery","category"),with=FALSE])
+  sub_long=melt(sub,id.vars=c("N_number_seq",test,"category"),measure.vars=c("Classical","Mesenchymal","Proneural"))
+  my_cors=sub_long[,list(xpos=min(value,na.rm=TRUE)+0.1,ypos=max(get(test),na.rm=TRUE)+0.1,cor=cor(get(test),value,use="complete.obs"),cor.test=cor.test(get(test),value,use="complete.obs")$p.value),by=c("variable","category")]
   
-  pl=ggplot(sub_long, aes(x=value,y=get(test)))+geom_point(shape=21,color="grey",alpha=0.7,size=2)+geom_text(data=my_cors,hjust=0,vjust=1,aes(y=ypos,x=xpos,label=paste0("r= ",round(cor,3),"\np= 10^",round(log10(cor.test),0))))+geom_smooth(method="lm",aes(fill=variable,col=variable))+facet_wrap(~variable,scale="free")+ggtitle(test)+xlim(c(0,1))+xlab("Class probability")+ylab("MIRA score")+theme(aspect.ratio=1)
+  pl=ggplot(sub_long, aes(x=value,y=get(test)))+geom_point(shape=21,color="grey",alpha=0.7,size=2)+geom_text(data=my_cors,hjust=0,vjust=1,aes(y=ypos,x=xpos,label=paste0("r= ",round(cor,3),"\np= 10^",round(log10(cor.test),0))))+geom_smooth(method="lm",aes(fill=variable,col=variable))+facet_wrap(category~variable,scale="free")+ggtitle(test)+xlim(c(0,1))+xlab("Class probability")+ylab("MIRA score")+theme(aspect.ratio=1)
   print(pl)
 }
 dev.off()
@@ -82,18 +100,10 @@ dev.off()
 test_list=column_annotation_combined_clean$histo_immuno
 classes="sub_group"
 
-pdf(paste0("transcSG-histo_immune.pdf"),height=3,width=2.5)
+pdf(paste0("transcSG-histo_immune.pdf"),height=3,width=4.5)
 for (test in test_list){
-  sub=unique(annotation[sub_group_prob>class_prob&category=="GBMatch"&IDH=="wt",c("N_number_st",test,classes,"surgery"),with=FALSE])
-  
-  sig=with(sub,test_difference(get(test),get(classes),ntest=length(test_list)))
-  sig[,test:=test,]
-  sig[,category:="histo_immuno",]
-  transc_stats=rbindlist(list(transc_stats,sig))
-  ypos=max(as.numeric(unlist(sub[,test,with=FALSE])),na.rm=TRUE)
-  ypos=ypos+0.1*ypos
-  pl=ggplot(sub, aes(x=substr(get(classes),1,3),y=get(test),group=get(classes)))+geom_point(col="grey",shape=21,alpha=1,size=3,position=position_jitter(width=0.2,height=0))+annotate(geom="text",x=0.5,y=ypos,hjust=0,vjust=1,label=paste0(sig$annot,collapse="\n"))+geom_boxplot(outlier.size=NA,fill="transparent")+ylab(test)+xlab("")
-  print(pl)
+  sub=unique(annotation[sub_group_prob>class_prob&category%in%c("GBMatch","GBmatch_val")&IDH=="wt",c("N_number_st",test,classes,"surgery","category"),with=FALSE])
+  plot_boxplots(sub,test,"histo_immuno",transc_stats)
 }
 dev.off()
 
@@ -102,18 +112,10 @@ dev.off()
 test_list=grep("Mean |Mode |File|Image|Block| STD |mm",column_annotation_combined_clean$histo_segmentation,invert=TRUE,value=TRUE)
 classes="sub_group"
 
-pdf(paste0("transcSG-histo_segmentation.pdf"),height=3,width=2.5)
+pdf(paste0("transcSG-histo_segmentation.pdf"),height=3,width=4.5)
 for (test in test_list){
-  sub=unique(annotation[sub_group_prob>class_prob&category=="GBMatch"&IDH=="wt",c("N_number_st",test,classes,"surgery"),with=FALSE])
-  
-  sig=with(sub,test_difference(get(test),get(classes),ntest=length(test_list)))
-  sig[,test:=test,]
-  sig[,category:="histo_segmentation",]
-  transc_stats=rbindlist(list(transc_stats,sig))
-  ypos=max(as.numeric(unlist(sub[,test,with=FALSE])),na.rm=TRUE)
-  ypos=ypos+0.1*ypos
-  pl=ggplot(sub, aes(x=substr(get(classes),1,3),y=get(test),group=get(classes)))+geom_point(col="grey",shape=21,alpha=1,size=3,position=position_jitter(width=0.2,height=0))+annotate(geom="text",x=0.5,y=ypos,hjust=0,vjust=1,label=paste0(sig$annot,collapse="\n"))+geom_boxplot(outlier.size=NA,fill="transparent")+ylab(test)+xlab("")
-  print(pl)
+  sub=unique(annotation[sub_group_prob>class_prob&category%in%c("GBMatch","GBmatch_val")&IDH=="wt",c("N_number_st",test,classes,"surgery","category"),with=FALSE])
+  plot_boxplots(sub,test,"histo_segmentation",transc_stats)
 }
 dev.off()
 

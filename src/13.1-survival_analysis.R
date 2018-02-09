@@ -73,21 +73,24 @@ plot_dots=function(data){
 annotation=fread(file.path(getOption("PROCESSED.PROJECT"),"results_analysis/01.1-combined_annotation/annotation_combined_final.tsv"))
 load(file.path(getOption("PROCESSED.PROJECT"),"results_analysis/01.1-combined_annotation/column_annotation_combined.RData"))
 
-annot_ASC=annotation[IDH=="wt",list(cycles.1=enrichmentCycles[surgery==1][1],cycles.2=enrichmentCycles[surgery==2][1],Age=min(Age),Sex=unique(Sex),category="survival"),by=patID]
+annot_ASC=annotation[IDH=="wt",list(cycles.1=enrichmentCycles[surgery==1][1],cycles.2=enrichmentCycles[surgery==2][1],Age=min(Age),Sex=unique(Sex),annoclass="cycles"),by=patID]
 
-annot_surv=annotation[surgery%in%c(1)&IDH=="wt"&category=="GBMatch",list(event=unique(VitalStatus),follow_up=unique(`Follow-up_years`)*12,category="survival"),by=patID]
+annot_surv=annotation[surgery%in%c(1)&IDH=="wt"&category%in%c("GBMatch","GBmatch_val"),list(event=unique(VitalStatus),follow_up=unique(`Follow-up_years`)*12,category=unique(category),annoclass="survival"),by=patID]
 annot_surv[,event:=ifelse(event=="dead",1,0)]
 
-annot_relapse=annotation[surgery%in%c(1,2)&IDH=="wt"&category=="GBMatch",list(event=1,follow_up=(unique(timeToFirstProg)/365)*12,category="relapse"),by=patID]
+annot_relapse=annotation[surgery%in%c(1,2)&IDH=="wt"&category%in%c("GBMatch","GBmatch_val"),list(event=1,follow_up=(unique(timeToFirstProg)/365)*12,category=category,annoclass="relapse"),by=patID]
 
 combi=rbindlist(list(annot_surv,annot_relapse),use.names=TRUE)
-combi[,long_surv:=ifelse(follow_up[category=="survival"]>=36,TRUE,FALSE),by="patID"]
+combi[,long_surv:=ifelse(follow_up[annoclass=="survival"]>=36,TRUE,FALSE),by="patID"]
 
-surv_stats=combi[,round(median(follow_up,na.rm=TRUE),2),by=category]
+#check if survival time is longer that time to relapse. Should be TRUE or NA
+surv_rel_check=combi[,round(follow_up[annoclass=="survival"],2)>=round(follow_up[annoclass=="relapse"],2),by="patID"]
+surv_rel_check[V1==FALSE]
 
+surv_stats=combi[,round(median(follow_up,na.rm=TRUE),2),by=c("category","annoclass")]
 #survival distribution
 pdf("follow_up_overview.pdf",height=4,width=4)
-ggplot(combi,aes(x=category,y=follow_up))+geom_point(size=2.5,shape=21,alpha=0.6,aes(fill=long_surv),position=position_jitter(width=0.3))+geom_boxplot(outlier.size=NA,fill="transparent")+annotate(geom="text",x=1.5,y=114,label=paste0("Median survival: ",surv_stats[category=="survival"]$V1,"\n","Median time to relapse: ",surv_stats[category=="relapse"]$V1))+scale_fill_manual(values=c("FALSE"="grey","TRUE"="red"))+scale_y_continuous(breaks=seq(from=0,to=125,by=6))+xlab("")+ylab("months")
+ggplot(combi,aes(x=annoclass,y=follow_up))+geom_point(size=2.5,shape=21,alpha=0.6,aes(fill=long_surv),position=position_jitter(width=0.3))+geom_boxplot(outlier.size=NA,fill="transparent")+annotate(geom="text",x=1.5,y=114,label=paste0("Median survival: ",surv_stats[annoclass=="survival"]$V1,"\n","Median time to relapse: ",surv_stats[annoclass=="relapse"]$V1))+scale_fill_manual(values=c("FALSE"="grey","TRUE"="red"))+scale_y_continuous(breaks=seq(from=0,to=125,by=6))+xlab("")+ylab("months")+facet_wrap(~category)
 dev.off()
 
 all_tests=data.table()
