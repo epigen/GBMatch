@@ -5,7 +5,7 @@ project.init2("GBMatch")
 # Parameters
 preProcessing <- "RAW"
 minCoverage <- 5
-minCntPerAnnot <- 5
+minCntPerAnnot <- 4
 
 if(!is.na(minCoverage)){
   minCoverage <- as.numeric(minCoverage)
@@ -75,33 +75,40 @@ immuno <- column_annotation_combined_clean$histo_immuno
 #  "surgery",
 #  "sub_group",
 #  "Sex")
+# fcts <- c(immuno, fcts)
 
-fcts <- c("category",
-          "sub_group")
+fcts <- c("category","sub_group","CD163","CD68","EZH2","MIB","Enhancing (mm3)")
 
-fcts <- c(immuno, fcts)
+
 
 
 # Do differential analysis
 res <- data.table(cpg=gsub("_$", "",rownames(meth_data_mat)))
-#factorOfInterest <- "CD68"
 
-(cohorts=unique(annotation_orig$cohort))
+cohorts=list("GBMatch","GBmatch_val",c("GBMatch","GBmatch_val"))
 
-(sel_cohort <- cohorts[2])
 for (sel_cohort in cohorts){ 
-  factorOfInterest <- fcts[1]
+
   for(factorOfInterest in fcts){
     message(factorOfInterest) 
     tryCatch({
       # ANNOTATION --------------------------------------------------------------
-      annotation=annotation_orig[cohort%in%sel_cohort&surgery==1]
+      annotation=annotation_orig[category%in%sel_cohort]
+      
+      if (sel_cohort==c("GBMatch","GBmatch_val")){
+        annotation=annotation_orig[category%in%sel_cohort&surgery==1]
+      }
       
       aDat <- annotation[!is.na(get(factorOfInterest)),c(factorOfInterest, "N_number_seq"), with=F]
       if(nrow(aDat) == 0){
         print(paste("Not enough samples to analyze ", factorOfInterest, " moving on"))
         next
       }
+      if(nrow(unique(aDat[,factorOfInterest,with=F]))<2){
+        print("Only one group. Skipping.")
+        next
+      }
+      
       
       if(factorOfInterest == "sub_group"){
         aDat <- annotation[!is.na(get(factorOfInterest))][sub_group_prob >= 0.8][,c(factorOfInterest, "N_number_seq"), with=F]
@@ -117,7 +124,7 @@ for (sel_cohort in cohorts){
       dim(aDat)
       dim(aDat <- aDat[N_number_seq %in% colnames(meth_data_mat)])
       
-      # those groups with N > 5
+      # those groups with N > 4
       groups <- aDat[,.N, by=factorOfInterest][N >= minCntPerAnnot][[factorOfInterest]]
       if(length(groups) > 1){
         i1 <- 1
@@ -152,6 +159,6 @@ for (sel_cohort in cohorts){
       }
     }, error = function(e) print(e))
   }
-  write.table(res, file=dirout(out,paste0("Pvalues_",sel_cohort,"Cohort.tsv")),sep="\t", quote=F, row.names=F)
+  write.table(res, file=dirout(out,paste0("Pvalues_",paste0(sel_cohort,collapse="_"),".tsv")),sep="\t", quote=F, row.names=F)
 }
 print("DONE")
