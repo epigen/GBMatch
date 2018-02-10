@@ -173,3 +173,57 @@ ggplot(sub_cyc,aes(y=log10_DPM,x=as.factor(extentOfResection),group=extentOfRese
 
 dev.off()
 
+#follow-up on Wnt genes (specifically SFRP2)
+
+#get genes
+eload(loadGencodeGenes("human",versNum=87))
+prom1k=promoters(SV$gencodeContainer$genesGR[SV$gencodeContainer$genes[,which(gene_biotype=="protein_coding")]], upstream=1000, downstream=500)
+genes=SV$gencodeContainer$genes[gene_biotype=="protein_coding"]
+genes_annot=cbind(as.data.table(as.data.frame(prom1k)),genes[,c("external_gene_name","ensembl_gene_id","chromosome_name"),])
+stopifnot(genes_annot$seqnames==genes_annot$chromosome_name)
+setnames(genes_annot,"seqnames","chr")
+#for some reasons 20 genes have different ENSGs but same position and gene name --> remove
+genes_annot=genes_annot[!duplicated(cbind(chr,start,end)),]
+
+
+#get measures of promoter DNA Meth and heterogeneity
+
+simpleCache("pdrPromoters1ksub", assignToVariable="pdr_ag")
+simpleCache("entropy/rrbsAgEntropy_min40_prom1k",assignToVariable="entropy_ag")
+simpleCache("rrbsProm1kb",assignToVariable="meth_ag")
+setnames(meth_ag,"CpGcount","CpGcount_meth")
+
+merged_heterogeneity_pre=merge(pdr_ag,entropy_ag,by=c("id","chr","start","end","regionID"),all=TRUE)
+merged_heterogeneity=merge(merged_heterogeneity_pre,meth_ag,by=c("id","chr","start","end","regionID"),all=TRUE)
+setnames(merged_heterogeneity,"id","N_number_seq")
+
+merged_heterogeneity_annot=merge(merged_heterogeneity,annotation[,c("N_number_seq","rand_frag_perc","Unique_CpGs","enrichmentCycles","Ct_postLigation","Ct_postConversion","Follow-up_years","Age","surgery.x","patID","category","IDH"),with=FALSE],by="N_number_seq")
+merged_heterogeneity_annot_genes=merge(genes_annot,merged_heterogeneity_annot,by=c("chr","start","end"))
+
+
+#store methe values for other analysis
+SFRP2_meth=unique(merged_heterogeneity_annot_genes[external_gene_name%in%c("SFRP2"),c("N_number_seq","methyl","readCount","CpGcount_meth"),with=FALSE])
+setnames(SFRP2_meth,c("methyl","readCount","CpGcount_meth"),c("SFRP2_meth","SFRP2_readCount","SFRP2_CpG_count"))
+write.table(SFRP2_meth,"SFRP2_meth.tsv",quote=FALSE,sep="\t",row.names=FALSE)
+
+
+#some plots
+
+sub=merged_heterogeneity_annot_genes[external_gene_name%in%c("SFRP2")&category%in%c("GBMatch","GBmatch_val")&surgery.x%in%c(1,2)&IDH=="wt"&(readCount/CpGcount_meth)>10&CpGcount_meth>20]
+sub[,NsurgAvail:=.N,by=patID]
+sub_long=melt(sub,id.vars=c("patID","N_number_seq","category","external_gene_name","surgery.x","NsurgAvail"),measure.vars=c("methyl","PDRa"))
+#remark: too little coverage in entropy...
+
+pdf("SFRP2_followup_boxpl.pdf",height=3,width=5)
+ggplot(sub_long,aes(y=value,x=paste0(category,"\nSurgery ",surgery.x)))+geom_boxplot(outlier.shape=NA)+geom_point(position=position_jitter(width=0.3),alpha=0.5)+facet_wrap(variable~external_gene_name,ncol=3)+xlab("")
+dev.off()
+
+pdf("SFRP2_followup_cor.pdf",height=4,width=5.5)
+sub[,meth_pdr_cor:=cor(methyl,PDRa),by=c("surgery.x","category","external_gene_name")]
+ggplot(sub,aes(y=PDRa,x=methyl,col=paste0(category," ",external_gene_name,"\nSurgery ",surgery.x," r=",round(meth_pdr_cor,3))))+geom_point(alpha=0.6)+geom_smooth(method="lm",alpha=0.2)+scale_color_discrete(name="Chort")+facet_wrap(~external_gene_name)
+dev.off()
+
+pdf("SFRP2_followup_trend.pdf",height=6,width=5)
+ggplot(sub_long[NsurgAvail>1],aes(y=value, x=paste0("Surgery ",surgery.x),group=paste0(patID,"_",variable)))+geom_line(aes(lty=variable))+geom_point(aes(shape=variable),position=position_jitter(width=0.01),alpha=0.6)+facet_wrap(external_gene_name~patID,ncol=2)+xlab("")
+dev.off()
+
