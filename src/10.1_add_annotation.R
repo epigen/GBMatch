@@ -49,9 +49,13 @@ mgmt_status[,patID:=NULL,]
 mgmt_status[,category:=NULL,]
 mgmt_status[,IDH:=NULL,]
 
+#get SFRP2 meth
+SFRP2_meth=fread(file.path(getOption("PROCESSED.PROJECT"),"results_analysis/11.2-diffMeth_single/SFRP2_meth.tsv"))
+
+
 #column annotation
 load("column_annoation.RData")
-column_annotation_mol=list(CNV_chrom_arms=names(CNV_chrom_arms), meth_heterogeneity=names(combined_heterogeneity),mutational_load=names(mut_load),transc_subgroups=names(transc_subgroups),dipScores=names(dip_scores),mgmt_status=names(mgmt_status))
+column_annotation_mol=list(CNV_chrom_arms=names(CNV_chrom_arms), meth_heterogeneity=names(combined_heterogeneity),mutational_load=names(mut_load),transc_subgroups=names(transc_subgroups),dipScores=names(dip_scores),mgmt_status=names(mgmt_status),SFRP2_meth=names(SFRP2_meth))
 
 column_annotation_combined=c(column_annotation,column_annotation_mol)
 
@@ -62,7 +66,7 @@ column_annotation_combined_clean=lapply(column_annotation_combined,function(x){g
 #column categories
 technical=c(column_annotation_combined_clean$random_fragmentation,column_annotation_combined_clean$sequencing_stats,column_annotation_combined_clean$sequencing_annot,"Image width [pix]","Image height [pix]","Block size N","material")
 medical=c(column_annotation_combined_clean$psa,column_annotation_combined_clean$clinical_annotation,column_annotation_combined_clean$imaging,column_annotation_combined_clean$imaging_progression,"WHO2016_classification", "WHO2016_classification_comment")
-measurement=c(column_annotation_combined_clean$histo_classification,column_annotation_combined_clean$histo_segmentation,column_annotation_combined_clean$imaging_segmentation,column_annotation_combined_clean$CNV_chrom_arms,column_annotation_combined_clean$CNV_GOIs,column_annotation_combined_clean$meth_heterogeneity,column_annotation_combined_clean$mutational_load,column_annotation_combined_clean$transc_subgroups,column_annotation_combined_clean$dipScores,column_annotation_combined_clean$mgmt_status)
+measurement=c(column_annotation_combined_clean$histo_classification,column_annotation_combined_clean$histo_segmentation,column_annotation_combined_clean$imaging_segmentation,column_annotation_combined_clean$CNV_chrom_arms,column_annotation_combined_clean$CNV_GOIs,column_annotation_combined_clean$meth_heterogeneity,column_annotation_combined_clean$mutational_load,column_annotation_combined_clean$transc_subgroups,column_annotation_combined_clean$dipScores,column_annotation_combined_clean$mgmt_status,column_annotation_combined_clean$SFRP2_meth)
 
 column_category=list(technical=technical,medical=medical[!medical%in%technical],measurement=measurement[!measurement%in%c(technical,medical)])
 
@@ -70,7 +74,7 @@ column_category=list(technical=technical,medical=medical[!medical%in%technical],
 
 
 #now merge
-merge_objects=c("annotation","CNV_chrom_arms","combined_heterogeneity","mut_load","transc_subgroups","dip_scores","mgmt_status")
+merge_objects=c("annotation","CNV_chrom_arms","combined_heterogeneity","mut_load","transc_subgroups","dip_scores","mgmt_status","SFRP2_meth")
 
 combined_annotation=data.table()
 for(merge_object in merge_objects){
