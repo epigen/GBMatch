@@ -160,12 +160,14 @@ sub_all_agg[,sample.1:=sub("RRBS_cpgMethylation_","",sampleName.1),]
 sub_all_agg[,DPM:=signif/all*1000000,]
 sub_all_agg=merge(annot_ASC,sub_all_agg,by="sample.1")
 
+write.table(sub_all_agg,"DPM.tsv",sep="\t",quote=FALSE,row.names=FALSE)
+
 sub_cyc=sub_all_agg[cycles.1<16&cycles.2<16&cycles.1>12&cycles.2>12]
 sub_cyc[,log10_DPM:=log10(DPM),]
-cors=sub_cyc[,list(cor=cor(timeToSecSurg,log10_DPM),y=max(log10_DPM)),]
+cors=sub_cyc[,cor.test(timeToSecSurg,log10_DPM,alternative="less"),]
 
 pdf("DPT_comps.pdf",height=3.5,width=3)
-ggplot(sub_cyc,aes(y=log10_DPM,x=timeToSecSurg/30))+geom_point(shape=21,size=3,fill="grey")+geom_smooth(method="lm",fill="lightgrey")+geom_text(data=cors,x=10,aes(y=y,label=paste0("r=",round(cor,3))))+xlab("timeToSecSurg (months)")
+ggplot(sub_cyc,aes(y=log10_DPM,x=timeToSecSurg/30))+geom_point(shape=21,size=3,fill="grey")+geom_smooth(method="lm",fill="lightgrey")+annotate("text",x=-Inf,y=Inf,label=paste0("r=",round(cors$estimate,2),"\np.value=",round(cors$p.value,2)),hjust=-0.2,vjust=1.2)+xlab("timeToSecSurg (months)")
 
 ggplot(sub_cyc,aes(y=log10_DPM,x=as.factor(progression_location),group=progression_location))+geom_point(shape=21,position=position_jitter(width=0.2))+geom_boxplot(fill="transparent",outlier.shape=NA)
 
@@ -201,7 +203,7 @@ merged_heterogeneity_annot=merge(merged_heterogeneity,annotation[,c("N_number_se
 merged_heterogeneity_annot_genes=merge(genes_annot,merged_heterogeneity_annot,by=c("chr","start","end"))
 
 
-#store methe values for other analysis
+#store meth values for other analysis
 SFRP2_meth=unique(merged_heterogeneity_annot_genes[external_gene_name%in%c("SFRP2"),c("N_number_seq","methyl","readCount","CpGcount_meth"),with=FALSE])
 setnames(SFRP2_meth,c("methyl","readCount","CpGcount_meth"),c("SFRP2_meth","SFRP2_readCount","SFRP2_CpG_count"))
 write.table(SFRP2_meth,"SFRP2_meth.tsv",quote=FALSE,sep="\t",row.names=FALSE)
