@@ -83,19 +83,18 @@ fcts <- c("category","sub_group","CD163","CD68","EZH2","MIB","Enhancing (mm3)")
 
 
 # Do differential analysis
-res <- data.table(cpg=gsub("_$", "",rownames(meth_data_mat)))
-
 cohorts=list("GBMatch","GBmatch_val",c("GBMatch","GBmatch_val"))
 
 for (sel_cohort in cohorts){ 
-
+  res <- data.table(cpg=gsub("_$", "",rownames(meth_data_mat)))
   for(factorOfInterest in fcts){
     message(factorOfInterest) 
     tryCatch({
       # ANNOTATION --------------------------------------------------------------
       annotation=annotation_orig[category%in%sel_cohort]
       
-      if (sel_cohort==c("GBMatch","GBmatch_val")){
+      if (paste0(sel_cohort,collapes="_")=="GBMatch_GBmatch_val"){
+        print("Only surgery 1")
         annotation=annotation_orig[category%in%sel_cohort&surgery==1]
       }
       
@@ -124,7 +123,7 @@ for (sel_cohort in cohorts){
       dim(aDat)
       dim(aDat <- aDat[N_number_seq %in% colnames(meth_data_mat)])
       
-      # those groups with N > 4
+      # those groups with N > 5
       groups <- aDat[,.N, by=factorOfInterest][N >= minCntPerAnnot][[factorOfInterest]]
       if(length(groups) > 1){
         i1 <- 1

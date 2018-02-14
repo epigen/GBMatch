@@ -5,7 +5,7 @@ project.init2("GBMatch")
 preProcessing <- "RAW_5"
 use.tiles <- TRUE
 equalize.hits <- FALSE
-qCutoff <- 0.05
+qCutoff <- 0.05 
 
 
 out1 = paste0('11.3-DiffMeth_groups/',preProcessing, "/")
@@ -37,8 +37,16 @@ cpgs.to.tiles <- function(gr, minHits){
   return(unique(as(tiles[data.table(data.frame(findOverlaps(gr, LOLA_tiles)))[,.N, by="subjectHits"][N >= minHits]$subjectHits], "GRanges")))
 }
 
+
+library(LOLA)
+LOLA_regionDB = loadRegionDB(paste0(Sys.getenv("RESOURCES"), "/regions/LOLACore/hg38/"))
+cellType_conversions=fread(file.path(getOption("PROJECT.DIR"),"metadata/LOLA_annot/CellTypes.tsv"),drop="collection")
+annotation=fread(paste0(dirout(),"01.1-combined_annotation/","annotation_combined_final.tsv"))
+
+cohorts=list("GBmatch_val","GBMatch",c("GBMatch","GBmatch_val"))
+for (lola_cohort in cohorts){
 # FILTER REPEATS ----------------------------------------------------------
-res <- fread(dirout(out1,"Pvalues.tsv"))
+res <- fread(dirout(out1,paste0("Pvalues_",paste0(lola_cohort,collapse="_"),".tsv")))
 
 # LONG DT -----------------------------------------------------------------
 resLONG <- melt(res, id.vars="cpg")
@@ -50,9 +58,8 @@ resLONG[variable == "subgroup_Mesenchymal_Classical"][qval > -qCutoff & qval < 0
 
 
 # PLOT A HIT --------------------------------------------------------------
-factorOfInterest <- "WHO2016_classification"
+factorOfInterest <- "sub_group"
 plotHits <- resLONG[abs(qval) < qCutoff][order(abs(qval))][grepl(gsub("_","",factorOfInterest), variable)]
-annotation=fread(paste0(dirout(),"01.1-combined_annotation/","annotation_combined_final.tsv"))
 aDat <- annotation[!is.na(get(factorOfInterest)),c(factorOfInterest, "N_number_seq"), with=F]
 if(factorOfInterest == "sub_group"){
   aDat <- annotation[!is.na(get(factorOfInterest))][sub_group_prob >= 0.8][,c(factorOfInterest, "N_number_seq"), with=F]
@@ -65,7 +72,7 @@ for(i in c(1:3, (nrow(plotHits)-3):nrow(plotHits))){
       plotHits[i]$variable, 
       "\n", plotHits[i]$cpg, "qval =",round(plotHits[i]$qval, 3)
       ))
-  ggsave(dirout(out, "Example", i,".pdf"))
+  ggsave(dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_Example"), i,".pdf"))
 }
 
 
@@ -105,7 +112,7 @@ userSets <- userSets[sapply(userSets, function(x) length(x$query) > 0)]
 ggplot(data.table(melt(sapply(lapply(userSets, function(x)x$query), length)), keep.rownames=TRUE), 
        aes(y=value, x=rn)) + 
   geom_bar(stat="identity") + coord_flip()+theme_bw(24)
-ggsave(dirout(out, "Hit_counts_beforeTiles.pdf"), height=20, width=15)
+ggsave(dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_Hit_counts_beforeTiles.pdf")), height=20, width=15)
 
 # To tiles
 if(use.tiles){
@@ -122,14 +129,11 @@ if(use.tiles){
 ggplot(data.table(melt(sapply(lapply(userSets, function(x)x$query), length)), keep.rownames=TRUE), 
        aes(y=value, x=rn)) + 
   geom_bar(stat="identity") + coord_flip()+theme_bw(24)
-ggsave(dirout(out, "Hit_counts_afterTiles.pdf"), height=20, width=15)
+ggsave(dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_Hit_counts_afterTiles.pdf")), height=20, width=15)
 
-library(LOLA)
 
 # LOLA --------------------------------------------------------------------
-if(!file.exists(dirout(out, "LOLA_FULL.tsv"))){
-  LOLA_regionDB = loadRegionDB(paste0(Sys.getenv("RESOURCES"), "/regions/LOLACore/hg38/"))
-  cellType_conversions=fread(file.path(getOption("PROJECT.DIR"),"metadata/LOLA_annot/CellTypes.tsv"),drop="collection")
+if(!file.exists(dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_LOLA_FULL.tsv")))){
   resLOLA <- data.table()
   xnam <- names(userSets)[1]
   for(xnam in names(userSets)){
@@ -144,8 +148,8 @@ if(!file.exists(dirout(out, "LOLA_FULL.tsv"))){
   
   # SIGNFICANCE ------------------------------------------------------------
   collections=c("codex","encode_tfbs")
-  resLOLA[,BY:=p.adjust(exp(-pValueLog),method="BY")]
-  resLOLA[,BH:=p.adjust(exp(-pValueLog),method="BH")]
+  resLOLA[,BY:=p.adjust(10^(-pValueLog),method="BY")]
+  resLOLA[,BH:=p.adjust(10^(-pValueLog),method="BH")]
   
   # How many results?
   resLOLA[BH < qCutoff][, .N , by="userSet"]
@@ -162,14 +166,14 @@ if(!file.exists(dirout(out, "LOLA_FULL.tsv"))){
   resLOLA[,target:=toupper(sub("-","",unlist(lapply(antibody,function(x){spl=unlist(strsplit(x,"_|eGFP-"));spl[spl!=""][1]})))),]
   
   # SAFE FULL TABLE
-  write.table(resLOLA, file=dirout(out, "LOLA_FULL.tsv"), sep="\t", quote=F, row.names=F)
-  write.table(resLOLA[BY < qCutoff], file=dirout(out, "LOLA_HITS.tsv"), sep="\t", quote=F, row.names=F)
+  write.table(resLOLA, file=dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_LOLA_FULL.tsv")), sep="\t", quote=F, row.names=F)
+  write.table(resLOLA[BY < qCutoff], file=dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_LOLA_HITS.tsv")), sep="\t", quote=F, row.names=F)
 }
-resLOLA <- fread(dirout(out, "LOLA_FULL.tsv"))
+resLOLA <- fread(dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_LOLA_FULL.tsv")))
 
 resLOLA <- resLOLA[cellType_corr %in% c("Astrocyte", "ESC")]
-resLOLA[,BY:=p.adjust(exp(-pValueLog),method="BY")]
-write.table(resLOLA[BY < qCutoff], file=dirout(out, "LOLA_HITS_AstroOrESC.tsv"), sep="\t", quote=F, row.names=F)
+resLOLA[,BY:=p.adjust(10^(-pValueLog),method="BY")]
+write.table(resLOLA[BY < qCutoff], file=dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_LOLA_HITS_AstroOrESC.tsv")), sep="\t", quote=F, row.names=F)
 
 # MAKE PLOTS OF HITS
 # LOLA HEATMAP -----------------------------------------------------------------
@@ -178,10 +182,10 @@ pDat2 <- as.matrix(pDat1[,-"target", with=F])
 row.names(pDat2) <- pDat1$target
 pDat2[pDat2 == -Inf] <- 0
 pDat2[pDat2 > 10] <- 10
-pDat2 <- pDat2[apply(pDat2, 1, max) > -log10(qCutoff),]
-pDat2 <- pDat2[,apply(pDat2, 2, max) > -log10(qCutoff)]
+pDat2 <- pDat2[apply(pDat2, 1, max) > -log10(qCutoff),,drop=FALSE]
+pDat2 <- pDat2[,apply(pDat2, 2, max) > -log10(qCutoff),drop=FALSE]
 if(nrow(pDat2) > 2 & ncol(pDat2) > 2){
-  pdf(dirout(out, "LOLA_HM.pdf"), height=20, width=20)
+  pdf(dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_LOLA_HM.pdf")), height=20, width=20)
   pheatmap(pDat2)
   dev.off()
 }
@@ -192,15 +196,16 @@ if(nrow(pDat2) > 2 & ncol(pDat2) > 2){
 
 # LOLA RESULTS IN SMALL DOTPLOT
 
-LOLA_res=fread(dirout(out,"LOLA_HITS_AstroOrESC.tsv"))
+LOLA_res=fread(dirout(out,paste0(paste0(lola_cohort,collapse="_"),"_LOLA_HITS_AstroOrESC.tsv")))
 
-pdf(dirout(out, "LOLA_res_subgroup.pdf"),height=3.5,width=5)
-ggplot(LOLA_res[grepl("subgroup",userSet)&collection%in%c("codex","encode_tfbs")&cellState!="Malignant"],aes(x=target,y=-log10(BY),fill=cellType_corr))+geom_point(position=position_jitter(height=0,width=0.1),shape=21,size=3,alpha=0.6,stroke=0.6)+geom_hline(yintercept=-log10(0.05),lty=20,col="grey")+theme(axis.text.x=element_text(angle = 90, hjust=1,vjust = 0.5))+facet_wrap(~userSet,ncol=1)+scale_fill_manual(values=c("Astrocyte"="#a6cee3","ESC"="#b2df8a"))+scale_color_manual(values=c("FALSE"="grey","TRUE"="black"))
-
+pdf(dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_LOLA_res_subgroup_BY0.001.pdf")),height=5,width=8)
+print(ggplot(LOLA_res[BY<0.001&grepl("subgroup",userSet)&collection%in%c("codex","encode_tfbs")&cellState!="Malignant"],aes(x=target,y=-log10(BY),fill=cellType_corr))+geom_point(position=position_jitter(height=0,width=0.1),shape=21,size=3,alpha=0.6,stroke=0.6)+geom_hline(yintercept=-log10(0.001),lty=20,col="grey")+theme(axis.text.x=element_text(angle = 90, hjust=1,vjust = 0.5))+facet_wrap(~userSet,ncol=1,scale="free_y")+scale_fill_manual(values=c("Astrocyte"="#a6cee3","ESC"="#b2df8a"))+scale_color_manual(values=c("FALSE"="grey","TRUE"="black")))
 dev.off()
 
 
-
+pdf(dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_LOLA_res_subgroup_BY0.05.pdf")),height=5,width=8)
+print(ggplot(LOLA_res[BY<0.05&grepl("subgroup",userSet)&collection%in%c("codex","encode_tfbs")&cellState!="Malignant"],aes(x=target,y=-log10(BY),fill=cellType_corr))+geom_point(position=position_jitter(height=0,width=0.1),shape=21,size=3,alpha=0.6,stroke=0.6)+geom_hline(yintercept=-log10(0.05),lty=20,col="grey")+theme(axis.text.x=element_text(angle = 90, hjust=1,vjust = 0.5))+facet_wrap(~userSet,ncol=1,scale="free_y")+scale_fill_manual(values=c("Astrocyte"="#a6cee3","ESC"="#b2df8a"))+scale_color_manual(values=c("FALSE"="grey","TRUE"="black")))
+dev.off()
 
 
 
@@ -211,7 +216,8 @@ quantile(data.nas)
 cpgs.keep <- which(data.nas < 100)
 
 nsel=500
-comps=c("subgroup_Mesenchymal_Proneural","subgroup_Proneural_Classical","subgroup_Mesenchymal_Classical")
+#comps=c("subgroup_Mesenchymal_Proneural","subgroup_Proneural_Classical","subgroup_Mesenchymal_Classical")
+comps=grep("subgroup_",names(res),value=TRUE)
 cpgs=vector()
 row_annots=vector()
 for (comp in comps){
@@ -226,9 +232,12 @@ for (comp in comps){
 
 
 # PREPARE SAMPLE ANNOTATION ------------------------------------------------------
+annotation_all=fread(paste0(dirout(),"01.1-combined_annotation/","annotation_combined_final.tsv"))
 factorOfInterest <- "sub_group"
-annotation=fread(paste0(dirout(),"01.1-combined_annotation/","annotation_combined_final.tsv"))
-annotation <- annotation[category == "GBMatch" & IDH == "wt"]
+
+for (hm_cohort in cohorts){
+print(hm_cohort)
+annotation <- annotation_all[category %in% hm_cohort & IDH == "wt"]
 aDat <- annotation[!is.na(get(factorOfInterest))]
 # only those samples in the top percentile
 aDat=aDat[sub_group_prob>0.8&auc>0.8]
@@ -238,9 +247,7 @@ aDat=aDat[sub_group_prob>0.8&auc>0.8]
 str(row_annot <- data.frame(direction=row_annots[unique(names(cpgs))]))
 str(col_annot <- data.frame(
   auc = aDat[["auc"]],
-  #Mesencymal = aDat[["Mesenchymal"]],
-  #Proneural = aDat[["Proneural"]],
-  #Classical = aDat[["Classical"]],
+  category=aDat[["category"]],
   sub_group = aDat[[factorOfInterest]],
   row.names = aDat$N_number_seq))
 hmMT <- meth_data_mat[unique(names(cpgs)),]
@@ -254,14 +261,16 @@ row_annot$direction=sub("subgroup_","",row_annot$direction)
 
 # PLOT --------------------------------------------------------------------
 
-colors=list(sub_group=c("Mesenchymal"="#00BA38","Classical"="#F8766D","Proneural"="#619CFF"),direction=c("Mesenchymal_Classical_-"="#fb9a99","Mesenchymal_Classical_+"="#e31a1c","Mesenchymal_Proneural_-"="#a6cee3","Mesenchymal_Proneural_+"="#1f78b4","Proneural_Classical_-"="#b2df8a","Proneural_Classical_+"="#33a02c"))
+colors=list(sub_group=c("Mesenchymal"="#00BA38","Classical"="#F8766D","Proneural"="#619CFF"),direction=c("Mesenchymal_Classical_-"="#fb9a99","Classical_Mesenchymal_+"="#fb9a99","Mesenchymal_Classical_+"="#e31a1c","Classical_Mesenchymal_-"="#e31a1c","Mesenchymal_Proneural_-"="#a6cee3","Proneural_Mesenchymal_+"="#a6cee3","Mesenchymal_Proneural_+"="#1f78b4","Proneural_Mesenchymal_-"="#1f78b4","Proneural_Classical_-"="#b2df8a","Classical_Proneural_+"="#b2df8a","Proneural_Classical_+"="#33a02c","Classical_Proneural_-"="#33a02c"),category=c("GBMatch"="grey","GBmatch_val"="black"))
 
 
-pdf(dirout(out, "subgroup_HM_Clustered.pdf"),height=5,width=6)
-pheatmap(border_color=NA,hmMT[order(row_annot$direction),order(col_annot$sub_group)], show_rownames=FALSE,show_colnames=FALSE,
+pdf(dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_subgroup_HM_Clustered_",paste0(hm_cohort,collapse="_"),".pdf")),height=7,width=8)
+pheatmap(border_color=NA,hmMT[order(row_annot$direction),order(col_annot$sub_group,col_annot$category)], show_rownames=FALSE,show_colnames=FALSE,
          annotation_col=col_annot,
          annotation_row=row_annot,
          cluster_rows=F, cluster_cols=F,
          annotation_colors=colors,
          color=colorRampPalette(c("blue","red"))(20))
 dev.off()
+}
+}
