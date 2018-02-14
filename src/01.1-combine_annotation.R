@@ -34,6 +34,8 @@ setnames(imaging_auto,"N-Nummer","N_number")
 
 #prep=fread("GBMatch_libraryPrep.csv")
 prep=fread("GBMatch_libraryPrep_rev.csv")
+plate_pos=fread("GBMatch_plate_positions_rev.csv")
+prep=merge(prep,plate_pos,by="N_number",all=TRUE)
 
 segmentation=fread("GBMatch_histo_segmentation_rev.csv")
 #include fragmentation check
