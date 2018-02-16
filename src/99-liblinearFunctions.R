@@ -208,10 +208,12 @@ check_prediction=function(data,labels,samples,cross=10,nReps=10,type=NULL,cost=N
   auc_annot[,x:=0.9,]
   auc_annot[,y:=ifelse(rand==TRUE,0.03,0.1),]
   
+  auc_annot[,label:=ifelse(rand==TRUE,paste0("Control=",round(as.numeric(mean_auc),2)),paste0("AUC=",round(as.numeric(mean_auc),2))),]
+  
   classes=unique(roc_mat_cv$class)
   inernal_plot_list=list()
   for (plot_class in classes){
-    pl=ggplot(roc_mat_cv[class==plot_class],aes(x=fpr,y=tpr,col=rand))+geom_line(aes(group=paste0(rep,rand),alpha=rand))+geom_text(data=auc_annot[class==plot_class],alpha=1,aes(x=x,y=y,label=paste0("auc=",round(as.numeric(mean_auc),2))))+scale_color_manual(values=c("TRUE"="grey","FALSE"="blue"))+scale_alpha_manual(values=c("TRUE"=0.5,"FALSE"=1))+annotate(geom="text",x=0,y=1,hjust=0,vjust=1,label=plot_class)
+    pl=ggplot(roc_mat_cv[class==plot_class],aes(x=fpr,y=tpr,col=rand))+geom_line(aes(group=paste0(rep,rand),alpha=rand))+geom_text(data=auc_annot[class==plot_class],alpha=1,aes(x=x,y=y,label=label))+scale_color_manual(values=c("TRUE"="darkgrey","FALSE"="blue"))+scale_alpha_manual(values=c("TRUE"=0.4,"FALSE"=1))+annotate(geom="text",x=0,y=1,hjust=0,vjust=1,label=plot_class)
     inernal_plot_list[[plot_class]]=pl
   }
   
@@ -292,7 +294,7 @@ prepare_data_fixed=function(meth_data_dt,annotation_all,features){
 
 
 #############prediction##########################################
-meth_pred_analysis=function(meth_data_imputed,annotation,column_annotation,set_targets=NULL,to_analyse,meth_sel,set_scale=FALSE,type=4,cost=1){
+meth_pred_analysis=function(meth_data_imputed,annotation,column_annotation,set_targets=NULL,to_analyse,meth_sel,set_scale=FALSE,type=4,cost=1,cross=NULL,nReps=10){
   for(selected in to_analyse){
     
     if(file.exists(paste0("dat_",selected,meth_sel,".RData"))){
@@ -355,7 +357,9 @@ meth_pred_analysis=function(meth_data_imputed,annotation,column_annotation,set_t
       if(any(annotation_sel$N_number_seq!=row.names(meth_data_sel))){stop("features and targets don't match")}
       ############turn scaling on and off here#################################################################
       ##use scaling for m-values and no scaling for beta-values. Scaled m-values seem too work slightly better than unscaled beta values, but scaled beta values perform equally well. However logically, it doesn't really make sense to scale beta-values.
-      pl[[target]]=check_prediction(data=meth_data_sel,labels=gsub("/|\\+","",gsub(" |-","_",annotation_sel[,get(target),])),samples=annotation_sel$N_number_seq,cross=nrow(meth_data_sel),scaleAndCenter=set_scale,type=type,cost=cost)
+      
+      if (is.null(cross)){cross=nrow(meth_data_sel)}
+      pl[[target]]=check_prediction(data=meth_data_sel,labels=gsub("/|\\+","",gsub(" |-","_",annotation_sel[,get(target),])),samples=annotation_sel$N_number_seq,cross=cross,nReps=nReps,scaleAndCenter=set_scale,type=type,cost=cost)
       #########################################################################################################
     }
     save(pl,file=paste0("dat_",selected,meth_sel,".RData"))
