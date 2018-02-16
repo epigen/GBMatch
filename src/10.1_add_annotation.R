@@ -19,6 +19,8 @@ setnames(CNV_chrom_arms,"sample","N_number_seq")
 #get meth heterogeneity
 loadCaches("combined_heterogeneity")
 setnames(combined_heterogeneity,"id","N_number_seq")
+combined_heterogeneity=combined_heterogeneity[N_number_seq%in%annotation$N_number_seq]
+
 
 #get EPM
 EPM_files=list.files(file.path(getOption("PROCESSED.PROJECT"),"results_analysis/06-methclone/"),"EPM_1vs2.tsv",recursive=TRUE,full.names=TRUE)
