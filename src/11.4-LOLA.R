@@ -1,6 +1,9 @@
 library(project.init)
 library(pheatmap)
+library(LOLA)
 project.init2("GBMatch")
+
+
 
 preProcessing <- "RAW_5"
 use.tiles <- TRUE
@@ -37,10 +40,11 @@ cpgs.to.tiles <- function(gr, minHits){
   return(unique(as(tiles[data.table(data.frame(findOverlaps(gr, LOLA_tiles)))[,.N, by="subjectHits"][N >= minHits]$subjectHits], "GRanges")))
 }
 
-
-library(LOLA)
-LOLA_regionDB = loadRegionDB(paste0(Sys.getenv("RESOURCES"), "/regions/LOLACore/hg38/"))
+LOLA_regionDB = loadRegionDB(dbLocation=paste0(Sys.getenv("RESOURCES"), "/regions/LOLACore/hg38/"),collections=c("codex","encode_tfbs"))
+LOLA_regionDB_seg = loadRegionDB(paste0(Sys.getenv("RESOURCES"), "/regions/customRegionDB/hg38/"),collections=c("roadmap_segmentation"))
+segmentation_annot=fread(paste0(Sys.getenv("RESOURCES"), "/regions/customRegionDB/hg38/roadmap_segmentation/index.txt"),select=c("filename","EID", "seg_code", "seg_explanation","Standardized Epigenome name"))
 cellType_conversions=fread(file.path(getOption("PROJECT.DIR"),"metadata/LOLA_annot/CellTypes.tsv"),drop="collection")
+
 annotation=fread(paste0(dirout(),"01.1-combined_annotation/","annotation_combined_final.tsv"))
 
 cohorts=list("GBmatch_val","GBMatch",c("GBMatch","GBmatch_val"))
@@ -133,29 +137,45 @@ ggsave(dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_Hit_counts_afterTil
 
 
 # LOLA --------------------------------------------------------------------
-if(!file.exists(dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_LOLA_FULL.tsv")))){
+#if(!file.exists(dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_LOLA_FULL.tsv")))){
   resLOLA <- data.table()
+  resLOLA_seg <- data.table()
   xnam <- names(userSets)[1]
   for(xnam in names(userSets)){
     tryCatch({
       res.x <- runLOLA(userSets=userSets[[xnam]]$query, userUniverse=userSets[[xnam]]$bg, regionDB=LOLA_regionDB)
       res.x$userSet <- rep(xnam, nrow(res.x))
       resLOLA <- rbind(resLOLA, res.x)
+      
+      res.x_seg <- runLOLA(userSets=userSets[[xnam]]$query, userUniverse=userSets[[xnam]]$bg, regionDB=LOLA_regionDB_seg)
+      res.x_seg$userSet <- rep(xnam, nrow(res.x_seg))
+      resLOLA_seg <- rbind(resLOLA_seg, res.x_seg)
+      
     }, error = function(e){
       print(paste(xnam, ":", e))
     })
   }
   
   # SIGNFICANCE ------------------------------------------------------------
-  collections=c("codex","encode_tfbs")
   resLOLA[,BY:=p.adjust(10^(-pValueLog),method="BY")]
   resLOLA[,BH:=p.adjust(10^(-pValueLog),method="BH")]
+  resLOLA_seg[,BY:=p.adjust(10^(-pValueLog),method="BY")]
+  resLOLA_seg[,BH:=p.adjust(10^(-pValueLog),method="BH")]
   
   # How many results?
   resLOLA[BH < qCutoff][, .N , by="userSet"]
   resLOLA[BY < qCutoff][, .N , by="userSet"]
-  resLOLA[collection%in%collections & BH < qCutoff][, .N , by="userSet"]
-  resLOLA[collection%in%collections & BY < qCutoff][, .N , by="userSet"]
+
+  
+  #for segmentation
+  resLOLA_seg=merge(resLOLA_seg,segmentation_annot,by="filename",all.x=TRUE)
+  write.table(resLOLA_seg, file=dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_LOLA_seg_FULL.tsv")), sep="\t", quote=F, row.names=F)
+  write.table(resLOLA_seg[BY < qCutoff], file=dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_LOLA_seg_HITS.tsv")), sep="\t", quote=F, row.names=F)
+
+#  resLOLA_seg[userSet=="category_GBMatch_GBmatchval"&BY < qCutoff,.N,by="seg_code"][order(N,decreasing=TRUE)]
+#  resLOLA_seg[userSet=="category_GBMatch_GBmatchval"&BY < qCutoff,.N,by="EID"][order(N,decreasing=TRUE)]
+#  resLOLA_seg[userSet=="category_GBmatchval_GBMatch"&BY < qCutoff,.N,by="seg_code"][order(N,decreasing=TRUE)]
+#  resLOLA_seg[userSet=="category_GBmatchval_GBMatch"&BY < qCutoff,.N,by="EID"][order(N,decreasing=TRUE)]
   
   # GET RESULTS -------------------------------------------------------------
   resLOLA[,mlog10p.adjust:=-log10(BY),]
@@ -168,7 +188,9 @@ if(!file.exists(dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_LOLA_FULL.
   # SAFE FULL TABLE
   write.table(resLOLA, file=dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_LOLA_FULL.tsv")), sep="\t", quote=F, row.names=F)
   write.table(resLOLA[BY < qCutoff], file=dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_LOLA_HITS.tsv")), sep="\t", quote=F, row.names=F)
-}
+#}
+
+
 resLOLA <- fread(dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_LOLA_FULL.tsv")))
 
 resLOLA <- resLOLA[cellType_corr %in% c("Astrocyte", "ESC")]

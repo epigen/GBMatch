@@ -5,7 +5,7 @@ project.init2("GBMatch")
 # Parameters
 preProcessing <- "RAW"
 minCoverage <- 5
-minCntPerAnnot <- 4
+minCntPerAnnot <- 4 #originally 5 but reduced to 4 to enable analysis in validation cohort
 
 if(!is.na(minCoverage)){
   minCoverage <- as.numeric(minCoverage)
@@ -152,7 +152,7 @@ for (sel_cohort in cohorts){
             }
             print(Sys.time())
             pval[is.na(pval)] <- NA # get rid of NaN
-            res[[paste0(factorOfInterest, "_", groups[i1], "_", groups[i2])]] <- pval
+            res[[paste0(factorOfInterest, "_", gsub("_","",groups[i1]), "_", gsub("_","",groups[i2]))]] <- pval
           }
         }
       }
