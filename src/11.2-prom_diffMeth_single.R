@@ -3,6 +3,7 @@ project.init2("GBMatch")
 library(LOLA)
 library(RGenomeUtils)
 library(enrichR)
+library(pathview)
 
 
 
@@ -228,4 +229,19 @@ dev.off()
 pdf("SFRP2_followup_trend.pdf",height=6,width=5)
 ggplot(sub_long[NsurgAvail>1],aes(y=value, x=paste0("Surgery ",surgery.x),group=paste0(patID,"_",variable)))+geom_line(aes(lty=variable))+geom_point(aes(shape=variable),position=position_jitter(width=0.01),alpha=0.6)+facet_wrap(external_gene_name~patID,ncol=2)+xlab("")
 dev.off()
+
+
+#wnt pathway visualisation
+
+wnt_genes_meth=merged_heterogeneity_annot_genes[external_gene_name%in%genes_enrichr[term=="Wnt signalling"]$gene_name]
+wnt_genes_meth[,Nallsamples:=length(unique(N_number_seq)),by=c("category","surgery.x")]
+wnt_genes_meth_merged=wnt_genes_meth[category%in%c("GBMatch","GBmatch_val","control")&surgery.x%in%c(1,2,NA)&CpGcount_meth>2&(readCount/CpGcount_meth)>10,list(Nsamples=sum(!is.na(methyl)),mean_meth=mean(methyl,na.rm=TRUE),mean_CpG=mean(CpGcount_meth,na.rm=TRUE),mean_reads=mean(readCount,na.rm=TRUE)),by=c("category","surgery.x","external_gene_name", "ensembl_gene_id","Nallsamples")]
+wnt_genes_meth_merged[,category_surg:=paste0(category,"_",surgery.x),]
+wnt_genes_meth_merged_wide=dcast(wnt_genes_meth_merged[Nsamples>(0.1*Nallsamples)&mean_CpG>2],external_gene_name+ensembl_gene_id~category_surg,value.var=c("mean_meth"))
+
+wnt_meth_for_kegg=data.frame(wnt_genes_meth_merged_wide[,c("control_NA",  "GBMatch_1",  "GBMatch_2", "GBmatch_val_1"),],row.names=wnt_genes_meth_merged_wide$ensembl_gene_id)
+
+pv.out <- pathview(gene.data = na.omit(wnt_meth_for_kegg),gene.idtype="ENSEMBL",node.sum="mean",limit=list(gene=c(0,1)),both.dirs=list(gene=FALSE),mid=list(gene="green") ,pathway.id = "04310",species = "hsa", out.suffix = "wnt_meanMethylation", kegg.native = T,sign.pos = "bottomleft")
+
+pv.out <- pathview(gene.data = genes_enrichr[term=="Wnt signalling"]$gene_name,gene.idtype="SYMBOL",node.sum="median",limit=list(gene=c(0,1)),both.dirs=list(gene=FALSE),mid=list(gene="green") ,pathway.id = "04310",species = "hsa", out.suffix = "wnt_includedGenes", kegg.native = T,sign.pos = "bottomleft")
 
