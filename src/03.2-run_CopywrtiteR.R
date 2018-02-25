@@ -23,7 +23,7 @@ control_bam=normalizePath(list.files("merged_bams","controls.bam$",full.names=TR
 #sample.control=data.frame(samples=c(control_bam,annotation[material=="FFPE"]$aligned_bam),controls=control_bam)
 
 #validation run
-sample.control=data.frame(samples=c(control_bam,annotation$aligned_bam),controls=control_bam)
+sample.control=data.frame(samples=c(control_bam,annotation[material!="RCL"]$aligned_bam),controls=control_bam)
 
 
 

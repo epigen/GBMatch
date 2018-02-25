@@ -26,6 +26,9 @@ setnames(meth_ag,"CpGcount","CpGcount_meth")
 merged_heterogeneity_pre=merge(pdr_ag,entropy_ag,by=c("id","chr","start","end","regionID"),all=TRUE)
 merged_heterogeneity=merge(merged_heterogeneity_pre,meth_ag,by=c("id","chr","start","end","regionID"),all=TRUE)
 
+#make sure to only use the samples in the annotation table
+merged_heterogeneity=merged_heterogeneity[id%in%annotation$id]
+
 merged_heterogeneity_annot=merge(merged_heterogeneity,annotation[,c("id","rand_frag_perc","Unique_CpGs","enrichmentCycles","Ct_postLigation","Ct_postConversion","Follow-up_years","Age","surgery.x","patID","category","IDH"),with=FALSE],by="id")
 
 
@@ -104,7 +107,7 @@ pl2=ggplot(unique(condensed[,c("plotID","category","surgery.x","annot_entropy","
 
 pl3=ggplot(unique(condensed[,c("plotID","category","surgery.x","annot_entropy","annot_pdr"),with=FALSE])[!(is.na(annot_entropy)&is.na(annot_pdr))],aes(x=plotID))+geom_density(aes(group=annot_entropy,col=annot_entropy,fill=annot_entropy),alpha=0.2)+facet_wrap(~surgery.x,scale="free")+annotate("text",label="Entropy class",x=1,hjust=0,y=0)+guides(col=FALSE,fill=FALSE)+theme(axis.title.x=element_blank(),axis.text=element_blank(),axis.ticks=element_blank())+scale_color_brewer(palette="Set2")+scale_fill_brewer(palette="Set2")
 
-pdf(paste0("epiallele-freqs_",sel_category,".pdf"),height=6,width=ifelse(sel_category=="GBMatch",8,7.5))
+pdf(paste0("epiallele-freqs_",sel_category,".pdf"),height=6,width=ifelse(sel_category=="GBMatch",8,3.5))
 grid.arrange(pl3, pl2, pl1, ncol=1, nrow=3, heights=c(1,1,5))
 dev.off()
 }

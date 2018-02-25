@@ -3,6 +3,7 @@ project.init2("GBMatch")
 library(gsubfn)
 library(gtools)
 library(ggrepel)
+library(gridExtra)
 
 
 CNA_dir="CNAprofiles_single_100kb"
@@ -56,6 +57,7 @@ segments_ctr_dt[,Feature:=paste0("seg_",1:nrow(segments_ctr_dt)),]
 segments_ctr_gr=with(segments_ctr_dt, GRanges(seqnames = Rle(chrom), IRanges(start=loc.start, end=loc.end),strand=Rle("*"),ID=Feature))
 
 segments_ctr_annot=list(dt=segments_ctr_dt,gr=segments_ctr_gr)
+dir.create("summary")
 save(segments_ctr_annot,file="summary/segments_ctr_annot.RData")
 
 #load tiles
@@ -79,7 +81,6 @@ segments_ctr_annot_mean[,sdChange:=abs(seg.mean/set_sd),]
 segments_ctr_annot_mean[,sdChange_top:=ifelse(sdChange>5,5,sdChange),]
 
 #now plot
-dir.create("summary")
 
 #distribution of change over sd
 pdf(file.path("summary/sdChange_distribution.pdf"),height=4,width=4)
@@ -175,8 +176,10 @@ segments_ctr_annot_mean_cb_1p19q_red[category=="GBmatch_val"&is.na(WHO2016_class
 segments_ctr_annot_mean_cb_1p19q_wide=reshape(segments_ctr_annot_mean_cb_1p19q_red,idvar=c("sample_short","WHO2016_classification","category","IDH"),timevar="region",direction="wide")
 segments_ctr_annot_mean_cb_1p19q_wide[,mean_len_perc:=mean(c(percent.1_p,percent.19_q)),by="sample_short"]
 
-pdf(file.path("summary/1p19q.pdf"),height=5,width=8)
-ggplot(segments_ctr_annot_mean_cb_1p19q_wide[category%in%c("GBMatch","GBmatch_add","GBmatch_val")],aes(x=dom_set.1_p,y=dom_set.19_q,col=category,fill=WHO2016_classification,size=mean_len_perc))+geom_point(shape=21,position=position_jitterdodge(jitter.width = 0.6, jitter.height = 0.35, dodge.width = NULL),alpha=0.5)+xlab(label="Chromosome 1p")+ylab(label="Chromosome 19q")+scale_color_manual(values=c("white","white","black"))+scale_fill_manual(values=c("red","grey","grey","grey","grey","red","grey"))+scale_size_continuous(range=c(1,3))
+pdf(file.path("summary/1p19q.pdf"),height=7,width=3)
+pl=ggplot(segments_ctr_annot_mean_cb_1p19q_wide[category%in%c("GBMatch","GBmatch_add","GBmatch_val")],aes(x=dom_set.1_p,y=dom_set.19_q,col=category,fill=WHO2016_classification,size=mean_len_perc))+geom_point(shape=21,position=position_jitterdodge(jitter.width = 0.5, jitter.height = 0.25, dodge.width = NULL),alpha=0.5)+xlab(label="Chromosome 1p")+ylab(label="Chromosome 19q")+scale_color_manual(values=c("grey","red","black"))+scale_fill_manual(values=c("red","grey","grey","grey","grey","red","grey"))+scale_size_continuous(range=c(1,3))
+      print(pl+ theme(legend.position="none")+ coord_fixed())
+      grid.arrange(g_legend(pl))
 dev.off()
 
 

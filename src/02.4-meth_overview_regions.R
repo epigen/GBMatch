@@ -29,7 +29,7 @@ rrbsEnhancers[,regions:="Enhancers",]
 
 
 #assess batch effects by MDS
-rrbsTiled5ksub_wide=as.data.table(dcast(rrbsTiled5ksub,regionID~id,value.var="methyl"))
+rrbsTiled5ksub_wide=as.data.table(dcast(rrbsTiled5ksub[id%in%annotation$N_number_seq],regionID~id,value.var="methyl"))
 rrbsTiled5ksub_wide_mat=as.matrix(rrbsTiled5ksub_wide[,-c("regionID"),with=FALSE])
 row.names(rrbsTiled5ksub_wide_mat)=rrbsTiled5ksub_wide$regionID
 
@@ -39,19 +39,12 @@ mds=isoMDS(d, k=2)
 mds_annot_pre=data.table(N_number_seq=row.names(mds$points),MDS1=mds$points[,1],MDS2=mds$points[,2])
 mds_annot=merge(mds_annot_pre,annotation,by="N_number_seq")
 
-batch_variables=c("SurgeryDate","material","category","cohort","batch","adapter","flowcell.y")
+batch_variables=c("SurgeryDate","material","category","cohort","batch","adapter","flowcell_date","IDH","Diagnosis")
 
 mds_annot[,SurgeryDate:=as.Date(SurgeryDate,format="%Y-%m-%d"),]
+mds_annot[,flowcell_date:=as.Date(flowcell_date,format="%Y-%m-%d"),]
 mds_annot[,batch:=as.factor(batch),]
-
-
-g_legend<-function(a.gplot){
-  tmp <- ggplot_gtable(ggplot_build(a.gplot))
-  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
-  legend <- tmp$grobs[[leg]]
-  return(legend)
-}
-
+mds_annot[,Diagnosis:=ifelse(phenotype=="Oligodendroglioma","Oligodendroglioma",ifelse(category=="control","Epilepsy","Glioblastoma")),]
 
 pdf("MDS_batch_color.pdf",height=6,width=4)
 for (batch_variable in batch_variables){
@@ -99,7 +92,7 @@ dev.off()
 #now plot overview
 
 #for primary cohort
-pdf("methylation_overview_material_prim.pdf",width=5,height=5)
+pdf("methylation_overview_material_prim.pdf",width=4.5,height=5)
 ggplot(meth_combined_annot[(readCount/CpGcount)>10&cohort=="primary"],aes(x=material,y=methyl,group=material))+geom_violin(fill="black")+geom_boxplot(outlier.size=NA,width=0.2)+facet_wrap(~regions,scale="free")+ylab("% DNA methylation")+xlab("")+ggtitle("> 10 reads per CpG")
 
 ggplot(meth_combined_annot[CpGcount>25&cohort=="primary"],aes(x=material,y=methyl,group=material))+geom_violin(fill="black")+geom_boxplot(outlier.size=NA,width=0.2)+facet_wrap(~regions,scale="free")+ylab("% DNA methylation")+xlab("")+ggtitle("> 10 reads per CpG")+ggtitle(">25 CpGs per region")
@@ -113,7 +106,7 @@ dev.off()
 
 
 #for validation cohort
-pdf("methylation_overview_material_val.pdf",width=4,height=5)
+pdf("methylation_overview_material_val.pdf",width=3.5,height=5)
 ggplot(meth_combined_annot[(readCount/CpGcount)>10&cohort=="validation"],aes(x=material,y=methyl,group=material))+geom_violin(fill="black")+geom_boxplot(outlier.size=NA,width=0.2)+facet_wrap(~regions,scale="free")+ylab("% DNA methylation")+xlab("")+ggtitle("> 10 reads per CpG")
 
 ggplot(meth_combined_annot[CpGcount>25&cohort=="validation"],aes(x=material,y=methyl,group=material))+geom_violin(fill="black")+geom_boxplot(outlier.size=NA,width=0.2)+facet_wrap(~regions,scale="free")+ylab("% DNA methylation")+xlab("")+ggtitle("> 10 reads per CpG")+ggtitle(">25 CpGs per region")

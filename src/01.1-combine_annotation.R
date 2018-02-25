@@ -21,6 +21,11 @@ setnames(sequencing_stats,"sampleName","N_number")
 sequencing_annot=fread(file.path(getOption("PROJECT.DIR"),"metadata/GBMatch_samples.csv"))
 setnames(sequencing_annot,"sample_name","N_number")
 sequencing=merge(sequencing_annot,sequencing_stats,by="N_number")
+fc_date=fread("flowcell_date.csv")
+fc_date[,flowcell_date:=as.Date(flowcell_date,"%Y.%m.%d"),]
+sequencing=merge(sequencing,fc_date,by="flowcell",all=TRUE)
+
+
 
 #clinical=prep_clin_annot("GBMatch_clinical data_20032017_mod.csv");clinical
 clinical=prep_clin_annot("GBMatch_clinical data_2018_rev.csv");clinical
@@ -279,6 +284,9 @@ merge4=merge4[!patID%in%surg_check[(min!=1|max<2)&categories=="GBMatch"]$patID]
 #complement complement Sex with sex
 merge4[is.na(Sex),Sex:=sex]
 
+
+#remove samples from validation cohort DNA prep plate 2
+merge4=merge4[plate_dna_abbrev!="EA003_plate2"|is.na(plate_dna_abbrev)]
 
 write.table(merge4,paste0(our_dir,"/annotation_combined.tsv"),row.names = FALSE,sep="\t",quote=FALSE)
 

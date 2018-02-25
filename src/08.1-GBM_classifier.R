@@ -140,20 +140,17 @@ pdf(file.path(paste0("roc_auc_",sub,"_predRRBS.pdf")),height=4,width=4.5)
 test_res_prob[,print_res(check[1][[1]],paste0(sample[1]," ",prediction[[1]][1]," prob:",round(prediction[[2]][which(colnames(prediction[[2]])==prediction[[1]][1])],3)," auc:",round(auc,2))),by="sampleName"]
 dev.off()
 
+#make sure to analyse only samples that are in the annotation
+test_res_prob=test_res_prob[sample%in%annotation$N_number_seq]
+
 
 class_probs=test_res_prob[,list(sub_group=prediction[[1]][1],prob=prediction[[2]][which(colnames(prediction[[2]])==prediction[[1]][1])],auc=auc[1],auc_rand=auc_rand[1],val_rat=val_rat[1]),c("sampleName","sample")]
 write.table(class_probs,paste0("class_probs",sub,"_predRRBS.tsv"),sep="\t",quote=FALSE,row.names=FALSE)
 
-pdf(file.path(paste0("class_probs_",sub,"_predRRBS.pdf")),height=3,width=3.5)
-ggplot(class_probs,aes(y=prob,x=substr(sub_group,1,3),group=sub_group))+geom_point(aes(fill=auc,col=auc),position=position_jitter(width=0.2,height=0),alpha=0.5,pch=21)+ylim(c(0,1))+geom_boxplot(fill="transparent")+scale_fill_continuous(low="blue",high="red")+scale_color_continuous(low="blue",high="red")
-
-ggplot(class_probs,aes(y=auc,x=substr(sub_group,1,3),group=sub_group))+geom_point(aes(fill=sub_group,col=sub_group),position=position_jitter(width=0.2,height=0),alpha=0.2,pch=21)+ylim(c(0,1))+geom_boxplot(outlier.shape=NA,fill="transparent")+geom_hline(yintercept=0.8,lty=20,col="grey")+xlab("")+ylab("ROC AUC")
-dev.off()
-
 
 class_probs_all=test_res_prob[,list(sub_group=prediction[[1]][1],Classical=prediction[[2]][1],Proneural=prediction[[2]][2],Mesenchymal=prediction[[2]][3],auc=auc[1],auc_rand=auc_rand[1]),c("sampleName","sample")]
 
-class_probs_all_annot=class_probs_all[annotation[,c("N_number_seq","patID","category","IDH","surgery.x","WHO2016_classification","Follow-up_years"),with=FALSE], on=c(sample="N_number_seq")]
+class_probs_all_annot=class_probs_all[annotation[,c("N_number_seq","patID","category","cohort","IDH","surgery.x","WHO2016_classification","Follow-up_years"),with=FALSE], on=c(sample="N_number_seq")]
 
 class_probs_all_annot[is.na(sub_group)]
 class_probs_all_annot=class_probs_all_annot[!is.na(sub_group)]
@@ -163,6 +160,13 @@ class_probs_all_annot[,sub_group_prob:=get(sub_group),by=1:nrow(class_probs_all_
 class_probs_all_annot[,switching:=ifelse(length(unique(sub_group[category=="GBMatch"&surgery.x%in%c(1,2)]))==1,FALSE,TRUE),by="patID"]
 
 write.table(class_probs_all_annot,paste0("class_probs_annot_",sub,"_predRRBS.tsv"),sep="\t",quote=FALSE,row.names=FALSE)
+
+pdf(file.path(paste0("class_probs_",sub,"_predRRBS.pdf")),height=3,width=5)
+ggplot(class_probs_all_annot[category%in%c("GBMatch","GBmatch_val")],aes(y=sub_group_prob,x=substr(sub_group,1,3),group=sub_group))+geom_point(aes(fill=auc,col=auc),position=position_jitter(width=0.2,height=0),alpha=0.5,pch=21)+ylim(c(0,1))+geom_boxplot(fill="transparent")+scale_fill_continuous(low="blue",high="red")+scale_color_continuous(low="blue",high="red")+facet_wrap(~cohort)
+
+ggplot(class_probs_all_annot[category%in%c("GBMatch","GBmatch_val")],aes(y=auc,x=substr(sub_group,1,3),group=sub_group))+geom_point(aes(fill=sub_group,col=sub_group),position=position_jitter(width=0.2,height=0),alpha=0.2,pch=21)+ylim(c(0,1))+geom_boxplot(outlier.shape=NA,fill="transparent")+geom_hline(yintercept=0.8,lty=20,col="grey")+xlab("")+ylab("ROC AUC")+facet_wrap(~cohort)
+dev.off()
+
 
 class_probs_all_annot_long=melt(class_probs_all_annot,id.vars=c("sampleName","sample","patID","category","sub_group","sub_group_prob","switching","auc","auc_rand","surgery.x","WHO2016_classification","Follow-up_years","IDH"),value.name="prob")
 

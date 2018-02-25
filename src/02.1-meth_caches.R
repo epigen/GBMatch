@@ -8,7 +8,11 @@ eload(loadUCSCRepeats())
 repeats = SV$repeats
 
 eload(loadAnnotation())
-BSSamples = SV$psa[file.exists(BSFile) & library=="RRBS", sample_name]; BSSamples
+#only include samples in combined sample annotation
+annotation=fread(file.path(getOption("PROCESSED.PROJECT"),"results_analysis/01.1-combined_annotation/annotation_combined.tsv"))
+BSSamples = SV$psa[file.exists(BSFile) & library=="RRBS"&sample_name%in%annotation$N_number_seq, sample_name]; BSSamples
+
+
 
 
 ##functions##########

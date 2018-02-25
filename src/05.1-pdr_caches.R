@@ -34,7 +34,9 @@ special=c("CpGcount=length(na.omit(PDRa))")
 jCommand = buildJadd(cols,funcs,special)
 
 # Choose samples on which to run this summary:
-pdrSamples = SV$psa[file.exists(PDRFile), sample_name]; pdrSamples
+#only include samples in combined sample annotation
+annotation=fread(file.path(getOption("PROCESSED.PROJECT"),"results_analysis/01.1-combined_annotation/annotation_combined.tsv"))
+pdrSamples = SV$psa[file.exists(PDRFile)&sample_name%in%annotation$N_number_seq, sample_name]; pdrSamples
 
 
 
@@ -111,6 +113,5 @@ simpleCache("pdrCgi", {
 	sampleSummaryLong # Cache this.
 },recreate=TRUE)
 
-combinePDRCache("pdrCgi")
 
 

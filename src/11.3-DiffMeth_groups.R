@@ -26,8 +26,12 @@ cacheName <- "rrbsCg"
 
 if(!file.exists(dirout(out, "Matrix.RData"))){
   
-  # LOAD DATA ---------------------------------------------------------------
+  # LOAD DATA AND ANNOTATION---------------------------------------------------------------
+  annotation_orig=fread(paste0(dirout(),"01.1-combined_annotation/","annotation_combined_final.tsv"))
   (load(paste0(getOption("PROCESSED.PROJECT"), "/RCache/", cacheName, ".RData")))
+  #make sure to only use samples in sample annotation
+  ret=ret[id%in%annotation_orig$N_number_seq]
+  
   ret$region <- paste0(ret$chr,"_", ret$start,"_",ret$end)
 
   if(!is.na(minCoverage)){
@@ -60,7 +64,6 @@ if(!file.exists(dirout(out, "Matrix.RData"))){
 }
 
 # Prepare annotation for diff analysis
-annotation_orig=fread(paste0(dirout(),"01.1-combined_annotation/","annotation_combined_final.tsv"))
 annotation_orig <- annotation_orig[category %in% c("GBMatch","GBmatch_val") & IDH == "wt"]
 colnames(annotation_orig)
 (load(paste0(dirout(),"01.1-combined_annotation/","column_annotation_combined.RData")))
@@ -77,7 +80,7 @@ immuno <- column_annotation_combined_clean$histo_immuno
 #  "Sex")
 # fcts <- c(immuno, fcts)
 
-fcts <- c("category","sub_group","CD163","CD68","EZH2","MIB","Enhancing (mm3)")
+fcts <- c("category","sub_group","CD163","CD68","CD3","CD8","EZH2","MIB","Enhancing (mm3)")
 
 
 

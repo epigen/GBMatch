@@ -19,7 +19,7 @@ condense_vcf=function(sample,patient,vcf_file,vcf_bg_file){
   message(sample)
   vcf=readVcf(vcf_file,"hg38")
   bg=as.numeric(gsub("[A-za-z ]","",grep("Confidently called bases[ ]*[0-9]",readLines(vcf_bg_file),value=TRUE,perl=TRUE)))
-
+  bg_reads=as.numeric(gsub("[A-za-z ]","",grep("Average good reads coverage in callable position   [ ]*[0-9]",readLines(vcf_bg_file),value=TRUE,perl=TRUE)))
   if (nrow(vcf@fixed)==0){
     message("No SNPs found. Retuning NAs")
     dt=data.table(CHROM=NA,POS=NA,varID=NA,REF=NA,ALT=NA,QUAL=NA,H_count=NA,M_count=NA,H_genes=NA,M_genes=NA,sample_name=sample,patID=patient,bg_calls=bg)
@@ -50,6 +50,7 @@ condense_vcf=function(sample,patient,vcf_file,vcf_bg_file){
   dt[,sample_name:=sample,]
   dt[,patID:=patient,]  #enable for complete rerun
   dt[,bg_calls:=bg,]
+  dt[,bg_reads:=bg_reads,]
   return(dt)
 }
 
@@ -71,14 +72,14 @@ for(i in c(1:nrow(annotation))){
 }
 
 
-bissnp_var_samp=bissnp_var[,list(all_count=.N,H_count=sum(H_count>0),M_count=sum(M_count>0),bg_calls=bg_calls[1],category=category[1]),by=c("patID","sample_name","surgery")]
+bissnp_var_samp=bissnp_var[,list(all_count=.N,H_count=sum(H_count>0),M_count=sum(M_count>0),bg_calls=bg_calls[1],bg_reads=bg_reads[1],category=category[1]),by=c("patID","sample_name","surgery")]
 
 
-bissnp_var_samp_long=melt(bissnp_var_samp,id.vars=c("patID", "sample_name","surgery","bg_calls","category"))
+bissnp_var_samp_long=melt(bissnp_var_samp,id.vars=c("patID", "sample_name","surgery","bg_calls","bg_reads","category"))
 bissnp_var_samp_long[,mut_norm:=value/bg_calls*1000000,]
 
-bissnp_var_pat=bissnp_var_samp[category%in%c("GBMatch","GBmatch_val"),list(all_count=all_count[which.max(bg_calls)], H_count=H_count[which.max(bg_calls)], M_count=M_count[which.max(bg_calls)], bg_calls=bg_calls[which.max(bg_calls)]),by=c("patID","surgery","category")]
-bissnp_var_pat_long=melt(bissnp_var_pat,id.vars=c("patID","surgery","category","bg_calls"))
+bissnp_var_pat=bissnp_var_samp[category%in%c("GBMatch","GBmatch_val"),list(all_count=all_count[which.max(bg_calls)], H_count=H_count[which.max(bg_calls)], M_count=M_count[which.max(bg_calls)], bg_calls=bg_calls[which.max(bg_calls)],bg_reads=bg_reads[which.max(bg_calls)]),by=c("patID","surgery","category")]
+bissnp_var_pat_long=melt(bissnp_var_pat,id.vars=c("patID","surgery","category","bg_calls","bg_reads"))
 bissnp_var_pat_long[,mut_norm:=value/bg_calls*1000000,]
 
 annot_age=unique(annotation[,list(age=age,surgery=surgery.x,patID=patID,IDH=IDH,sex=sex,timeToSecSurg=timeToSecSurg),])
@@ -106,7 +107,7 @@ ggplot(bissnp_var_pat_long[surgery<3],aes(y=mut_norm,x=paste0(category,"\nSurger
 dev.off()
 
 bissnp_var_pat_long_wide=reshape(bissnp_var_pat_long[!is.na(surgery)],idvar=c("patID","variable"),timevar="surgery",direction="wide")
-bissnp_var_pat_wide=reshape(bissnp_var_pat_long[!is.na(surgery)],idvar=c("patID","bg_calls","surgery"),timevar=c("variable"),drop="value",direction="wide")
+bissnp_var_pat_wide=reshape(bissnp_var_pat_long[!is.na(surgery)],idvar=c("patID","bg_calls","bg_reads","surgery"),timevar=c("variable"),drop="value",direction="wide")
 bissnp_var_pat_wide=reshape(bissnp_var_pat_wide,idvar="patID",timevar="surgery",direction="wide")
 
 
@@ -129,7 +130,7 @@ GOIs_sel=merge(GOIs_sel,OGTS,by="gene",all.x=TRUE)
 bissnp_var_hit=bissnp_var[!is.na(H_genes)]
 
 #recycling should be ok, because some lines are expanded
-bissnp_var_hit_long=bissnp_var_hit[, cbind(gene=unlist(strsplit(x=H_genes,",")), .SD), by=c("sample_name", "bg_calls","patID", "surgery", "category","REF","ALT","QUAL")]
+bissnp_var_hit_long=bissnp_var_hit[, cbind(gene=unlist(strsplit(x=H_genes,",")), .SD), by=c("sample_name", "bg_calls","bg_reads","patID", "surgery", "category","REF","ALT","QUAL")]
 
 bissnp_var_hit_long=merge(bissnp_var_hit_long,GOIs_sel,by="gene")
 bissnp_var_hit_long[QUAL>100,QUAL:=100,]

@@ -21,29 +21,30 @@ pdf("rand_frag_RCL.pdf",height=5,width=6)
 ggplot(annotation[!is.na(sample_group)&!material=="frozen"],aes(x=material,y=rand_frag_perc,fill=sample_group,group=sample_group))+geom_line(alpha=0.6)+geom_point(alpha=0.5,shape=21,size=3)+ylim(c(0,100))
 dev.off()
 
-annotation[,time_to_prep:=as.numeric(as.Date("2016-12-01")-as.Date(SurgeryDate)),]
-cor_time=annotation[,list(date=min(SurgeryDate),y=rand_frag_perc[which.min(as.Date(SurgeryDate))],time_cor=cor(rand_frag_perc,-time_to_prep)),by=c("material")]
+annotation[,material_cohort:=paste0(cohort,"\n",material),]
+annotation[,time_to_prep:=as.numeric(as.Date(flowcell_date)-as.Date(SurgeryDate)),]
+cor_time=annotation[,list(date=min(SurgeryDate),y=rand_frag_perc[which.min(as.Date(SurgeryDate))],time_cor=cor(rand_frag_perc,-time_to_prep)),by=c("material_cohort")]
 
 pdf("rand_fragVStime.pdf",height=3.5,width=4.5)
-ggplot(annotation,aes(x=as.Date(SurgeryDate),y=rand_frag_perc,fill=material,group=material))+geom_point(alpha=0.5,shape=21,size=3,aes(col=cohort))+geom_text(hjust=0,data=cor_time,aes(x=as.Date(date),y=y,label=paste0(material,": r=",round(time_cor,3))))+ylim(c(0,100))+geom_smooth(method="lm")+scale_color_manual(values=c("validation"="black","primary"="transparent")) +ylab("% randomly fragmented reads")+xlab("Surgery date")
+ggplot(annotation,aes(x=as.Date(SurgeryDate),y=rand_frag_perc,fill=material_cohort,group=material_cohort,col=material_cohort))+geom_point(alpha=0.5,shape=21,size=3)+geom_text(hjust=0,data=cor_time,aes(x=as.Date(date),y=y,label=paste0(material_cohort,": r=",round(time_cor,3))))+ylim(c(0,100))+geom_smooth(method="lm") +ylab("% randomly fragmented reads")+xlab("Surgery date")
 dev.off()
 
 #use FFPE necrosis values because they are not available for frozen
 annotation[,`Relative share necrosis`:=ifelse(is.na(`Relative share necrosis`),`Relative share necrosis`[material=="FFPE"],`Relative share necrosis`),by="N_number_st"]
 
-cor_nec=annotation[,list(`Relative share necrosis`=max(`Relative share necrosis`,na.rm=TRUE),rand_frag_perc=rand_frag_perc[which.max(`Relative share necrosis`)],cor=cor(`Relative share necrosis`,rand_frag_perc,use="pairwise.complete")),by="material"]
+cor_nec=annotation[,list(`Relative share necrosis`=max(`Relative share necrosis`,na.rm=TRUE),rand_frag_perc=rand_frag_perc[which.max(`Relative share necrosis`)],cor=cor(`Relative share necrosis`,rand_frag_perc,use="pairwise.complete")),by="material_cohort"]
 pdf("rand_fragVSnecrosis.pdf",height=3.5,width=4.5)
-ggplot(annotation,aes(x=`Relative share necrosis`,y=rand_frag_perc,fill=material,group=material))+geom_point(alpha=0.5,shape=21,size=3,aes(col=cohort))+geom_text(data=cor_nec,hjust=1,aes(label=paste0(material,": r=",round(cor,3))))+ylim(c(0,100))+geom_smooth(method="lm")+scale_color_manual(values=c("validation"="black","primary"="transparent"))+ylab("% randomly fragmented reads")+xlab("Relative share necrosis")
+ggplot(annotation,aes(x=`Relative share necrosis`,y=rand_frag_perc,fill=material_cohort,group=material_cohort,col=material_cohort))+geom_point(alpha=0.5,shape=21,size=3)+geom_text(data=cor_nec,hjust=1,aes(label=paste0(material_cohort,": r=",round(cor,3))))+ylim(c(0,100))+geom_smooth(method="lm")+ylab("% randomly fragmented reads")+xlab("Relative share necrosis")
 dev.off()
 
-cor_CpG=annotation[,list(Raw_reads=max(Raw_reads),Unique_CpGs=Unique_CpGs[which.max(Raw_reads)],cor=cor(Raw_reads,Unique_CpGs)),by="material"]
+cor_CpG=annotation[,list(Raw_reads=max(Raw_reads),Unique_CpGs=Unique_CpGs[which.max(Raw_reads)],cor=cor(Raw_reads,Unique_CpGs)),by="material_cohort"]
 pdf("readsVSCpG.pdf",height=3.5,width=4.5)
-ggplot(annotation,aes(x=Raw_reads/1000000,y=Unique_CpGs/1000000,fill=material,group=material))+geom_point(alpha=0.5,shape=21,size=3,aes(col=cohort))+geom_text(data=cor_CpG,hjust=1,aes(label=paste0(material,": r=",round(cor,3))))+geom_smooth(method="lm")+scale_color_manual(values=c("validation"="black","primary"="transparent"))+ylab("Unique CpGs (Million)")+xlab("Raw reads (Million)")
+ggplot(annotation,aes(x=Raw_reads/1000000,y=Unique_CpGs/1000000,fill=material_cohort,group=material_cohort,col=material_cohort))+geom_point(alpha=0.5,shape=21,size=3)+geom_text(data=cor_CpG,hjust=1,aes(label=paste0(material_cohort,": r=",round(cor,3))))+geom_smooth(method="lm")+ylab("Unique CpGs (Million)")+xlab("Raw reads (Million)")
 dev.off()
 
 #bisylfite conversion
-pdf("bisulfite_conversion.pdf",width=5,height=2.5)
-ggplot(annotation)+geom_point(aes(x=material,y=K1_unmethylated_meth*100,col="Unmethylated",fill="Unmethylated"),position=position_jitter(width=0.3,height=0),alpha=0.5,shape=21)+geom_point(aes(x=material,y=K3_methylated_meth*100,col="Methylated",fill="Methylated"),position=position_jitter(width=0.3,height=0),alpha=0.5,shape=21)+geom_hline(yintercept=5,color="grey",lty=20)+geom_hline(yintercept=95,color="grey",lty=20)+ylab("Control methylation (%)")
+pdf("bisulfite_conversion.pdf",width=4.5,height=2.5)
+ggplot(annotation)+geom_point(aes(x=material,y=K1_unmethylated_meth*100,col="Unmethylated",fill="Unmethylated"),position=position_jitter(width=0.3,height=0),alpha=0.5,shape=21)+geom_point(aes(x=material,y=K3_methylated_meth*100,col="Methylated",fill="Methylated"),position=position_jitter(width=0.3,height=0),alpha=0.5,shape=21)+geom_hline(yintercept=5,color="grey",lty=20)+geom_hline(yintercept=95,color="grey",lty=20)+facet_grid(~cohort,space="free_x",scale="free_x")+ylab("Control methylation (%)")
 dev.off()
 
 ########################
@@ -113,13 +114,13 @@ pl=ggplot(clinical_annot_long_date[Event!="DateOfBirth"],aes(x=Date_form,y=patID
   theme(axis.text.x=element_text(angle=90, vjust=0.5))+
   coord_flip()+facet_grid(~category,scales="free",space="free")
 
-pdf("timeline_prog_surg.pdf",height=5,width=35)
+pdf("timeline_prog_surg.pdf",height=5,width=28)
 print(pl)
 dev.off()
 
 pl2=pl+geom_point(data=clinical_annot_long_date[grepl("Surgery",Event)&!is.na(N_number_seq)],aes(x=Date_form,y=patID),shape=16,size=4)
 
-pdf("timeline_Nno.pdf",height=8,width=36)
+pdf("timeline_Nno.pdf",height=8,width=28)
 print(pl2)
 dev.off()
 

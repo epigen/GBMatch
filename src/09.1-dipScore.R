@@ -57,8 +57,8 @@ binResults=binProcess(rangesList, list("rrbsCg"), annotation, binCount)
 
 #analysis for segmentation
 #select single factors/cell types
-factor="Astrocyte|H1_Cell_Line|H9_Cell_Line"
-mylist_seg=lapply(c(regionDB_seg$regionAnno[size>1000][grep(factor,antibody)]$GRL_id,regionDB_seg$regionAnno[size>1000][grep(factor,cellType_corr)]$GRL_id),function(x){name=paste0(regionDB_seg$regionAnno[GRL_id==x]$seg_explanation,"__",regionDB_seg$regionAnno[GRL_id==x]$cellType_corr,"__",regionDB_seg$regionAnno[GRL_id==x]$EID,"_",regionDB_seg$regionAnno[GRL_id==x]$size);dt=as.data.table(as.data.frame(regionDB_seg$regionGRL[[x]]));dt[,start:=ceiling(start-(total_width-width)/2),];dt[,end:=ceiling(end+(total_width-width)/2),];dt[,width:=end-start,];return(list("name"=name,"dt"=dt))})
+factor_seg="Astrocyte|H1_Cell_Line|H9_Cell_Line"
+mylist_seg=lapply(c(regionDB_seg$regionAnno[size>1000][grep(factor_seg,antibody)]$GRL_id,regionDB_seg$regionAnno[size>1000][grep(factor_seg,cellType_corr)]$GRL_id),function(x){name=paste0(regionDB_seg$regionAnno[GRL_id==x]$seg_explanation,"__",regionDB_seg$regionAnno[GRL_id==x]$cellType_corr,"__",regionDB_seg$regionAnno[GRL_id==x]$EID,"_",regionDB_seg$regionAnno[GRL_id==x]$size);dt=as.data.table(as.data.frame(regionDB_seg$regionGRL[[x]]));dt[,start:=ceiling(start-(total_width-width)/2),];dt[,end:=ceiling(end+(total_width-width)/2),];dt[,width:=end-start,];return(list("name"=name,"dt"=dt))})
 
 rangesList_seg=lapply(mylist_seg,function(x){x$dt})
 names(rangesList_seg)=gsub("/| ","_",as.character(unlist(lapply(mylist_seg,function(x){x$name}))))
@@ -77,7 +77,7 @@ for(assay in names(binResults)){
 }
 dev.off()
 
-pdf(paste0("aggregatedMeth_subgroup_",factor,"_seg.pdf"),height=6,width=8)
+pdf(paste0("aggregatedMeth_subgroup_",factor_seg,"_seg.pdf"),height=6,width=8)
 for(assay in names(binResults_seg)){
   pl=ggplot(binResults_seg[[assay]]$binnedBSDT[(readCount>1000&(auc>0.8&sub_group_prob>0.8)|category=="control")&category%in%c("control","GBMatch","GBmatch_val","GBmatch_valF")],aes(x=factor(regionGroupID),y=methyl,col=sub_group))+geom_line(alpha=0.2,aes(group=id))+geom_smooth(aes(group=sub_group), se=FALSE)+facet_wrap(~category,scale="free")+ggtitle(assay)+scale_x_discrete(labels=labelBinCenter(binCount))+xlab(paste0("Genome bins surrounding sites (",total_width/1000,"kb)"))
   print(pl)
@@ -99,7 +99,7 @@ for(assay in names(binResults)){
 dev.off()
 
 #plot profiles by subgroup only GBMatch IDH=="wt" for segmentation
-pdf(paste0("aggregatedMeth_subgroup_GBMatch_",factor,"_seg.pdf"),height=3.5,width=4)
+pdf(paste0("aggregatedMeth_subgroup_GBMatch_",factor_seg,"_seg.pdf"),height=3.5,width=4)
 for(assay in names(binResults_seg)){
   spl=unlist(strsplit(assay,"__"))
   ab=spl[1]
@@ -123,7 +123,7 @@ for(assay in names(binResults)){
 dev.off()
 
 #plot profiles by surgery only GBMatch IDH=="wt" for segmentation
-pdf(paste0("aggregatedMeth_surgery_GBMatch_",factor,"_seg.pdf"),height=3.5,width=4)
+pdf(paste0("aggregatedMeth_surgery_GBMatch_",factor_seg,"_seg.pdf"),height=3.5,width=4)
 for(assay in names(binResults_seg)){
   spl=unlist(strsplit(assay,"__"))
   ab=spl[1]
@@ -149,7 +149,7 @@ for(assay in names(binResults)){
 dev.off()
 
 #plot profiles by subgroup only GBMatch_val IDH=="wt" segmentation
-pdf(paste0("aggregatedMeth_subgroup_GBMatch_val_",factor,"_seg.pdf"),height=3.5,width=4)
+pdf(paste0("aggregatedMeth_subgroup_GBMatch_val_",factor_seg,"_seg.pdf"),height=3.5,width=4)
 for(assay in names(binResults_seg)){
   spl=unlist(strsplit(assay,"__"))
   ab=spl[1]
@@ -197,7 +197,7 @@ for(assay in names(binResults_seg)){
 sort(names(combined_dipScores_seg))
 select=c("Active_TSS__H1_Cell_Line__E003_17209","Active_TSS__NH-A_Astrocytes__E125_20684","Bivalent_enhancers__H1_Cell_Line__E003_15759","Bivalent_enhancers__NH-A_Astrocytes__E125_5604","Bivalent_Poised_TSS__H1_Cell_Line__E003_9125","Bivalent_Poised_TSS__NH-A_Astrocytes__E125_3212","Enhancers__H1_Cell_Line__E003_98851","Enhancers__NH-A_Astrocytes__E125_100086","Heterochromatin__H1_Cell_Line__E003_35494","Heterochromatin__NH-A_Astrocytes__E125_19974","Quiescent__H1_Cell_Line__E003_82316","Quiescent__NH-A_Astrocytes__E125_63717","Repressed_polycomb__H1_Cell_Line__E003_17100","Repressed_polycomb__NH-A_Astrocytes__E125_19527")
 
-write.table(combined_dipScores_seg[,c("id",select),with=FALSE],paste0("dipScores_",factor,"_sel_seg.tsv"),sep="\t",row.names=FALSE,quote=FALSE)
+write.table(combined_dipScores_seg[,c("id",select),with=FALSE],paste0("dipScores_",factor_seg,"_sel_seg.tsv"),sep="\t",row.names=FALSE,quote=FALSE)
 
 
 

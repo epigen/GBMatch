@@ -13,10 +13,26 @@ annotation=fread(file.path(getOption("PROCESSED.PROJECT"),"results_analysis/01.1
 annot_ASC=annotation[IDH=="wt"&category=="GBMatch",list(cycles.1=enrichmentCycles[surgery.x==1][1],cycles.2=enrichmentCycles[surgery.x==2][1],Age=min(Age),Sex=unique(Sex), extentOfResection=Extentofresection[surgery.x==1][1],progression_location=progression_location[surgery.x==2][1],timeToSecSurg=unique(timeToSecSurg),category=unique(category),IDH=unique(IDH)),by=patID]
 setnames(annot_ASC,"patID","patient")
 
+#load lola regiondb (needed below)
+regionDB_core = loadRegionDB("/data/groups/lab_bock/shared/resources/regions/LOLACore/hg38/")
+cellType_conversions=fread(file.path(getOption("PROJECT.DIR"),"metadata/LOLA_annot/CellTypes.tsv"),drop="collection")
+
+#region annotation
+eload(loadTiles(genomeBuild=genome, tileSize=1000))
+eload(loadTiles(genomeBuild=genome, tileSize=5000))
+eload(loadGencodeGenes("human",versNum=87))
+prom1k=promoters(SV$gencodeContainer$genesGR[SV$gencodeContainer$genes[,which(gene_biotype=="protein_coding")]], upstream=1000, downstream=500)
+prom1k=prom1k[!duplicated(prom1k)]
+
+
 ##set it up
-min_reads=40  #20 or 60 or 40 (use for furtehr analyses)
+#min_reads=60  #20 or 60 or 40 (use for furtehr analyses)
 
+min_reads_list=c(20,40,60)
+#min_reads_list=c(40)
 
+for (min_reads in min_reads_list){
+  message(paste0("Min reads: ",min_reads))
 out_dir=file.path(getOption("PROCESSED.PROJECT"),paste0("results_analysis/06-methclone/summary_minReads",min_reads))
 dir.create(out_dir)
 setwd(out_dir)
@@ -24,6 +40,7 @@ methclone_files=list.files(path=paste0("../data_minReads",min_reads),pattern="*.
 
 ##get the data
 simpleCache("rbindlist(sapply(methclone_files,function(x){fread(x,select=c(1:48))},simplify=FALSE))",cacheName=paste0("methclone_all_min",min_reads),cacheSubDir="entropy",assignToVariable="methclone")
+
 #for some reason Methclone seldomly gives two result lines for exactly the same location --> only keep location with lower entropy
 methclone[,keep:=min(entropy),by=c("chr","start","end","strand","sample")]
 methclone=methclone[keep==entropy]
@@ -35,6 +52,10 @@ methclone[,timepoint_1:=spl[seq(4,to=length(spl),by=5)],]
 methclone[,timepoint_2:=spl[seq(5,to=length(spl),by=5)],]
 methclone[,comparison:=paste0(timepoint_1,"vs",timepoint_2),]
 methclone[,comparison_simpl:=gsub("ctr_.","0",comparison),]
+
+#make sure to only use samples in sample annotation sheet
+methclone=methclone[sample_1%in%annotation$N_number_seq&sample_2%in%annotation$N_number_seq]
+
 methclone_self=methclone[sample_1==sample_2]
 methclone=methclone[(sample_1!=sample_2)]
 
@@ -46,11 +67,6 @@ setnames(methclone_red,c("sample_1",grep("s0",names(methclone_self),value=TRUE))
 simpleCache(paste0("rrbs_entropy_min",min_reads),methclone_red,recreate=FALSE)
 
 #Aggregate entropy over regions
-eload(loadTiles(genomeBuild=genome, tileSize=1000))
-eload(loadTiles(genomeBuild=genome, tileSize=5000))
-eload(loadGencodeGenes("human",versNum=87))
-prom1k=promoters(SV$gencodeContainer$genesGR[SV$gencodeContainer$genes[,which(gene_biotype=="protein_coding")]], upstream=1000, downstream=500)
-prom1k=prom1k[!duplicated(prom1k)]
 
 tiled_entropy=function(methclone_dt,tiles,exclude=NULL){
   # Build summary J command
@@ -75,6 +91,7 @@ methclone=methclone[!(sample_1%in%annotation[material=="frozen"]$N_number_seq|sa
 
 ##annotate the methclone resuls with genetic features
 methclone_gr=with(methclone,GRanges(GRanges(seqnames = Rle(chr), IRanges(start=start, end=end),strand=Rle(strand),sample=sample,entropy=entropy)))
+#gene annotation
 anno=annotatePeakInBatch(methclone_gr, AnnotationData=TSS.human.GRCh38)
 anno=addGeneIDs(annotatedPeak=anno,orgAnn="org.Hs.eg.db", IDs2Add="symbol")
 anno_dt=as.data.table(as.data.frame(anno))
@@ -91,12 +108,10 @@ for (test in tests){
   methclone_grl[[test]]=with(methclone[sample==test],GRanges(seqnames = Rle(chr), IRanges(start=start, end=end),strand=Rle(strand),entropy=entropy)) 
 } 
 
-#load lola regiondb (needed below)
-regionDB_core = loadRegionDB("/data/groups/lab_bock/shared/resources/regions/LOLACore/hg38/")
 
 #try range of entropy cutoffs according to reviewer comment
 entropy_cutoffs=c(-40,-50,-60, -70, -80, -90)
-
+#entropy_cutoffs=c(-80)
 for (entropy_cutoff in entropy_cutoffs){
   subdir=paste0("EPM_epy_cutoff",entropy_cutoff)
   dir.create(subdir)
@@ -175,8 +190,8 @@ dev.off()
 
 ##run LOLA
 #first run LOLA on eloci in any 1vs2 comparison
-uset_all=unique(subset(methclone_gr,entropy<(entropy_cutoff)&grepl("__1vs2",sample)))
-univ_all=unique(subset(methclone_gr,grepl("__1vs2",sample)))
+uset_all=unique(subset(methclone_gr,entropy<(entropy_cutoff)&grepl("__1vs2",sample)&sample%in%methclone_anno[(cycles.1<16&cycles.2<16&cycles.1>12&cycles.2>12)]$sample))
+univ_all=unique(subset(methclone_gr,grepl("__1vs2",sample)&sample%in%methclone_anno[(cycles.1<16&cycles.2<16&cycles.1>12&cycles.2>12)]$sample))
 
 simpleCache(cacheName=paste0("allEloci_",min_reads,"epy",abs(entropy_cutoff)),{df=runLOLA(userSets=GRangesList(allEloci__all1vsall2__1vs2all=uset_all),userUniverse=univ_all,regionDB=regionDB_core);return(df)},cacheSubDir="methcloneLOLA",recreate=FALSE)
 
@@ -196,8 +211,6 @@ for(list in c(grep("__ctr_[1-5]vsctr_[1-5]",names(methclone_grl),value=TRUE),gre
 }
 
 collections=c("codex","encode_tfbs")
-cellType_conversions=fread(file.path(getOption("PROJECT.DIR"),"metadata/LOLA_annot/CellTypes.tsv"),drop="collection")
-
 locResults=locResults[collection%in%collections]
 locResults[,p.adjust:=p.adjust(10^(-pValueLog),method="BY")]
 locResults[,mlog10p.adjust:=-log10(p.adjust),]
@@ -229,7 +242,15 @@ pdf("LOLA_signif_all.pdf",height=7,width=9)
 print(ggplot(sub,aes(x=dbSet,y=-log10(p.adjust),col=target))+geom_boxplot()+geom_abline(intercept=-log10(0.001),slope=0,lty=2)+facet_wrap(~facet_label,scale = "free_x")+coord_flip())
 dev.off()
 
+pdf("LOLA_signif_combined.pdf",height=3,width=4)
+print(ggplot(sub[sample=="allEloci__all1vsall2__1vs2all"&p.adjust<0.001],aes(x=dbSet,y=-log10(p.adjust),col=target,size=logOddsRatio))+geom_point()+geom_abline(intercept=-log10(0.001),slope=0,lty=2)+facet_wrap(~facet_label,scale = "free_x")+ylim(0,NA)+coord_flip())
+print(ggplot(sub[sample=="allEloci__all1vsall2__1vs2all"&p.adjust<0.001],aes(x=dbSet,y=logOddsRatio,size=-log10(p.adjust),col=target))+geom_point()+facet_wrap(~facet_label,scale = "free_x")+coord_flip())
+dev.off()
+
+
+
 setwd("../")
 }
-
+rm(list=grep("allEloci|rrbs_entropy_|rrbsAgEntropy_|methclone",objects(),value=TRUE))
+}
 

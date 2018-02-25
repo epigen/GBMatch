@@ -47,7 +47,7 @@ cellType_conversions=fread(file.path(getOption("PROJECT.DIR"),"metadata/LOLA_ann
 
 annotation=fread(paste0(dirout(),"01.1-combined_annotation/","annotation_combined_final.tsv"))
 
-cohorts=list("GBmatch_val","GBMatch",c("GBMatch","GBmatch_val"))
+cohorts=list("GBMatch",c("GBMatch","GBmatch_val")) #"GBmatch_val",
 for (lola_cohort in cohorts){
 # FILTER REPEATS ----------------------------------------------------------
 res <- fread(dirout(out1,paste0("Pvalues_",paste0(lola_cohort,collapse="_"),".tsv")))
