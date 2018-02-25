@@ -173,7 +173,7 @@ run_pred=function(data,labels,samples,cross=10,param,scaleAndCenter=FALSE){
 }
 
 #assess and plot prediction also with random labels
-check_prediction=function(data,labels,samples,cross=10,nReps=10,type=NULL,cost=NULL,scaleAndCenter=FALSE){
+check_prediction=function(data,labels,samples,cross=10,nReps=10,type=NULL,cost=NULL,scaleAndCenter=FALSE,cores=1){
   
   
   param=find_param(data,labels,type,cost,scaleAndCenter=FALSE)
@@ -183,17 +183,31 @@ check_prediction=function(data,labels,samples,cross=10,nReps=10,type=NULL,cost=N
   nReps=nReps
   set.seed(1234)
   rand_labs=lapply(seq_len(nReps), function(x) sample(labels))
-  i=0
-  decision_mat_all=data.table()
-  for (rand_lab in rand_labs){
-    i=i+1
-    param_rand=find_param(data,rand_lab,type,cost,scaleAndCenter=FALSE)
+  
+#serial version  
+#  i=0
+#  decision_mat_all=data.table()
+#  for (rand_lab in rand_labs){
+#    i=i+1
+#    param_rand=find_param(data,rand_lab,type,cost,scaleAndCenter=FALSE)
+#    pred_rand=run_pred(data=data,labels=rand_lab,samples=samples,param=param_rand,cross = cross,scaleAndCenter=scaleAndCenter)
+#    decision_mat=pred_rand$decisions
+#    decision_mat[,rep:=i,]
+#    decision_mat_all=rbindlist(list(decision_mat_all,decision_mat))
+#  }
+#parallel version (to speed it up if many repetions needed)
+  names(rand_labs)=1:length(rand_labs)
+  random_pred=function(data,rand_lab,samples,type,cost,cross,scaleAndCenter){
+    param_rand=find_param(data,rand_lab,type,cost,scaleAndCenter=scaleAndCenter)
     pred_rand=run_pred(data=data,labels=rand_lab,samples=samples,param=param_rand,cross = cross,scaleAndCenter=scaleAndCenter)
     decision_mat=pred_rand$decisions
-    decision_mat[,rep:=i,]
-    decision_mat_all=rbindlist(list(decision_mat_all,decision_mat))
+    gc()
+    return(decision_mat)
   }
-  
+  decision_mat_list=mclapply(X=rand_labs,mc.silent=TRUE,mc.preschedule=FALSE,mc.cores=cores,mc.cleanup=TRUE,FUN=function(x)random_pred(data=data,rand_lab=x,samples=samples,type=type,cost=cost,cross=cross,scaleAndCenter=scaleAndCenter))
+  decision_mat_all=rbindlist(decision_mat_list,idcol="rep")
+###### parallel end ##################
+
   decision_mat_all[,rand:=TRUE,]
   decision_mat_all=rbindlist(list(decision_mat_all,pred$decisions[,c("rand","rep"):=list(FALSE,1),]),use.names = TRUE)
   
@@ -203,21 +217,31 @@ check_prediction=function(data,labels,samples,cross=10,nReps=10,type=NULL,cost=N
   
   roc_mat_cv=decision_mat_wide[,rbindlist(sapply(names(decision_mat_wide)[-c(1:6)],multi_roc,decisionValues=eval(parse(text=paste0("data.frame(",paste0(sapply(names(decision_mat_wide)[-c(1:6)],function(x)paste0(x,"=",x)),collapse = ","),")"))),true_labels=as.character(true_label),simplify=FALSE)),by=c("rep","rand")]
   
+  #interpolate and merge roc curves
+  roc_mat_cv_int=roc_mat_cv[,approx(fpr,tpr,xout=seq(0,1,0.01),yleft=0,yright=1,method="constant",ties=max),by=c("class","auc","rep","rand")]
+  setnames(roc_mat_cv_int,c("x","y"),c("fpr","tpr"))
+  roc_mat_cv_int[fpr==0,tpr:=0,]
+  roc_mat_cv_int[fpr==1,tpr:=1,]
   
   auc_annot=roc_mat_cv[,list(mean_auc=mean(auc)),by=c("class","rand")]
-  auc_annot[,x:=0.9,]
+  auc_annot[,x:=0.8,]
   auc_annot[,y:=ifelse(rand==TRUE,0.03,0.1),]
   
   auc_annot[,label:=ifelse(rand==TRUE,paste0("Control=",round(as.numeric(mean_auc),2)),paste0("AUC=",round(as.numeric(mean_auc),2))),]
   
   classes=unique(roc_mat_cv$class)
   inernal_plot_list=list()
+  inernal_plot_list_int=list()
   for (plot_class in classes){
-    pl=ggplot(roc_mat_cv[class==plot_class],aes(x=fpr,y=tpr,col=rand))+geom_line(aes(group=paste0(rep,rand),alpha=rand))+geom_text(data=auc_annot[class==plot_class],alpha=1,aes(x=x,y=y,label=label))+scale_color_manual(values=c("TRUE"="darkgrey","FALSE"="blue"))+scale_alpha_manual(values=c("TRUE"=0.4,"FALSE"=1))+annotate(geom="text",x=0,y=1,hjust=0,vjust=1,label=plot_class)
+    pl=ggplot(roc_mat_cv[class==plot_class],aes(x=fpr,y=tpr,col=rand))+geom_line(aes(group=paste0(rep,rand),alpha=rand))+geom_text(data=auc_annot[class==plot_class],alpha=1,aes(x=x,y=y,label=label))+scale_color_manual(values=c("TRUE"="darkgrey","FALSE"="blue"))+scale_alpha_manual(values=c("TRUE"=0.4,"FALSE"=1))+annotate(geom="text",x=0,y=1,hjust=0,vjust=1,label=plot_class)+ylab("TPR")+xlab("FPR")
+    
+    pl_int=ggplot(roc_mat_cv_int[class==plot_class],aes(x=fpr,y=tpr,group=rand))+stat_summary(geom="ribbon", fun.ymin = function(x) quantile(x, 0.025), fun.ymax = function(x) quantile(x, 0.975), fill="lightgrey",alpha=0.4)+stat_summary(geom="line",aes(col=rand), fun.y=mean)+geom_text(data=auc_annot[class==plot_class],alpha=1,aes(x=x,y=y,label=label))+scale_color_manual(values=c("TRUE"="darkgrey","FALSE"="blue"))+annotate(geom="text",x=0,y=1,hjust=0,vjust=1,label=plot_class)+ylab("TPR")+xlab("FPR")
+  
     inernal_plot_list[[plot_class]]=pl
+    inernal_plot_list_int[[plot_class]]=pl_int
   }
   
-  return(list(plot=inernal_plot_list,decision_mat=decision_mat_wide,model=pred$model,attr_center=pred$attr_center,attr_scale=pred$attr_scale,auc=mean(auc_annot[rand==FALSE]$mean_auc),auc_rand=mean(auc_annot[rand==TRUE]$mean_auc)))
+  return(list(plot=inernal_plot_list,decision_mat=decision_mat_wide,model=pred$model,attr_center=pred$attr_center,attr_scale=pred$attr_scale,auc=mean(auc_annot[rand==FALSE]$mean_auc),auc_rand=mean(auc_annot[rand==TRUE]$mean_auc),plot_int=inernal_plot_list_int))
 }
 #############################################################################################
 
@@ -294,7 +318,7 @@ prepare_data_fixed=function(meth_data_dt,annotation_all,features){
 
 
 #############prediction##########################################
-meth_pred_analysis=function(meth_data_imputed,annotation,column_annotation,set_targets=NULL,to_analyse,meth_sel,set_scale=FALSE,type=4,cost=1,cross=NULL,nReps=10){
+meth_pred_analysis=function(meth_data_imputed,annotation,column_annotation,set_targets=NULL,to_analyse,meth_sel,set_scale=FALSE,type=4,cost=1,cross=NULL,nReps=10,cores=1){
   for(selected in to_analyse){
     
     if(file.exists(paste0("dat_",selected,meth_sel,".RData"))){
@@ -305,6 +329,7 @@ meth_pred_analysis=function(meth_data_imputed,annotation,column_annotation,set_t
         plot_list=pl[[name]]$plot
         for (i in c(1:length(plot_list))){
           print(pl[[name]]$plot[[i]]+ggtitle(name)) 
+          print(pl[[name]]$plot_int[[i]]+ggtitle(name))
         }
       }
       dev.off()
@@ -359,7 +384,7 @@ meth_pred_analysis=function(meth_data_imputed,annotation,column_annotation,set_t
       ##use scaling for m-values and no scaling for beta-values. Scaled m-values seem too work slightly better than unscaled beta values, but scaled beta values perform equally well. However logically, it doesn't really make sense to scale beta-values.
       
       if (is.null(cross)){cross=nrow(meth_data_sel)}
-      pl[[target]]=check_prediction(data=meth_data_sel,labels=gsub("/|\\+","",gsub(" |-","_",annotation_sel[,get(target),])),samples=annotation_sel$N_number_seq,cross=cross,nReps=nReps,scaleAndCenter=set_scale,type=type,cost=cost)
+      pl[[target]]=check_prediction(data=meth_data_sel,labels=gsub("/|\\+","",gsub(" |-","_",annotation_sel[,get(target),])),samples=annotation_sel$N_number_seq,cross=cross,nReps=nReps,scaleAndCenter=set_scale,type=type,cost=cost,cores=cores)
       #########################################################################################################
     }
     save(pl,file=paste0("dat_",selected,meth_sel,".RData"))
@@ -367,7 +392,8 @@ meth_pred_analysis=function(meth_data_imputed,annotation,column_annotation,set_t
     for (name in names(pl)){
       plot_list=pl[[name]]$plot
       for (i in c(1:length(plot_list))){
-        print(pl[[name]]$plot[[i]]+ggtitle(name)) 
+        print(pl[[name]]$plot[[i]]+ggtitle(name))
+        print(pl[[name]]$plot_int[[i]]+ggtitle(name))
       }
     }
     dev.off()

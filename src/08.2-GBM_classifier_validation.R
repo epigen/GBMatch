@@ -206,9 +206,9 @@ write.table(compare,"subtype_validation_compare.tsv",sep="\t",row.names=FALSE,qu
 
 pdf("subtype_validation_pred_quality.pdf",height=3,width=5,useDingbats=FALSE)
 RRBS_cor=compare[,cor(prob_dist,auc),]
-ggplot(compare,aes(x=auc,y=prob_dist))+geom_smooth(method="lm",col="black")+geom_point(size=2.5,stroke=1.5,shape=21,aes(col=majority_sybtype,fill=sub_group))+geom_text(label=paste0("r=",round(RRBS_cor,3)),hjust=0,x=0.909,y=1.2)+xlab("RRBS based subtype prediction AUC")+ylab("Distance between RNA and RRBS\nbased subtype composition")+scale_fill_discrete(name="RRBS subtype")+scale_color_discrete(name="RNA subtype")
+ggplot(compare,aes(x=auc,y=prob_dist))+geom_smooth(method="lm",col="black")+geom_point(size=2.5,stroke=1.5,shape=21,aes(col=majority_sybtype,fill=sub_group))+annotate("text",label=paste0("r=",round(RRBS_cor,3)),hjust=0,x=0.909,y=1.2)+xlab("RRBS based subtype prediction AUC")+ylab("Distance between RNA and RRBS\nbased subtype composition")+scale_fill_discrete(name="RRBS subtype")+scale_color_discrete(name="RNA subtype")
 RNA_cor=compare[,cor(prob_dist,cor),]
-ggplot(compare,aes(x=cor,y=prob_dist))+geom_smooth(method="lm",col="black")+geom_point(size=2.5,stroke=1.5,pch=21,aes(col=majority_sybtype,fill=sub_group))+geom_text(label=paste0("r=",round(RNA_cor,3)),hjust=0,x=0.2,y=1.2)+xlab(" Maximum RNA profile correlation")+ylab("Distance between RNA and RRBS\nbased subtype composition")+scale_fill_discrete(name="RRBS subtype")+scale_color_discrete(name="RNA subtype")
+ggplot(compare,aes(x=cor,y=prob_dist))+geom_smooth(method="lm",col="black")+geom_point(size=2.5,stroke=1.5,pch=21,aes(col=majority_sybtype,fill=sub_group))+annotate("text",label=paste0("r=",round(RNA_cor,3)),hjust=0,x=0.2,y=1.2)+xlab(" Maximum RNA profile correlation")+ylab("Distance between RNA and RRBS\nbased subtype composition")+scale_fill_discrete(name="RRBS subtype")+scale_color_discrete(name="RNA subtype")
 dev.off()
 
 #boxplot RNA klassification quality vs. concordant/discordant classification 
@@ -217,7 +217,7 @@ wilcox_diff=compare[,wilcox.test(x=cor[subtype_classification=="concordant"],y=c
 ttest_diff=compare[,t.test(x=cor[subtype_classification=="concordant"],y=cor[subtype_classification=="discordant"],alternative="g"),]
 
 pdf("subtype_validation_pred_quality_boxpl.pdf",height=3,width=4,useDingbats=FALSE)
-ggplot(compare,aes(x=subtype_classification,y=cor))+geom_boxplot()+geom_point(position=position_jitter(width=0.25),alpha=0.8,size=2.5,stroke=1.5,shape=21,aes(col=majority_sybtype,fill=sub_group))+geom_text(label=paste0("p.wil=",round(wilcox_diff$p.value,3),"\np.ttest=",round(ttest_diff$p.value,3)),hjust=0,x=1.5,y=0.7)+ylab(" Maximum RNA profile correlation")+scale_fill_discrete(name="RRBS subtype")+scale_color_discrete(name="RNA subtype")
+ggplot(compare,aes(x=subtype_classification,y=cor))+geom_boxplot()+geom_point(position=position_jitter(width=0.25),alpha=0.8,size=2.5,stroke=1.5,shape=21,aes(col=majority_sybtype,fill=sub_group))+annotate("text",label=paste0("p.wil=",round(wilcox_diff$p.value,3),"\np.ttest=",round(ttest_diff$p.value,3)),hjust=0,x=1.5,y=0.7)+ylab(" Maximum RNA profile correlation")+scale_fill_discrete(name="RRBS subtype")+scale_color_discrete(name="RNA subtype")
 dev.off()
 
 
@@ -257,7 +257,7 @@ get_ROC=function(target,values){
   dt=dt[order(TPR)]
   
   set.seed(234)
-  rand_labs=lapply(seq_len(10), function(x) sample(target))
+  rand_labs=lapply(seq_len(100), function(x) sample(target))
   i=1
   for (rand_lab in rand_labs){
     print(i)
@@ -268,7 +268,12 @@ get_ROC=function(target,values){
     i=i+1
     dt=rbindlist(list(dt,rand_dt))
   }
-  return(dt)
+  dt_int=dt[,approx(FPR,TPR,xout=seq(0,1,0.01),yleft=0,yright=1,method="constant",ties=max),by=c("AUC","run","rand")]
+  setnames(dt_int,c("x","y"),c("FPR","TPR"))
+  dt_int[FPR==0,TPR:=0,]
+  dt_int[FPR==1,TPR:=1,]
+  
+  return(list(roc_dt=dt,roc_dt_int=dt_int))
 }
 
 compare[,c("isMesenchymal","isClassical","isProneural"):=list(majority_sybtype=="Mesenchymal",majority_sybtype=="Classical",majority_sybtype=="Proneural"),]
@@ -281,12 +286,16 @@ compare_long[,class_prob:=ifelse(subgroup_class%in%c("isMesenchymal","isMesenchy
 compare_long[,Ntrue:=sum(is.subgroup),by="subgroup_class"]
 compare_long[,Nfalse:=sum(!is.subgroup),by="subgroup_class"]
 
-ROC_subgroups=compare_long[,get_ROC(is.subgroup,class_prob),by=c("subgroup_class","Ntrue","Nfalse")]
-
+ROC_subgroups=compare_long[,get_ROC(is.subgroup,class_prob)$roc_dt,by=c("subgroup_class","Ntrue","Nfalse")]
 ROC_subgroups[,facet_label:=paste0(subgroup_class,"\nAUC=",unique(round(mean(AUC[rand==FALSE]),2)),"/",round(mean(AUC[rand==TRUE]),2),"\nTRUE=",Ntrue,"\nFALSE=",Nfalse),by=c("subgroup_class")]
 
+ROC_subgroups_int=compare_long[,get_ROC(is.subgroup,class_prob)$roc_dt_int,by=c("subgroup_class","Ntrue","Nfalse")]
+ROC_subgroups_int[,facet_label:=paste0(subgroup_class,"\nAUC=",unique(round(mean(AUC[rand==FALSE]),2)),"/",round(mean(AUC[rand==TRUE]),2),"\nTRUE=",Ntrue,"\nFALSE=",Nfalse),by=c("subgroup_class")]
+
 pdf("ROC_subgroups_rand.pdf",height=8,width=6)
-ggplot(ROC_subgroups,aes(x=FPR,y=TPR,col=rand,group=run,alpha=rand))+geom_line()+facet_wrap(~facet_label,nrow=3,scale="free")+scale_color_manual(values=c("TRUE"="grey","FALSE"="blue"))+scale_alpha_manual(values=c("TRUE"=0.7,"FALSE"=1))
+ggplot(ROC_subgroups,aes(x=FPR,y=TPR,col=rand,group=run,alpha=rand))+geom_line()+facet_wrap(~facet_label,nrow=3,scale="free")+scale_color_manual(values=c("TRUE"="grey","FALSE"="blue"))+scale_alpha_manual(values=c("TRUE"=0.3,"FALSE"=1))
+
+ggplot(ROC_subgroups_int,aes(x=FPR,y=TPR,group=rand))+stat_summary(geom="ribbon", fun.ymin = function(x) quantile(x, 0.025), fun.ymax = function(x) quantile(x, 0.975), fill="lightgrey",alpha=0.4)+stat_summary(geom="line",aes(col=rand), fun.y=mean)+facet_wrap(~facet_label,nrow=4,scale="free")+scale_color_manual(values=c("TRUE"="grey","FALSE"="blue"))
 dev.off()
 
 
