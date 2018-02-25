@@ -31,15 +31,15 @@ test_difference=function(values,groups,ntests){
   }else{
   combinations=as.data.table(permutations(n=length(na.omit(unique(groups))),r=2,v=as.character(unique(groups)),repeats.allowed=FALSE))
   }
-  combinations[,id:=paste0(sort(c(substr(V1,1,3),substr(V2,1,3))),collapse="_"),1:nrow(combinations)]
+  combinations[,id:=paste0(sort(c(substr(V1,1,3),substr(V2,1,3))),collapse=","),1:nrow(combinations)]
   combinations=combinations[!duplicated(id)]
   
   if (length(na.omit(values))>5){
   combinations[,p.value:=ifelse(sum(!is.na(values[groups==V2]))>0&sum(!is.na(values[groups==V1]))>0,try(as.numeric(wilcox.test(x=values[groups==V1],y=values[groups==V2])$p.value),silent=TRUE),1),by=1:nrow(combinations)]}else{
     combinations[,p.value:=1]
   }
-  combinations[,p.value.round:=ifelse(p.value<0.001,"<0.001",as.character(round(p.value,3))),]
-  combinations[,annot:=paste0(id,": ",p.value.round),]
+  combinations[,p.value.round:=ifelse(p.value<0.001,"<0.001",paste0("=",as.character(signif(p.value,2)))),]
+  combinations[,annot:=paste0("p-val(",id,")",p.value.round),]
   combinations[,meanV1:=mean(values[groups==V1],na.rm=TRUE),by=1:nrow(combinations)]
   combinations[,meanV2:=mean(values[groups==V2],na.rm=TRUE),by=1:nrow(combinations)]
   combinations[,sdV1:=sd(values[groups==V1],na.rm=TRUE),by=1:nrow(combinations)]
@@ -63,7 +63,7 @@ plot_boxplots=function(sub,test,test_category,transc_stats,class,by){
   sig_annot[,ypos:=ypos]  
   sig_annot[,xpos:=0.5]
   
-  pl=ggplot()+geom_point(data=sub,aes(x=substr(get(class),1,3),y=get(test),group=get(class)),shape=21,color="grey",alpha=1,size=3,position=position_jitter(width=0.2,height=0))+geom_text(data=sig_annot,aes(x=xpos,y=ypos,label=annot),hjust=0,vjust=1)+geom_boxplot(data=sub,aes(x=substr(get(class),1,3),y=get(test),group=get(class)),outlier.size=NA,fill="transparent")+ylab(test)+xlab("")+facet_wrap(as.formula(paste0("~",paste0(by,collapse="+"))))
+  pl=ggplot()+geom_point(data=sub,aes(x=substr(get(class),1,3),y=get(test),group=get(class)),shape=21,color="grey",alpha=1,size=3,position=position_jitter(width=0.2,height=0))+geom_text(data=sig_annot,lineheight=0.9,aes(x=xpos,y=ypos,label=annot),hjust=0,vjust=1,size=2.5)+geom_boxplot(data=sub,aes(x=substr(get(class),1,3),y=get(test),group=get(class)),outlier.size=NA,fill="transparent")+ylab(test)+xlab("")+facet_wrap(as.formula(paste0("~",paste0(by,collapse="+"))))
   print(pl)
   return(transc_stats)
 }
