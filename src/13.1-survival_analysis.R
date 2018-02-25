@@ -32,12 +32,12 @@ plot_surv=function(data,type="surv"){
   {
     if (length(levels(summary(fit)$strata)) == 0) 
       return(NULL)
-    sdiff <- survival::survdiff(eval(fit$call$formula), data = eval(fit$call$data))
+    sdiff <- survival::survdiff(eval(fit$call$formula), data = eval(fit$call$data),rho=0) #rho=0 means log-rank test
     pvalue <- stats::pchisq(sdiff$chisq, length(sdiff$n) - 1,lower.tail = FALSE)
     return(pvalue)
   }
   
-  categories=grep("patID|event|follow_up",names(data),invert=TRUE,value=TRUE)
+  categories=grep("patID|event|follow_up|category|annoclass",names(data),invert=TRUE,value=TRUE)
   
   for (category in categories){
     print(category)
@@ -47,11 +47,11 @@ plot_surv=function(data,type="surv"){
       next
     }
     survfit_1=survfit(Surv(time = follow_up, event = event) ~ get(category), data=sub)
-    pvalue=round(get_pval(survfit_1),4)
+    pvalue=signif(get_pval(survfit_1),2)
     print(pvalue)
     
-    if (type=="surv"){ylab="Survival probability"}else if (type=="rel"){ylab="Relapse-free survival probability"}
-    pl[category]=ggsurvplot(fit=survfit_1,conf.int=TRUE,main=paste0(category,"\np.value=",pvalue),palette="Set2",font.main=c(10, "plain", "black"),ylab = ylab,xlab="Months")
+    if (type=="surv"){ylab="Overall survival probability"}else if (type=="rel"){ylab="Progression-free survival probability"}
+    pl[category]=ggsurvplot(fit=survfit_1,conf.int=TRUE,main=paste0(category,"\np-value=",pvalue),palette="Set2",font.main=c(10, "plain", "black"),ylab = ylab,xlab="Months")
     ret=rbindlist(list(ret,data.table(category=category,p.value=pvalue)))
     
   }
@@ -79,6 +79,8 @@ annot_surv=annotation[surgery%in%c(1)&IDH=="wt"&category%in%c("GBMatch","GBmatch
 annot_surv[,event:=ifelse(event=="dead",1,0)]
 
 annot_relapse=unique(annotation[surgery%in%c(1,2)&IDH=="wt"&category%in%c("GBMatch","GBmatch_val"),list(event=1,follow_up=(unique(timeToFirstProg)/365)*12,category=category,annoclass="relapse"),by=patID])
+
+annot_relapse_est=unique(annotation[surgery%in%c(1,2)&IDH=="wt"&category%in%c("GBMatch","GBmatch_val"),list(event=1,follow_up=ifelse(is.na(timeToFirstProg),unique(`Follow-up_years`)*12-2,(unique(timeToFirstProg)/365)*12),category=category,annoclass="relapse"),by=patID])
 
 combi=rbindlist(list(annot_surv,annot_relapse),use.names=TRUE)
 combi[,long_surv:=ifelse(follow_up[annoclass=="survival"]>=36,TRUE,FALSE),by="patID"]
@@ -146,7 +148,9 @@ entropy=methclone[,list(patID=patID,entropy_1=binarize2(mean_entropy1,0.2,0.8),e
 
 entropy_surv=merge(entropy,annot_surv,by=c("patID","category"))
 entropy_relapse=merge(entropy,annot_relapse,by=c("patID","category"))
-                      
+entropy_relapse_est=merge(entropy,annot_relapse_est,by=c("patID","category"))
+
+
 categories=c("GBMatch")
 
 for (sel_category in categories){
@@ -164,6 +168,14 @@ dev.off()
 
 pdf(paste0("methclone_annotation_relapse_dp_",sel_category,".pdf"),height=2,width=2)
 print(plot_dots(entropy_relapse[category==sel_category]))
+dev.off()
+
+pdf(paste0("methclone_annotation_relapse_est_",sel_category,".pdf"),height=3.5,width=3.0)
+print(plot_surv(entropy_relapse_est[category==sel_category],type="rel")[[1]])
+dev.off()
+
+pdf(paste0("methclone_annotation_relapse_est_dp_",sel_category,".pdf"),height=2,width=2)
+print(plot_dots(entropy_relapse_est[category==sel_category]))
 dev.off()
 }
 
@@ -188,7 +200,7 @@ het_wide=reshape(het_bin,idvar=c("patID","category"),timevar="surgery",direction
 
 het_surv=merge(het_wide,annot_surv,by=c("patID","category"))
 het_relapse=merge(het_wide,annot_relapse,by=c("patID","category"))
-
+het_relapse_est=merge(het_wide,annot_relapse_est,by=c("patID","category"))
 
 categories=c("GBMatch","GBmatch_val")
 
@@ -208,6 +220,15 @@ dev.off()
 pdf(paste0("heterogeneity_annotation_relapse_dp_",sel_category,".pdf"),height=4,width=3)
 print(plot_dots(het_relapse[category==sel_category]))
 dev.off()
+
+pdf(paste0("heterogeneity_annotation_relapse_est_",sel_category,".pdf"),height=3.5,width=3)
+print(plot_surv(het_relapse_est[category==sel_category],type="rel")[[1]])
+dev.off()
+
+pdf(paste0("heterogeneity_annotation_relapse_est_dp_",sel_category,".pdf"),height=4,width=3)
+print(plot_dots(het_relapse_est[category==sel_category]))
+dev.off()
+
 }
 
 
@@ -268,7 +289,7 @@ subtypes_wide[,toClassical:=ifelse(sub_group.1!="Classical"&sub_group.2=="Classi
 
 
 subtypes_surv=merge(subtypes_wide,annot_surv,by=c("patID","category"))
-subtypes_relapse=merge(subtypes_wide[category==sel_category],annot_relapse,by=c("patID","category"))
+subtypes_relapse=merge(subtypes_wide,annot_relapse,by=c("patID","category"))
 
 
 categories=c("GBMatch","GBmatch_val")
@@ -454,6 +475,8 @@ annot_pat=reshape(sub,idvar="patID",timevar="surgery",direction="wide")
 
 annot_pat_surv=merge(annot_pat,annot_surv,by="patID")
 annot_pat_relapse=merge(annot_pat,annot_relapse,by="patID")
+annot_pat_relapse_est=merge(annot_pat,annot_relapse_est,by="patID")
+
 
 categories=c("GBMatch","GBmatch_val")
 for (sel_category in categories){
@@ -473,7 +496,34 @@ dev.off()
 pdf(paste0("mgmt_annotation_relapse_dp_",sel_category,".pdf"),height=4,width=3)
 print(plot_dots(annot_pat_relapse[category==sel_category]))
 dev.off()
+
+pdf(paste0("mgmt_annotation_relapse_est_",sel_category,".pdf"),height=3.5,width=3)
+print(plot_surv(annot_pat_relapse_est[category==sel_category],type="rel")[[1]])
+dev.off()
+
+pdf(paste0("mgmt_annotation_relapse_est_dp_",sel_category,".pdf"),height=4,width=3)
+print(plot_dots(annot_pat_relapse_est[category==sel_category]))
+dev.off()
 }
+
+#progression and extension cohort together
+
+pdf(paste0("mgmt_annotation_surv_",paste0(categories,collapse="_"),".pdf"),height=3.5,width=3)
+print(plot_surv(annot_pat_surv[category%in%categories])[[1]])
+dev.off()
+
+pdf(paste0("mgmt_annotation_surv_dp_",paste0(categories,collapse="_"),".pdf"),height=4,width=3)
+print(plot_dots(annot_pat_surv[category%in%categories]))
+dev.off()
+
+
+pdf(paste0("mgmt_annotation_relapse_est_",paste0(categories,collapse="_"),".pdf"),height=3.5,width=3)
+print(plot_surv(annot_pat_relapse_est[category%in%categories],type="rel")[[1]])
+dev.off()
+
+pdf(paste0("mgmt_annotation_relapse_est_dp_",paste0(categories,collapse="_"),".pdf"),height=4,width=3)
+print(plot_dots(annot_pat_relapse_est[category%in%categories]))
+dev.off()
 
 ##############################################
 ##stratification from annotation immune cells
