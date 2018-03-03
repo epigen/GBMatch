@@ -203,6 +203,7 @@ write.table(compare,"subtype_validation_compare.tsv",sep="\t",row.names=FALSE,qu
 
 
 ##now analyze the comparison
+compare[,plot_id:=paste0(patID,"_",ifelse(is.na(surgery.x),0,surgery.x)),]
 
 pdf("subtype_validation_pred_quality.pdf",height=3,width=5,useDingbats=FALSE)
 RRBS_cor=compare[,cor(prob_dist,auc),]
@@ -222,9 +223,9 @@ dev.off()
 
 
 #plot correlations for each sample
-RRBS_probs=compare[,c("sample_name","Classical","Proneural", "Mesenchymal","sub_group","majority_sybtype"),with=FALSE]
+RRBS_probs=compare[,c("sample_name","plot_id","Classical","Proneural", "Mesenchymal","sub_group","majority_sybtype"),with=FALSE]
 setnames(RRBS_probs,c("Classical","Proneural", "Mesenchymal"),c("cla","pro","mes"))
-RRBS_probs[,facet_label:=paste0(sample_name,"\nRNA:",majority_sybtype,"\nRRBS:",sub_group)]
+RRBS_probs[,facet_label:=paste0(plot_id,"\nRNA:",majority_sybtype,"\nRRBS:",sub_group)]
 mix_profiles_cor_RRBS=merge(mix_profiles_cor,RRBS_probs[,c("sample_name","facet_label"),],by="sample_name")
 
 
