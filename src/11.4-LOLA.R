@@ -219,14 +219,19 @@ if(nrow(pDat2) > 2 & ncol(pDat2) > 2){
 # LOLA RESULTS IN SMALL DOTPLOT
 
 LOLA_res=fread(dirout(out,paste0(paste0(lola_cohort,collapse="_"),"_LOLA_HITS_AstroOrESC.tsv")))
+#LOLA_res=fread(dirout(out,paste0(paste0("GBMatch",collapse="_"),"_LOLA_HITS_AstroOrESC.tsv")))
+LOLA_res=LOLA_res[grepl("subgroup",userSet)&collection%in%c("codex","encode_tfbs")&cellState!="Malignant"]
+LOLA_res[,target_max:=min(BY),by=target]
+LOLA_res[,target:=factor(target,levels=unique(target[order(target_max)])),]
+LOLA_res[,logOddsRatio:=ifelse(logOddsRatio==Inf,max(logOddsRatio[logOddsRatio!=Inf]),logOddsRatio),]
 
-pdf(dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_LOLA_res_subgroup_BY0.001.pdf")),height=5,width=8)
-print(ggplot(LOLA_res[BY<0.001&grepl("subgroup",userSet)&collection%in%c("codex","encode_tfbs")&cellState!="Malignant"],aes(x=target,y=-log10(BY),fill=cellType_corr))+geom_point(position=position_jitter(height=0,width=0.1),shape=21,size=3,alpha=0.6,stroke=0.6)+geom_hline(yintercept=-log10(0.001),lty=20,col="grey")+theme(axis.text.x=element_text(angle = 90, hjust=1,vjust = 0.5))+facet_wrap(~userSet,ncol=1,scale="free_y")+scale_fill_manual(values=c("Astrocyte"="#a6cee3","ESC"="#b2df8a"))+scale_color_manual(values=c("FALSE"="grey","TRUE"="black")))
+pdf(dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_LOLA_res_subgroup_BY0.001.pdf")),height=5,width=7)
+print(ggplot(LOLA_res[BY<0.001],aes(x=target,y=-log10(BY),size=logOddsRatio,fill=cellType_corr))+geom_point(position=position_jitter(height=0,width=0.1),shape=21,alpha=0.6,stroke=0.6)+geom_hline(yintercept=-log10(0.001),lty=20,col="grey")+theme(axis.text.x=element_text(angle = 90, hjust=1,vjust = 0.5))+facet_wrap(~userSet,ncol=1)+scale_fill_manual(values=c("Astrocyte"="#a6cee3","ESC"="#b2df8a"))+scale_color_manual(values=c("FALSE"="grey","TRUE"="black")))
 dev.off()
 
 
 pdf(dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_LOLA_res_subgroup_BY0.05.pdf")),height=5,width=8)
-print(ggplot(LOLA_res[BY<0.05&grepl("subgroup",userSet)&collection%in%c("codex","encode_tfbs")&cellState!="Malignant"],aes(x=target,y=-log10(BY),fill=cellType_corr))+geom_point(position=position_jitter(height=0,width=0.1),shape=21,size=3,alpha=0.6,stroke=0.6)+geom_hline(yintercept=-log10(0.05),lty=20,col="grey")+theme(axis.text.x=element_text(angle = 90, hjust=1,vjust = 0.5))+facet_wrap(~userSet,ncol=1,scale="free_y")+scale_fill_manual(values=c("Astrocyte"="#a6cee3","ESC"="#b2df8a"))+scale_color_manual(values=c("FALSE"="grey","TRUE"="black")))
+print(ggplot(LOLA_res[BY<0.05],aes(x=target,y=-log10(BY),fill=cellType_corr),,size=logOddsRatio)+geom_point(position=position_jitter(height=0,width=0.1),shape=21,size=3,alpha=0.6,stroke=0.6)+geom_hline(yintercept=-log10(0.05),lty=20,col="grey")+theme(axis.text.x=element_text(angle = 90, hjust=1,vjust = 0.5))+facet_wrap(~userSet,ncol=1)+scale_fill_manual(values=c("Astrocyte"="#a6cee3","ESC"="#b2df8a"))+scale_color_manual(values=c("FALSE"="grey","TRUE"="black")))
 dev.off()
 
 

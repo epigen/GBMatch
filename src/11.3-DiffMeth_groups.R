@@ -5,7 +5,7 @@ project.init2("GBMatch")
 # Parameters
 preProcessing <- "RAW"
 minCoverage <- 5
-minCntPerAnnot <- 4 #originally 5 but reduced to 4 to enable analysis in validation cohort
+minCntPerAnnot <- 5 #originally 5 but reduced to 4 to enable analysis in validation cohort
 
 if(!is.na(minCoverage)){
   minCoverage <- as.numeric(minCoverage)
