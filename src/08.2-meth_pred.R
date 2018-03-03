@@ -4,6 +4,7 @@ library(simpleCache)
 library("impute")
 library(pheatmap)
 library(sva)
+library(LOLA)
 
 source(file.path(getOption("PROJECT.DIR"),"src/99-liblinearFunctions.R"))
 
@@ -19,6 +20,11 @@ rm(rrbsTiled5ksub)
 
 #load annotation
 annotation_all=fread(file.path(getOption("PROCESSED.PROJECT"),"results_analysis/01.1-combined_annotation/annotation_combined.tsv"))
+annotation_all[,cohort_surv_median:=median(`Follow-up_years`,na.rm=TRUE),by=c("category","IDH","surgery.x")]
+annotation_all[,survival_class:=ifelse(category=="GBMatch"&`Follow-up_years`>=cohort_surv_median,"long",ifelse(category=="GBmatch_val"&`Follow-up_years`<=cohort_surv_median,"short",NA)),]
+annotation_all[,timeToFirstProg_est:=ifelse(is.na(timeToFirstProg),`Follow-up_years`*12-2,timeToFirstProg),]
+
+
 #column name lists
 load(file.path(getOption("PROCESSED.PROJECT"),"results_analysis/01.1-combined_annotation/column_annoation.RData"))
 column_annotation=lapply(column_annotation,function(x){grep("N_number|N-number|ID|read_length",x,value=TRUE,invert=TRUE)})
@@ -61,7 +67,7 @@ meth_sub=prepped_data$meth_data_imputed[anno_sub$N_number_seq,]
 stopifnot(row.names(meth_sub)==anno_sub$N_number_seq)
 
 cost=heuristicC(meth_sub)
-meth_pred_analysis(meth_data_imputed=meth_sub,annotation=anno_sub,column_annotation=column_annotation,to_analyse=c("val_wt_selected"),set_targets=c("CD163","CD3","CD68","CD45ro","CD8","EZH2","HLA-DR","CD34","cell","MIB","Mean AVG Eccentricity Tumor","Mean COV Eccentricity Tumor","Mean Nuclei # Tumor","Relative share necrosis","StuppComplete","Follow-up_years","timeToFirstProg","IDH","Sex","age"),meth_sel=meth_sel,set_scale=set_scale,type=4,cost=cost,cross=10,nReps=100)
+meth_pred_analysis(meth_data_imputed=meth_sub,annotation=anno_sub,column_annotation=column_annotation,to_analyse=c("val_wt_selected"),set_targets=c("CD163","CD68","MIB","Mean AVG Eccentricity Tumor","Mean COV Eccentricity Tumor","Mean Nuclei # Tumor","Relative share necrosis","StuppComplete","Follow-up_years","timeToFirstProg","Sex","age"),meth_sel=meth_sel,set_scale=set_scale,type=4,cost=cost,cross=10,nReps=100)
 
 
 #only surgery 1 in primary
@@ -80,12 +86,21 @@ stopifnot(row.names(meth_sub)==anno_sub$N_number_seq)
 cost=heuristicC(meth_sub)
 meth_pred_analysis(meth_data_imputed=meth_sub,annotation=anno_sub,column_annotation=column_annotation,to_analyse=c("prim_s2_selected"),set_targets=c("StuppComplete","Shape_shift","TumorPhenotype","Follow-up_years","timeToFirstProg","timeToSecSurg","Sex","age"),meth_sel=meth_sel,set_scale=set_scale,type=4,cost=cost,cross=10,nReps=100)
 
+#selected in progression and validation cohort only surgery 1, wt
+anno_sub=prepped_data$annotation[category%in%c("GBMatch","GBmatch_val")&surgery.x==1&IDH=="wt"]
+meth_sub=prepped_data$meth_data_imputed[anno_sub$N_number_seq,]
+stopifnot(row.names(meth_sub)==anno_sub$N_number_seq)
+
+cost=heuristicC(meth_sub)
+meth_pred_analysis(meth_data_imputed=meth_sub,annotation=anno_sub,column_annotation=column_annotation,to_analyse=c("prim&val_s1_selected"),set_targets=c("StuppComplete","survival_class","Follow-up_years","timeToFirstProg_est","Sex","age"),meth_sel=meth_sel,set_scale=set_scale,type=4,cost=cost,cross=10,nReps=100,cores=32)
+#note core >1 --> don't run on login node!!
+
+
+
 
 ##full run on all data and all the different annotations and data in loo-cv --> takes ages (adapt e.g. to run only on primary or validation cohort)
 #meth_sel="_bval_notscaled_0.9_cross"
 #meth_pred_analysis(meth_data_imputed=prepped_data$meth_data_imputed,annotation=prepped_data$annotation,column_annotation=column_annotation,to_analyse=c("histo_immuno","histo_segmentation","imaging_segmentation","clinical_annotation","histo_classification"),meth_sel=meth_sel,set_scale=set_scale,type=4,cost=cost)
-
-
 
 
 #############################folowup on genomic regions (features) selected in the final models################################
@@ -121,12 +136,34 @@ get_features=function(pl,prepped_data,factor,rank_cutoff=50){
   return(list(annot_col=annot_col,annot_row=annot_row,data=sel,comp=comp))
 }
 
+plot_heatmap=function(file_name=NULL,pl,prepped_data,factor,rank_cutoff,title=factor){
+  features_res=get_features(pl=pl,prepped_data=prepped_data,factor=factor,rank_cutoff=rank_cutoff)
+  bin=c()
+  bin[features_res$comp]=c("#ff9289","#00d8e0")
+  colors=list(bin=bin,weight=c("#af8dc3","#f7f7f7","#7fbf7b"),category=c("GBMatch"="grey","GBmatch_val"="black"))
+  if(!is.null(file_name)){
+    pdf(paste0(file_name,".pdf"),height=5,width=9)
+  }
+  pheatmap(t(features_res$data),clustering_distance_rows=dist(t(scale(features_res$data,center=TRUE,scale=TRUE))),clustering_distance_cols=dist(scale(features_res$data,center=TRUE,scale=TRUE)),cluster_rows=FALSE,cluster_cols=TRUE,show_rownames=FALSE,show_colnames=FALSE,annotation_col=features_res$annot_row,annotation_row=features_res$annot_col,color=colorRampPalette(c("blue" ,"red"))(20),border_color=NA,annotation_colors=colors,main=paste0(title," ", rank_cutoff))
+  if(!is.null(file_name)){
+    dev.off()
+  }
+  if(!is.null(file_name)){
+    if(all(features_res$annot_row[,factor]==features_res$annot_row[,"bin"])){features_res$annot_row[,factor]=NULL}
+    png(paste0(file_name,".png"),height=250,width=270)
+  pheatmap(t(features_res$data),clustering_distance_rows=dist(t(scale(features_res$data,center=TRUE,scale=TRUE))),clustering_distance_cols=dist(scale(features_res$data,center=TRUE,scale=TRUE)),annotation_names_row=FALSE,annotation_names_col=FALSE,treeheight_col=25,cluster_rows=FALSE,cluster_cols=TRUE,show_rownames=FALSE,show_colnames=FALSE,annotation_col=features_res$annot_row,annotation_row=features_res$annot_col,color=colorRampPalette(c("blue" ,"red"))(20),border_color=NA,annotation_colors=colors,main=paste0(title," top ", rank_cutoff," features"),fontsize=11,legend=FALSE,annotation_legend=FALSE)
+    dev.off()
+  }
+}
+
 
 #set up analysis
 #load previously built (on original cohort) and crossvalidated classifiers
 meth_sel="bval_notscaled_0.9_cross"
 load("dat_prim_wt_selected_bval_notscaled_0.9_cross.RData")
 
+#load previously built (on combined cohort) and crossvalidated classifiers (for survival presiction)
+load("dat_prim&val_s1_selected_bval_notscaled_0.9_cross.RData")
 
 ####Matching methylation matrix on which cross validation was performed##############
 #like above (only rerun when not available)
@@ -144,6 +181,10 @@ stopifnot(row.names(prepped_data_val$meth_data_imputed)==prepped_data_val$annota
 prepped_data_wt=list(meth_data_imputed=prepped_data$meth_data_imputed[prepped_data$annotation[IDH=="wt"]$N_number_seq,],annotation=prepped_data$annotation[IDH=="wt"])
 stopifnot(row.names(prepped_data_wt$meth_data_imputed)==prepped_data_wt$annotation$N_number_seq)
 
+#for survival prediction
+prepped_data_prim_val=list(meth_data_imputed=prepped_data$meth_data_imputed[prepped_data$annotation[category%in%c("GBMatch","GBmatch_val")&surgery.x==1&IDH=="wt"]$N_number_seq,],annotation=prepped_data$annotation[category%in%c("GBMatch","GBmatch_val")&surgery.x==1&IDH=="wt"])
+stopifnot(row.names(prepped_data_prim_val$meth_data_imputed)==prepped_data_prim_val$annotation$N_number_seq)
+
 #make results directory
 dir.create("feature_analysis")
 
@@ -159,24 +200,23 @@ factor="HLA-DR"
 factor="EZH2"
 factor="Sex"
 
-for (rank_cutoff in seq(150,200,by=2)){
-  
-  features_res=get_features(pl=pl,prepped_data=prepped_data_prim,factor=factor,rank_cutoff=rank_cutoff)
-  bin=c()
-  bin[features_res$comp]=c("#ff9289","#00d8e0")
-  colors=list(bin=bin,weight=c("#af8dc3","#f7f7f7","#7fbf7b"))
-  ph=pheatmap(t(features_res$data),clustering_distance_rows=dist(t(scale(features_res$data,center=TRUE,scale=TRUE))),clustering_distance_cols=dist(scale(features_res$data,center=TRUE,scale=TRUE)),cluster_rows=FALSE,cluster_cols=TRUE,annotation_col=features_res$annot_row,annotation_row=features_res$annot_col,color=colorRampPalette(c("blue" ,"red"))(20),border_color=NA,annotation_colors=features_res$colors,main=paste0(factor," ", rank_cutoff))
+factor="survival_class" #rank_cutoff=200
 
-  print(ph)
+for (rank_cutoff in seq(150,200,by=2)){
+plot_heatmap(pl=pl,prepped_data=prepped_data_prim_val,factor=factor,rank_cutoff=rank_cutoff)
 }
 
+#plot and save only heatmap for selected factor and rank_cutoff
 
-#set factor and rank_cutoff
+plot_heatmap(file_name=paste0("feature_analysis/only_heatmap_",factor),pl=pl,prepped_data=prepped_data_prim_val,factor="survival_class",rank_cutoff=200,title="Survival class")
+
+
+#set factor and rank_cutoff foe complrehensive analysis
 #complete val
 #factor_list=list(c("MIB",150),c("CD45ro",150),c("CD163",190),c("CD3",196),c("CD68",164),c("CD8",190),c("CD34",196),c("HLA-DR",188),c("Sex",196))
 #without val plate 2 including IDH mut
 #factor_list=list(c("MIB",190),c("CD45ro",184),c("CD163",182),c("CD3",184),c("CD68",174),c("CD8",174),c("CD34",150),c("HLA-DR",184),c("Sex",188))
-#without val plate 2 including IDH mut
+#without val plate 2 without IDH mut
 factor_list=list(c("MIB",194),c("CD45ro",196),c("CD163",160),c("CD3",158),c("CD68",178),c("CD8",178),c("CD34",164),c("HLA-DR",194),c("EZH2",190),c("Sex",186))
 
 
@@ -251,6 +291,9 @@ sel=features_res$data
 annot_row=features_res$annot_row
 annot_col=features_res$annot_col
 
+annot_row_hm=annot_row
+if(all(annot_row_hm[,gsub("-",".",factor)]==annot_row_hm[,"bin"])){annot_row_hm[,gsub("-",".",factor)]=NULL}
+
 
 #heatmap analysis (clustering)
 bin=c()
@@ -258,13 +301,13 @@ bin[features_res$comp]=c("#ff9289","#00d8e0")
 
 colors=list(bin=bin,weight=c("#af8dc3","#ffffff","#7fbf7b"),category=c("GBMatch"="grey","GBmatch_val"="black"))
 pdf(paste0("feature_analysis/heatmap_",factor,"_",meth_sel,"_",analysis,".pdf"),height=5,width=9)
-pheatmap(t(sel),clustering_distance_rows=dist(t(scale(sel,center=TRUE,scale=TRUE))),clustering_distance_cols=dist(scale(sel,center=TRUE,scale=TRUE)),cluster_rows=FALSE,annotation_col=annot_row,annotation_row=annot_col,color=colorRampPalette(c("blue" ,"red"))(20),border_color=NA,annotation_colors=colors,main=factor)
+pheatmap(t(sel),clustering_distance_rows=dist(t(scale(sel,center=TRUE,scale=TRUE))),clustering_distance_cols=dist(scale(sel,center=TRUE,scale=TRUE)),cluster_rows=FALSE,annotation_col=annot_row_hm,annotation_row=annot_col,color=colorRampPalette(c("blue" ,"red"))(20),border_color=NA,annotation_colors=colors,main=factor)
 
-pheatmap(t(sel),clustering_distance_rows=dist(t(scale(sel,center=TRUE,scale=TRUE))),clustering_distance_cols=dist(scale(sel,center=TRUE,scale=TRUE)),cluster_rows=TRUE,annotation_col=annot_row,annotation_row=annot_col,color=colorRampPalette(c("blue" ,"red"))(20),border_color=NA,annotation_colors=colors,main=factor)
+pheatmap(t(sel),clustering_distance_rows=dist(t(scale(sel,center=TRUE,scale=TRUE))),clustering_distance_cols=dist(scale(sel,center=TRUE,scale=TRUE)),cluster_rows=TRUE,annotation_col=annot_row_hm,annotation_row=annot_col,color=colorRampPalette(c("blue" ,"red"))(20),border_color=NA,annotation_colors=colors,main=factor)
 dev.off()
 
 png(paste0("feature_analysis/heatmap_",factor,"_",meth_sel,"_",analysis,".png"),height=250,width=270)
-pheatmap(t(sel),clustering_distance_rows=dist(t(scale(sel,center=TRUE,scale=TRUE))),show_rownames=FALSE,show_colnames=FALSE,annotation_names_row=FALSE,annotation_names_col=FALSE,treeheight_col=25,clustering_distance_cols=dist(scale(sel,center=TRUE,scale=TRUE)),cluster_rows=FALSE,annotation_col=annot_row,annotation_row=annot_col,color=colorRampPalette(c("blue" ,"red"))(20),border_color=NA,annotation_colors=colors,main=paste0(factor," top ", rank_cutoff," features"),fontsize=11,legend=FALSE,annotation_legend=FALSE)
+pheatmap(t(sel),clustering_distance_rows=dist(t(scale(sel,center=TRUE,scale=TRUE))),show_rownames=FALSE,show_colnames=FALSE,annotation_names_row=FALSE,annotation_names_col=FALSE,treeheight_col=25,clustering_distance_cols=dist(scale(sel,center=TRUE,scale=TRUE)),cluster_rows=FALSE,annotation_col=annot_row_hm,annotation_row=annot_col,color=colorRampPalette(c("blue" ,"red"))(20),border_color=NA,annotation_colors=colors,main=paste0(factor," top ", rank_cutoff," features"),fontsize=11,legend=FALSE,annotation_legend=FALSE)
 dev.off()
 
 
@@ -300,3 +343,52 @@ pdf(paste0("feature_analysis/qq_",factor,"_",meth_sel,"_",analysis,".pdf"),heigh
 print(ggplot(sel_all_long) +stat_qq(aes(sample = methyl,col=bin),geom="line")+ggtitle(factor)+xlim(c(-4,4))+ coord_fixed(ratio=8)+facet_wrap(~weight_group)) 
 dev.off()
 }}
+
+
+##########feature follow-up with LOLA
+#load LOLA DBs
+regionDB = loadRegionDB(file.path(Sys.getenv("RESOURCES"),"regions/LOLACore/hg38/"),collections=c("encode_tfbs","codex"))
+regionDB_seg = loadRegionDB(file.path(Sys.getenv("RESOURCES"),"regions/customRegionDB/hg38/"),collections=list("roadmap_segmentation"))
+cellType_anno=fread(file.path(getOption("PROJECT.DIR"),"metadata/LOLA_annot/CellTypes.tsv"))
+cellType_anno_seg=fread(file.path(Sys.getenv("RESOURCES"),"regions/customRegionDB/hg38/roadmap_segmentation/index.txt"),select=c("filename","EID", "seg_code","seg_explanation","Epigenome name (from EDACC Release 9 directory)","ANATOMY"))
+setnames(cellType_anno_seg,"Epigenome name (from EDACC Release 9 directory)","cellType_corr")
+
+#get data
+load("dat_prim&val_s1_selected_bval_notscaled_0.9_cross.RData")
+sel_analysis="survival_class"
+sel_level="long"
+
+#convert features to granges
+weight_mat=as.data.table(t(pl[[sel_analysis]]$model$W),keep.rownames=TRUE)
+weight_mat=weight_mat[rn!="Bias"]
+spl=unlist(strsplit(weight_mat$rn,"_"))
+weight_mat[,chr:=spl[seq(1,length(spl),3)],]
+weight_mat[,start:=as.numeric(spl[seq(2,length(spl),3)]),]
+weight_mat[,end:=as.numeric(spl[seq(2,length(spl),3)]),]
+weight_mat=weight_mat[order(get(sel_level))]
+weight_mat[,weight_group:=ifelse(get(sel_factor)>0,"pos","neg"),]
+
+univ=with(weight_mat,GRanges(seqnames = Rle(chr), IRanges(start=start, end=end),strand=Rle("*"),weight=get(sel_level)))
+uset=GRangesList()
+uset[[paste0(sel_analysis,"_",sel_level,"_neg")]]=univ[1:1000]
+uset[[paste0(sel_analysis,"_",sel_level,"_pos")]]=univ[(length(univ)-999):length(univ)]
+
+
+locResults=runLOLA(userSets=uset,userUniverse=univ,regionDB=regionDB_seg)
+
+locResults[,p.adjust:=p.adjust(10^(-pValueLog),method="BY"),by=userSet]
+locResults[,mlog10p.adjust:=-log10(p.adjust),]
+locResults=merge(locResults,cellType_anno_seg,by="filename")
+
+locResults_sel=locResults[p.adjust<0.05&ANATOMY%in%c("ESC","BRAIN")]
+locResults_sel[,ANATOMY_cor:=ifelse(cellType_corr=="NH-A_Astrocytes","ASTRO",ANATOMY),]
+
+pdf(paste0("feature_analysis/LOLA_",sel_analysis,".pdf"),height=3.5,width=6)
+ggplot(locResults_sel,aes(y=-log10(p.adjust),x=seg_explanation,size=logOddsRatio,fill=ANATOMY_cor))+geom_point(alpha=0.6,shape=21,position=position_jitter(width=0.05))+geom_hline(yintercept=-log10(0.05),linetype="dashed",col="grey")+facet_wrap(~userSet)+coord_flip()+xlab("")+ theme(legend.position="bottom",legend.box = "vertical")
+dev.off()
+
+
+
+
+
+
