@@ -36,7 +36,7 @@ rm(rrbsCg)
 #regions to plot
 POIs=list(enhancer51330=c("chr22", 50298971,50304771),enhancer88653=c("chr7", 151114913,151115513),enhancer84097=c("chr7", 1667764,1669964),enhancer49388=c("chr21", 45016885, 45020285),PLXNB2=c("chr22",50274644,50309283),BCL2L11=c("chr2",111113953,111169264),SFRP2=c("chr4",153780540,153794943),MGMT=c("chr10",129445717,129773284),TERT=c("chr5",1248767,1302098))
 
-#POIs=list(TERT=c("chr5",1248767,1302098))
+POIs=list(MGMT_prom=c("chr10",129466500,129467700))
 
 #now plot
 for (POIname in names(POIs)){
@@ -49,7 +49,32 @@ for (POIname in names(POIs)){
   sub=rrbsCg_annot[regions=="CG"&surgery.x%in%c(1,2)&category%in%c("GBMatch","GBmatch_val")&IDH=="wt"&chr==sel_chr&start>lower&end<upper]
   sub[,id:=factor(id,levels=unique(id[order(surgery.x)])),]
   pdf(paste0("methylation_track_CG_",POIname,"_",sel_chr,"_",lower,".pdf"),width=5,height=4)
-    pl=ggplot(sub)+geom_tile(width=0.005*(upper-lower), aes(fill=methyl,x=start,y=id))+xlab(paste0(sel_chr," (M)"))+scale_fill_gradient(low="blue",high="red")+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+theme(axis.title.y=element_blank(),axis.text.y=element_blank(),axis.ticks.y=element_blank())+theme(legend.position="bottom")+facet_grid(paste0(category,"\n",surgery.x)~.,scales="free_y",space="free_y")+xlim(c(lower,upper))
+    pl=ggplot(sub)+geom_tile(width=0.005*(upper-lower), aes(fill=methyl,x=start,y=id))+xlab(paste0(sel_chr," (M)"))+scale_fill_gradient(low="blue",high="red")+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+theme(axis.title.y=element_blank(),axis.text.y=element_blank(),axis.ticks.y=element_blank())+geom_vline(xintercept = c(lower,upper),col="lightgrey")+theme(legend.position="bottom")+facet_grid(category+surgery.x~.,scales="free_y",space="free_y")+xlim(c(lower,upper))
     print(pl)
   dev.off()
 }
+
+
+#promoter zoom in 
+
+POIs=list(MGMT_prom=c("chr10",129466600,129467700),TERT_prom=c("chr5",1294500,1296000),SFRP2_prom=c("chr4",153788500,153793000))
+POIs=list(SFRP2_prom=c("chr4",153788500,153793000))
+
+#now plot
+for (POIname in names(POIs)){
+  POI=POIs[[POIname]]
+  print(POI)
+  sel_chr=POI[1]
+  lower=as.numeric(POI[2])
+  upper=as.numeric(POI[3])
+  
+  sub=rrbsCg_annot[regions=="CG"&surgery.x%in%c(1,2)&category%in%c("GBMatch","GBmatch_val")&IDH=="wt"&chr==sel_chr&start>lower&end<upper]
+  sub[,id:=factor(id,levels=unique(id[order(surgery.x)])),]
+  pdf(paste0("methylation_track_CG_",POIname,"_",sel_chr,"_",lower,".pdf"),width=3,height=4)
+  pl=ggplot(sub)+geom_tile(width=0.005*(upper-lower), aes(fill=methyl,x=start,y=id))+xlab(paste0(sel_chr," (M)"))+scale_fill_gradient(low="blue",high="red")+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+theme(axis.title.y=element_blank(),axis.text.y=element_blank(),axis.ticks.y=element_blank())+geom_vline(xintercept = c(lower,upper),col="lightgrey")+theme(legend.position="bottom")+facet_grid(category+surgery.x~.,scales="free_y",space="free_y")+scale_x_continuous(breaks=c(lower,upper))
+  print(pl)
+  dev.off()
+}
+
+
+
