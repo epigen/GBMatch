@@ -162,8 +162,6 @@ plot_heatmap=function(file_name=NULL,pl,prepped_data,factor,rank_cutoff,title=fa
 meth_sel="bval_notscaled_0.9_cross"
 load("dat_prim_wt_selected_bval_notscaled_0.9_cross.RData")
 
-#load previously built (on combined cohort) and crossvalidated classifiers (for survival presiction)
-load("dat_prim&val_s1_selected_bval_notscaled_0.9_cross.RData")
 
 ####Matching methylation matrix on which cross validation was performed##############
 #like above (only rerun when not available)
@@ -181,9 +179,6 @@ stopifnot(row.names(prepped_data_val$meth_data_imputed)==prepped_data_val$annota
 prepped_data_wt=list(meth_data_imputed=prepped_data$meth_data_imputed[prepped_data$annotation[IDH=="wt"]$N_number_seq,],annotation=prepped_data$annotation[IDH=="wt"])
 stopifnot(row.names(prepped_data_wt$meth_data_imputed)==prepped_data_wt$annotation$N_number_seq)
 
-#for survival prediction
-prepped_data_prim_val=list(meth_data_imputed=prepped_data$meth_data_imputed[prepped_data$annotation[category%in%c("GBMatch","GBmatch_val")&surgery.x==1&IDH=="wt"]$N_number_seq,],annotation=prepped_data$annotation[category%in%c("GBMatch","GBmatch_val")&surgery.x==1&IDH=="wt"])
-stopifnot(row.names(prepped_data_prim_val$meth_data_imputed)==prepped_data_prim_val$annotation$N_number_seq)
 
 #make results directory
 dir.create("feature_analysis")
@@ -199,17 +194,15 @@ factor="CD34"
 factor="HLA-DR"
 factor="EZH2"
 factor="Sex"
-
+factor="Relative share necrosis"
+factor="Mean AVG Eccentricity Tumor" #196
+factor="Mean COV Eccentricity Tumor" #160
+#only for survival prediction in prim&val
 factor="survival_class" #rank_cutoff=200
 
 for (rank_cutoff in seq(150,200,by=2)){
-plot_heatmap(pl=pl,prepped_data=prepped_data_prim_val,factor=factor,rank_cutoff=rank_cutoff)
+plot_heatmap(pl=pl,prepped_data=prepped_data_prim,factor=factor,rank_cutoff=rank_cutoff)
 }
-
-#plot and save only heatmap for selected factor and rank_cutoff
-
-plot_heatmap(file_name=paste0("feature_analysis/only_heatmap_",factor),pl=pl,prepped_data=prepped_data_prim_val,factor="survival_class",rank_cutoff=200,title="Survival class")
-
 
 #set factor and rank_cutoff foe complrehensive analysis
 #complete val
@@ -217,9 +210,9 @@ plot_heatmap(file_name=paste0("feature_analysis/only_heatmap_",factor),pl=pl,pre
 #without val plate 2 including IDH mut
 #factor_list=list(c("MIB",190),c("CD45ro",184),c("CD163",182),c("CD3",184),c("CD68",174),c("CD8",174),c("CD34",150),c("HLA-DR",184),c("Sex",188))
 #without val plate 2 without IDH mut
-factor_list=list(c("MIB",194),c("CD45ro",196),c("CD163",160),c("CD3",158),c("CD68",178),c("CD8",178),c("CD34",164),c("HLA-DR",194),c("EZH2",190),c("Sex",186))
+factor_list=list(c("MIB",194),c("CD45ro",196),c("CD163",160),c("CD3",158),c("CD68",178),c("CD8",178),c("CD34",164),c("HLA-DR",194),c("EZH2",190),c("Sex",186),c("Relative share necrosis",164),c("Mean AVG Eccentricity Tumor" ,196),c("Mean COV Eccentricity Tumor" ,160))
 
-
+factor_list=list(c("Mean AVG Eccentricity Tumor" ,196),c("Mean COV Eccentricity Tumor" ,160))
 
 for (factor in factor_list){
   rank_cutoff=as.numeric(factor[2])
@@ -292,7 +285,7 @@ annot_row=features_res$annot_row
 annot_col=features_res$annot_col
 
 annot_row_hm=annot_row
-if(all(annot_row_hm[,gsub("-",".",factor)]==annot_row_hm[,"bin"])){annot_row_hm[,gsub("-",".",factor)]=NULL}
+if(all(annot_row_hm[,gsub("-| ",".",factor)]==annot_row_hm[,"bin"])){annot_row_hm[,gsub("-| ",".",factor)]=NULL}
 
 
 #heatmap analysis (clustering)
@@ -313,12 +306,12 @@ dev.off()
 
 #feature distribution
 sel_annot=merge(sel,annot_row,by=0)
-sel_long=as.data.table(melt(sel_annot,id.vars=c(paste0(gsub("-",".",factor)),"bin","Row.names","category"),value.name="methyl"))
+sel_long=as.data.table(melt(sel_annot,id.vars=c(paste0(gsub("-| ",".",factor)),"bin","Row.names","category"),value.name="methyl"))
 sel_long=merge(sel_long,data.table(weights=annot_col$weight,variable=row.names(annot_col)),by="variable")
 sel_long[,weight_group:=ifelse(weights>0,"weights +","weights -"),]
 
 all_annot=merge(sel_data$meth_data_imputed,annot_row,by=0,all.y=TRUE)
-all_long=as.data.table(melt(all_annot,id.vars=c(gsub("-",".",factor),"bin","Row.names","category"),value.name="methyl"))
+all_long=as.data.table(melt(all_annot,id.vars=c(gsub("-| ",".",factor),"bin","Row.names","category"),value.name="methyl"))
 all_long[,weight_group:="core regions"]
 
 sel_all_long=rbindlist(list(sel_long,all_long),use.names=TRUE,fill=TRUE)
@@ -343,6 +336,18 @@ pdf(paste0("feature_analysis/qq_",factor,"_",meth_sel,"_",analysis,".pdf"),heigh
 print(ggplot(sel_all_long) +stat_qq(aes(sample = methyl,col=bin),geom="line")+ggtitle(factor)+xlim(c(-4,4))+ coord_fixed(ratio=8)+facet_wrap(~weight_group)) 
 dev.off()
 }}
+
+
+#########for survival prediction
+#load previously built (on combined cohort) and crossvalidated classifiers (for survival presiction)
+load("dat_prim&val_s1_selected_bval_notscaled_0.9_cross.RData")
+
+prepped_data_prim_val=list(meth_data_imputed=prepped_data$meth_data_imputed[prepped_data$annotation[category%in%c("GBMatch","GBmatch_val")&surgery.x==1&IDH=="wt"]$N_number_seq,],annotation=prepped_data$annotation[category%in%c("GBMatch","GBmatch_val")&surgery.x==1&IDH=="wt"])
+stopifnot(row.names(prepped_data_prim_val$meth_data_imputed)==prepped_data_prim_val$annotation$N_number_seq)
+#plot and save only heatmap for selected factor and rank_cutoff
+factor="survival_class" #rank_cutoff=200
+plot_heatmap(file_name=paste0("feature_analysis/only_heatmap_",factor),pl=pl,prepped_data=prepped_data_prim_val,factor="survival_class",rank_cutoff=200,title="Survival class")
+
 
 
 ##########feature follow-up with LOLA
