@@ -150,7 +150,7 @@ stopifnot(nrow(prep[N_number_st%in%prep[duplicated(N_number_st)]$N_number_st])==
 stopifnot(nrow(segmentation[N_number_st%in%segmentation[duplicated(N_number_st)]$N_number_st])==0)
 
 
-column_annotation=list(psa=names(psa),histo_immuno=names(histo),histo_classification=names(histo_description),histo_segmentation=names(segmentation),sequencing_stats=c(names(sequencing_stats),"qualTier"),sequencing_annot=names(sequencing_annot),library_prep=names(prep),clinical_annotation=c(names(clinical),"timeToFirstProg","timeToSecSurg"),imaging=names(imaging),imaging_progression=names(imaging_prog),imaging_segmentation=names(imaging_auto),random_fragmentation=names(frag_check))
+column_annotation=list(psa=names(psa),histo_immuno=names(histo),histo_classification=names(histo_description),histo_segmentation=names(segmentation),sequencing_stats=c(names(sequencing_stats),"qualTier"),sequencing_annot=c(names(sequencing_annot),"flowcell_date"),library_prep=names(prep),clinical_annotation=c(names(clinical),"timeToFirstProg","timeToSecSurg"),imaging=names(imaging),imaging_progression=names(imaging_prog),imaging_segmentation=names(imaging_auto),random_fragmentation=names(frag_check))
 save(column_annotation,file = paste0(our_dir,"/column_annoation.RData"))
 
 
@@ -286,8 +286,9 @@ merge4[is.na(Sex),Sex:=sex]
 
 
 #remove samples from validation cohort DNA prep plate 2
-merge4=merge4[plate_dna_abbrev!="EA003_plate2"|is.na(plate_dna_abbrev)]
+merge4_filt=merge4[plate_dna_abbrev!="EA003_plate2"|is.na(plate_dna_abbrev)]
 
-write.table(merge4,paste0(our_dir,"/annotation_combined.tsv"),row.names = FALSE,sep="\t",quote=FALSE)
+write.table(merge4_filt,paste0(our_dir,"/annotation_combined.tsv"),row.names = FALSE,sep="\t",quote=FALSE)
 
+write.table(merge4,paste0(our_dir,"/annotation_combined_includeAll.tsv"),row.names = FALSE,sep="\t",quote=FALSE)
 
