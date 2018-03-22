@@ -72,8 +72,8 @@ write.table(pat_stats_summary_GBmatch_val,file="Pat_stats_summary_GBMatch_val.ts
 
 
 #Supplementary Table 2 (RRBS stats)
-rrbs_stats=annotation[,c("N_number_seq","patID","surgery.x","material","category","inputDNA","adapter","enrichmentCycles","instrument_model","read_length","read_type", "library","Raw_reads","Aligned_reads","Alignment_rate","rand_frag_perc","Unique_CpGs","meanCoverage","K1_unmethylated_meth","K3_methylated_meth","qualTier"),with=FALSE]
-setnames(rrbs_stats,names(rrbs_stats),c("Sample ID","Patient ID","Surgery Number","Material","Category","Input DNA [ng]","Adapter","Enrichment Cycles","Instrument Model","Read Length","Read Type","Library","Raw Reads","Aligned Reads","Alignment Rate [%]","Fragmented Reads [%]","Unique GpGs","Mean Coverage","DNA methylation (unmethylated spike-in)","DNA methylation (methylated spike-in)","Quality Tier"))
+rrbs_stats=annotation[,c("N_number_seq","patID","IDH","surgery.x","material","category","inputDNA","adapter","enrichmentCycles","instrument_model","read_length","read_type", "library","Raw_reads","Aligned_reads","Alignment_rate","rand_frag_perc","Unique_CpGs","meanCoverage","bisulfiteConversionRate","K1_unmethylated_meth","K3_methylated_meth","qualTier"),with=FALSE]
+setnames(rrbs_stats,names(rrbs_stats),c("Sample ID","Patient ID","IDH status","Surgery Number","Material","Category","Input DNA [ng]","Adapter","Enrichment Cycles","Instrument Model","Read Length","Read Type","Library","Raw Reads","Aligned Reads","Alignment Rate [%]","Fragmented Reads [%]","Unique GpGs","Mean Coverage","Non-CpG Conversion Rate","DNA methylation (unmethylated spike-in)","DNA methylation (methylated spike-in)","Quality Tier"))
 write.table(rrbs_stats,file="RRBS_stats.tsv",sep="\t",quote=FALSE,row.names=FALSE)
 
 #some summary stats for paper

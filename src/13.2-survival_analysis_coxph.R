@@ -45,7 +45,7 @@ annotation_wide[,StuppComplete:=ifelse(StuppComplete.1=="yes","yes","no"),]
 
 
 #univariate models
-covariates=c("Age_1","Sex","mgmt_methyl.1","mgmt_methyl.2","10_q_deletion.1","10_q_deletion.2","7_p_amplification.1","7_p_amplification.2","StuppComplete","CD163.1","CD163.2","CD68.1","CD68.2","MIB.1","MIB.2","mean_entropy_conf.1","mean_entropy_conf.2","mean_pdr_conf.1","mean_pdr_conf.2","DPM_conf.1",paste0(grep("EPM_.*_conf",names(annotation_sub),value=TRUE),".1"),"EZH2_(39875)__NH-A_None_6488.1","EZH2_(39875)__NH-A_None_6488.2","NANOG__Embryonic Stem Cell_NA_18532.1","NANOG__Embryonic Stem Cell_NA_18532.2")
+covariates=c("Age_1","Sex","mgmt_methyl.1","mgmt_methyl.2","10_q_deletion.1","10_q_deletion.2","7_p_amplification.1","7_p_amplification.2","StuppComplete","CD163.1","CD163.2","CD68.1","CD68.2","MIB.1","MIB.2","mean_entropy_conf.1","mean_entropy_conf.2","mean_pdr_conf.1","mean_pdr_conf.2","DPM_conf.1",paste0(grep("EPM_.*_conf",names(annotation_sub),value=TRUE),".1"),"EZH2_(39875)__NH-A_None_6488.1","EZH2_(39875)__NH-A_None_6488.2","NANOG__Embryonic Stem Cell_NA_18532.1","NANOG__Embryonic Stem Cell_NA_18532.2","mean_diffmeth.Wnt signalling.1","diff_trend_dist_norm.1","Necrotic  (mm3).1","Necrotic  (mm3).2","Enhancing (mm3).1","Enhancing (mm3).2")
 
 sel_categories=c("GBmatch_val","GBMatch") # "GBMatch"
 #mode="PFS" #"OS"

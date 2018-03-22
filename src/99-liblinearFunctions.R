@@ -248,7 +248,7 @@ check_prediction=function(data,labels,samples,cross=10,nReps=10,type=NULL,cost=N
 ##################for predicting properties from methylation prediction######################
 
 #########prepare the data#################
-prepare_data=function(meth_data_dt,annotation_all,min_na_ratio=0.999){
+prepare_data=function(meth_data_dt,annotation_all,min_na_ratio=0.9,min_na_ratio_samp=0.8){
   meth_data_mat=dcast(meth_data_dt,id~region,value.var="methyl")
   row.names(meth_data_mat)=meth_data_mat$id
   meth_data_mat$id=NULL
@@ -260,7 +260,7 @@ prepare_data=function(meth_data_dt,annotation_all,min_na_ratio=0.999){
   meth_data_mat_sel=meth_data_mat[,region_na_ratios>min_na_ratio]
   #check for low coverage sample --> select samples to include
   sample_na_ratios=apply(meth_data_mat_sel,1,function(x){sum(!is.na(x))/length(x)})
-  meth_data_mat_sel=meth_data_mat_sel[sample_na_ratios>0.8,]
+  meth_data_mat_sel=meth_data_mat_sel[sample_na_ratios>min_na_ratio_samp,]
   
   meth_data_imputed=t(impute.knn(t(meth_data_mat_sel),k=5)$data)
   region_na_ratios_red=region_na_ratios[region_na_ratios>min_na_ratio]

@@ -39,7 +39,7 @@ mds=isoMDS(d, k=2)
 mds_annot_pre=data.table(N_number_seq=row.names(mds$points),MDS1=mds$points[,1],MDS2=mds$points[,2])
 mds_annot=merge(mds_annot_pre,annotation,by="N_number_seq")
 
-batch_variables=c("SurgeryDate","material","category","cohort","batch","adapter","flowcell_date","IDH","Diagnosis")
+batch_variables=c("SurgeryDate","material","category","cohort","batch","adapter","flowcell_date","IDH","Diagnosis","Center")
 
 mds_annot[,SurgeryDate:=as.Date(SurgeryDate,format="%Y-%m-%d"),]
 mds_annot[,flowcell_date:=as.Date(flowcell_date,format="%Y-%m-%d"),]
