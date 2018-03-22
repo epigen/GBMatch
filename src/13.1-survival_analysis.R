@@ -80,7 +80,8 @@ annot_surv[,event:=ifelse(event=="dead",1,0)]
 
 annot_relapse=unique(annotation[surgery%in%c(1,2)&IDH=="wt"&category%in%c("GBMatch","GBmatch_val"),list(event=1,follow_up=(unique(timeToFirstProg)/365)*12,category=category,annoclass="relapse"),by=patID])
 
-annot_relapse_est=unique(annotation[surgery%in%c(1,2)&IDH=="wt"&category%in%c("GBMatch","GBmatch_val"),list(event=1,follow_up=ifelse(is.na(timeToFirstProg),unique(`Follow-up_years`)*12-2,(unique(timeToFirstProg)/365)*12),category=category,annoclass="relapse"),by=patID])
+annot_relapse_est=unique(annotation[surgery%in%c(1,2)&IDH=="wt"&category%in%c("GBMatch","GBmatch_val"),list(event=ifelse(is.na(timeToFirstProg),unique(VitalStatus),"dead"),follow_up=ifelse(is.na(timeToFirstProg),unique(`Follow-up_years`)*12-2,(unique(timeToFirstProg)/365)*12),category=category,annoclass="relapse"),by=patID])
+annot_relapse_est[,event:=ifelse(event=="dead",1,0)]
 
 combi=rbindlist(list(annot_surv,annot_relapse),use.names=TRUE)
 combi[,long_surv:=ifelse(follow_up[annoclass=="survival"]>=36,TRUE,FALSE),by="patID"]
