@@ -127,9 +127,16 @@ write.table(combined_annotation,"annotation_combined_final.tsv",sep="\t",row.nam
 
 
 #cleanup for simplicity
-removeCols=c("patientID","N_number_st","N_number_psa","age","sex","dateOfBirth","genotype","individual","order","N_number_prep","sample","ProtocolVersion","flowcell_repeat","position_rrbs","plate_dna","position_dna","plate_dna_abbrev","experiment","BSF_name","cell_type", "organism","data_source","pipeline","File_mb","K1_unmethylated_meth_EL","K1_unmethylated_count_EL","K3_methylated_meth_EL","K3_methylated_count_EL","Time" ,"Success","bam","FileName","N_number_seg","N_number_hist","N_number_hDesc","Initials1","Initials2","N_number_clin","N_number_img","ID","N_number_imgA","N-Number_1st","N-Number_2nd","Verlauf vorhanden 1=ja, 2=nein" ,"all_count","H_count""M_count","bg_calls","bg_reads",)
+removeCols=c("patientID","N_number_st","N_number_psa","age","sex","date","resectionNo","dCt","Read_type","Total_efficiency","total_efficiency","trim_loss_rate","alignment_rate","SampleEvent","dateOfBirth","genotype","individual","order","N_number_prep","sample","ProtocolVersion","flowcell_repeat","all","position_rrbs","plate_dna","position_dna","plate_dna_abbrev","experiment","BSF_name","cell_type", "organism","data_source","pipeline","File_mb","K1_unmethylated_meth_EL","K1_unmethylated_count_EL","K3_methylated_meth_EL","K3_methylated_count_EL","Time" ,"Success","bam","FileName","N_number_seg","N_number_hist","N_number_hDesc","Initials1","Initials2","N_number_clin","N_number_img","ID","N_number_imgA","N-Number_1st","N-Number_2nd","Verlauf vorhanden 1=ja, 2=nein" ,"all_count","H_count","M_count","bg_calls","bg_reads","switching","SFRP2_meth","SFRP2_readCount","SFRP2_CpG_count")
+
+toRename=c("N_number_seq","cell","sub_group","auc","auc_rand","sub_group_prob","meth_max","meth_min")
+newNames=c("id","Cell density","transcSubtype","transcSubtype_auc","transcSubtype_auc_rand","transcSubtype_classProb","mgmt_meth_max","mgmt_meth_min")
+combined_annotation_forPublic=combined_annotation[,-removeCols,with=FALSE]
+setnames(combined_annotation_forPublic,toRename,newNames)
+
+write.table(combined_annotation_forPublic,"GBMatch_sampleAnnotation.tsv",sep="\t",row.names=FALSE,quote=FALSE)
+write.table(data.table(columnName=names(combined_annotation_forPublic)),"GBMatch_columnAnnotation.tsv",sep="\t",row.names=FALSE,quote=FALSE)
 
 
-toRename=c("all","cell","sub_group","Classical","Proneural","Mesenchymal","auc","auc_rand","sub_group_prob","meth_max","meth_min")
 
 
