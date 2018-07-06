@@ -23,26 +23,30 @@ dev.off()
 
 annotation[,material_cohort:=paste0(cohort,"\n",material),]
 annotation[,time_to_prep:=as.numeric(as.Date(flowcell_date)-as.Date(SurgeryDate)),]
-cor_time=annotation[,list(date=min(SurgeryDate),y=rand_frag_perc[which.min(as.Date(SurgeryDate))],time_cor=cor(rand_frag_perc,-time_to_prep)),by=c("material_cohort")]
+cor_time=annotation[,list(date=min(SurgeryDate),y=rand_frag_perc[which.min(as.Date(SurgeryDate))],time_cor=cor(rand_frag_perc,-time_to_prep),N=nrow(na.omit(cbind(rand_frag_perc,-time_to_prep)))),by=c("material_cohort")]
 
+####Figure S1C start #################################
 pdf("rand_fragVStime.pdf",height=3.5,width=4.5)
-ggplot(annotation,aes(x=as.Date(SurgeryDate),y=rand_frag_perc,fill=material_cohort,group=material_cohort,col=material_cohort))+geom_point(alpha=0.5,shape=21,size=3)+geom_text(hjust=0,data=cor_time,aes(x=as.Date(date),y=y,label=paste0(material_cohort,": r=",round(time_cor,3))))+ylim(c(0,100))+geom_smooth(method="lm") +ylab("% randomly fragmented reads")+xlab("Surgery date")
+ggplot(annotation,aes(x=as.Date(SurgeryDate),y=rand_frag_perc,fill=material_cohort,group=material_cohort,col=material_cohort))+geom_point(alpha=0.5,shape=21,size=3)+geom_text(hjust=0,data=cor_time,aes(x=as.Date(date),y=y,label=paste0(material_cohort,": r=",round(time_cor,3)," (N=",N,")")))+ylim(c(0,100))+geom_smooth(method="lm") +ylab("% randomly fragmented reads")+xlab("Surgery date")
 dev.off()
 
 #use FFPE necrosis values because they are not available for frozen
 annotation[,`Relative share necrosis`:=ifelse(is.na(`Relative share necrosis`),`Relative share necrosis`[material=="FFPE"],`Relative share necrosis`),by="N_number_st"]
 
-cor_nec=annotation[,list(`Relative share necrosis`=max(`Relative share necrosis`,na.rm=TRUE),rand_frag_perc=rand_frag_perc[which.max(`Relative share necrosis`)],cor=cor(`Relative share necrosis`,rand_frag_perc,use="pairwise.complete")),by="material_cohort"]
+cor_nec=annotation[,list(`Relative share necrosis`=max(`Relative share necrosis`,na.rm=TRUE),rand_frag_perc=rand_frag_perc[which.max(`Relative share necrosis`)],cor=cor(`Relative share necrosis`,rand_frag_perc,use="pairwise.complete"),N=nrow(na.omit(cbind(`Relative share necrosis`,rand_frag_perc)))),by="material_cohort"]
 pdf("rand_fragVSnecrosis.pdf",height=3.5,width=4.5)
-ggplot(annotation,aes(x=`Relative share necrosis`,y=rand_frag_perc,fill=material_cohort,group=material_cohort,col=material_cohort))+geom_point(alpha=0.5,shape=21,size=3)+geom_text(data=cor_nec,hjust=1,aes(label=paste0(material_cohort,": r=",round(cor,3))))+ylim(c(0,100))+geom_smooth(method="lm")+ylab("% randomly fragmented reads")+xlab("Relative share necrosis")
+ggplot(annotation,aes(x=`Relative share necrosis`,y=rand_frag_perc,fill=material_cohort,group=material_cohort,col=material_cohort))+geom_point(alpha=0.5,shape=21,size=3)+geom_text(data=cor_nec,hjust=1,aes(label=paste0(material_cohort,": r=",round(cor,3)," (N=",N,")")))+ylim(c(0,100))+geom_smooth(method="lm")+ylab("% randomly fragmented reads")+xlab("Relative share necrosis")
 dev.off()
 
-cor_CpG=annotation[,list(Raw_reads=max(Raw_reads),Unique_CpGs=Unique_CpGs[which.max(Raw_reads)],cor=cor(Raw_reads,Unique_CpGs)),by="material_cohort"]
+cor_CpG=annotation[,list(Raw_reads=max(Raw_reads),Unique_CpGs=Unique_CpGs[which.max(Raw_reads)],cor=cor(Raw_reads,Unique_CpGs),N=nrow(na.omit(cbind(Raw_reads,Unique_CpGs)))),by="material_cohort"]
 pdf("readsVSCpG.pdf",height=3.5,width=4.5)
-ggplot(annotation,aes(x=Raw_reads/1000000,y=Unique_CpGs/1000000,fill=material_cohort,group=material_cohort,col=material_cohort))+geom_point(alpha=0.5,shape=21,size=3)+geom_text(data=cor_CpG,hjust=1,aes(label=paste0(material_cohort,": r=",round(cor,3))))+geom_smooth(method="lm")+ylab("Unique CpGs (Million)")+xlab("Raw reads (Million)")
+ggplot(annotation,aes(x=Raw_reads/1000000,y=Unique_CpGs/1000000,fill=material_cohort,group=material_cohort,col=material_cohort))+geom_point(alpha=0.5,shape=21,size=3)+geom_text(data=cor_CpG,hjust=1,aes(label=paste0(material_cohort,": r=",round(cor,3)," (N=",N,")")))+geom_smooth(method="lm")+ylab("Unique CpGs (Million)")+xlab("Raw reads (Million)")
 dev.off()
+####Figure S1C start #################################
+
 
 #bisylfite conversion
+####Figure S1D
 pdf("bisulfite_conversion.pdf",width=4.5,height=2.5)
 ggplot(annotation)+geom_point(aes(x=material,y=K1_unmethylated_meth*100,col="Unmethylated",fill="Unmethylated"),position=position_jitter(width=0.3,height=0),alpha=0.5,shape=21)+geom_point(aes(x=material,y=K3_methylated_meth*100,col="Methylated",fill="Methylated"),position=position_jitter(width=0.3,height=0),alpha=0.5,shape=21)+geom_hline(yintercept=5,color="grey",lty=20)+geom_hline(yintercept=95,color="grey",lty=20)+facet_grid(~cohort,space="free_x",scale="free_x")+ylab("Control methylation (%)")
 dev.off()
@@ -69,8 +73,6 @@ pat_stats_summary_GBmatch_val=pat_stats[grepl("GBmatch_val([^F]|$)",Categories,p
 write.table(pat_stats_summary_GBmatch_val,file="Pat_stats_summary_GBMatch_val.tsv",sep="\t",quote=FALSE,row.names=FALSE)
 
 
-
-
 #Supplementary Table 2 (RRBS stats)
 rrbs_stats=annotation[,c("N_number_seq","patID","Sex","Center","tissue","IDH","surgery.x","material","category","inputDNA","adapter","enrichmentCycles","instrument_model","read_length","read_type", "library","Raw_reads","Aligned_reads","Alignment_rate","rand_frag_perc","Unique_CpGs","meanCoverage","bisulfiteConversionRate","K1_unmethylated_meth","K3_methylated_meth","qualTier"),with=FALSE]
 setnames(rrbs_stats,names(rrbs_stats),c("Sample ID","Patient ID","Sex","Center","Sample Type","IDH status","Surgery Number","Material","Category","Input DNA [ng]","Adapter","Enrichment Cycles","Sequencing Instrument","Read Length","Read Type","Library","Raw Reads","Aligned Reads","Alignment Rate [%]","Fragmented Reads [%]","Unique GpGs","Mean Coverage","Non-CpG Conversion Rate","DNA methylation (unmethylated spike-in)","DNA methylation (methylated spike-in)","Quality Tier"))
@@ -91,7 +93,7 @@ cat(paste0("\n\nFFPE samples\nIDHwt patients: ",nrow(sub[`Patient ID`%in%pat_sta
 #########################
 
 #Cohort over time
-
+####Figure 1B and S1B
 clinical_annot_long_date=melt(annotation[category%in%c("GBMatch","GBmatch_val")&IDH=="wt"&!is.na(VitalStatus)],measure.vars =c("DateOfBirth","DateOfDeath_LastFollow-up","ProgressionDate","SurgeryDate","TreatmentDate"),variable.name="Event",value.name = "Date_form")
 clinical_annot_long_date[Event!="DateOfDeath_LastFollow-up",VitalStatus:="alive",]
 clinical_annot_long_date[Event=="SurgeryDate",Event:=paste0("Surgery ",surgery.x),]
@@ -124,8 +126,12 @@ pdf("timeline_Nno.pdf",height=8,width=28)
 print(pl2)
 dev.off()
 
+dataFig1b=clinical_annot_long_date[Event!="DateOfBirth"&!is.na(Date_form)&category=="GBMatch"][,list(Date_form,patID,surgery.x,VitalStatus,Event,category)]
+write.table(dataFig1b,"Source Data Figure 1b.csv",sep=";",quote=FALSE,row.names=FALSE)
+
 
 #single patient
+####Figure 1A
 patient="pat_014"
 sub=clinical_annot_long_date[patID==patient&Event!="DateOfBirth"]
 
@@ -145,6 +151,7 @@ dev.off()
 
 
 #plot locations
+####Figure S1A
 mapWorld <- borders("world","austria", colour="gray50", fill="white") # create a layer of borders
 
 centers=pat_stats[grepl("GBMatch|GBmatch_add|GBmatch_val([^F]|$)",Categories),list(N=.N,IDH_count=paste0(length(`IDH status`[`IDH status`=="wt"]),"/",IDHwt=length(`IDH status`[`IDH status`=="mut"]))),by="Center"]

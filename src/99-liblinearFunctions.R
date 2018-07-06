@@ -324,12 +324,14 @@ meth_pred_analysis=function(meth_data_imputed,annotation,column_annotation,set_t
     if(file.exists(paste0("dat_",selected,meth_sel,".RData"))){
       load(file=paste0("dat_",selected,meth_sel,".RData"))
       
-      pdf(paste0("roc_",selected,meth_sel,".pdf"),height=3.5,width=4.5)
+      pdf(paste0("roc_",selected,meth_sel,".pdf"),height=5,width=4.5)
       for (name in names(pl)){
         plot_list=pl[[name]]$plot
+        sample_N=unique(pl[[name]]$decision_mat[rand==FALSE,list(sample,true_label),])[,.N,by=true_label]
+        sample_N[,lab:=paste0("N(",true_label,")=",N),]
         for (i in c(1:length(plot_list))){
-          print(pl[[name]]$plot[[i]]+ggtitle(name)) 
-          print(pl[[name]]$plot_int[[i]]+ggtitle(name))
+          print(pl[[name]]$plot[[i]]+ggtitle(paste0(c(name,sample_N$lab),collapse="\n"))+coord_fixed(ratio=1)) 
+          print(pl[[name]]$plot_int[[i]]+ggtitle(paste0(c(name,sample_N$lab),collapse="\n"))+coord_fixed(ratio=1))
         }
       }
       dev.off()
@@ -388,12 +390,14 @@ meth_pred_analysis=function(meth_data_imputed,annotation,column_annotation,set_t
       #########################################################################################################
     }
     save(pl,file=paste0("dat_",selected,meth_sel,".RData"))
-    pdf(paste0("roc_",selected,meth_sel,".pdf"),height=3.5,width=4.5)
+    pdf(paste0("roc_",selected,meth_sel,".pdf"),height=5,width=4.5)
     for (name in names(pl)){
       plot_list=pl[[name]]$plot
+      sample_N=unique(pl[[name]]$decision_mat[rand==FALSE,list(sample,true_label),])[,.N,by=true_label]
+      sample_N[,lab:=paste0("N(",true_label,")=",N),]
       for (i in c(1:length(plot_list))){
-        print(pl[[name]]$plot[[i]]+ggtitle(name))
-        print(pl[[name]]$plot_int[[i]]+ggtitle(name))
+        print(pl[[name]]$plot[[i]]+ggtitle(paste0(c(name,sample_N$lab),collapse="\n"))+coord_fixed(ratio=1))
+        print(pl[[name]]$plot_int[[i]]+ggtitle(paste0(c(name,sample_N$lab),collapse="\n"))+coord_fixed(ratio=1))
       }
     }
     dev.off()

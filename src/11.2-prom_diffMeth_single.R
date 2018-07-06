@@ -67,17 +67,24 @@ sub[,gene_name:=factor(gene_name,levels=unique(gene_name[order(plot_order,decrea
 
 sub_expand <- rbind(sub, cbind(expand.grid(gene_name=levels(sub$gene_name), hypo_meth=levels(as.factor(sub$hypo_meth))), N=NA,plot_order=NA))
 
+####Figure 6b (upper)
 pdf("promoter_diff_meth_recurrent.pdf",width=5,height=5)
 ggplot(sub_expand,aes(x=gene_name,y=N,fill=factor(hypo_meth,levels=c("2","1")),group=hypo_meth,alpha=ifelse(abs(N)<5,"off","on")))+geom_bar(col="black",stat="identity",position=position_dodge(width=0))+theme(axis.text.x=element_text(angle = -90, hjust = 0,vjust=0.5))+scale_alpha_discrete(range=c(0.25,1))+theme(legend.position="bottom",legend.box = "vertical")
 dev.off()
+write.table(sub_expand,"Source Data Figure6b_upper.csv",sep=";",quote=FALSE,row.names=FALSE)
+
 
 sub_signif=all_signif[gene_name%in%sub$gene_name]
 sub_all=all[readCount.1>diffmeth_readlim&readCount.2>diffmeth_readlim]
-mycor=sub_all[,cor(methyl.1,methyl.2)]
+mycor=sub_all[,list(cor(methyl.1,methyl.2),length(methyl.1))]
 
+####Figure 6a
 pdf("promoter_diff_meth_scatter.pdf",width=6.5,height=4)
-ggplot(data=sub_all,aes(x=methyl.1*100,y=methyl.2*100))+stat_bin_hex(bins=30,aes(fill=..density..^0.1))+geom_point(data=sub_signif,shape=21,size=3,aes(col=factor(hypo_meth,levels=c("2","1"))))+annotate("text",x=15,y=98,label=paste0("r=",round(mycor,3)))+scale_fill_gradientn(colours = colorRampPalette(c("white", blues9))(256))+xlab("% DNA methylation primary tumor")+ylab("% DNA methylation recurring tumor")+theme(aspect.ratio=1)
+ggplot(data=sub_all,aes(x=methyl.1*100,y=methyl.2*100))+stat_bin_hex(bins=30,aes(fill=..density..^0.1))+geom_point(data=sub_signif,shape=21,size=3,aes(col=factor(hypo_meth,levels=c("2","1"))))+annotate("text",x=50,y=98,label=paste0("r=",round(mycor$V1,3)," N=",mycor$V2))+scale_fill_gradientn(colours = colorRampPalette(c("white", blues9))(256))+xlab("% DNA methylation primary tumor")+ylab("% DNA methylation recurring tumor")+theme(aspect.ratio=1)
 dev.off()
+
+source_data6a=rbindlist(list(sub_all[,list(methyl.1,methyl.2,patID,gene_name, ensG)][,type:="scatter",],sub_signif[,list(methyl.1,methyl.2,hypo_meth,patID,gene_name, ensG)][,type:="highlight",]),use.names=TRUE,fill=TRUE)
+write.table(source_data6a,"Source Data Figure6a.csv",sep=";",quote=FALSE,row.names=FALSE)
 
 #follow-up on recurrently differentially methylated genes
 sub_rec=sub[abs(N)>=5]
@@ -100,17 +107,24 @@ sel_recurring_trend_pat[,diff_trend_dist_norm:=diff_trend_dist/Ngenes,]
 
 pdf("sel_recurring_trend.pdf",height=2.5,width=3.5)
 ggplot(sel_recurring_trend_pat,aes(x=Ngenes,y=diff_trend_dist_norm))+geom_point(shape=21)
+
+####Figure6c
 ggplot(sel_recurring_trend_pat,aes(x=diff_trend_dist_norm))+geom_histogram(col="darkgrey",fill="grey",binwidth=0.05)+ylim(c(0,20))+scale_x_continuous(breaks=seq(from=0,to=2,by=0.2),limits=c(0,2))+ggtitle("all patients")+geom_vline(xintercept=c(0.7,1.15),lty=20)
 ggplot(sel_recurring_trend_pat[Ngenes>4],aes(x=diff_trend_dist_norm))+geom_histogram(col="darkgrey",fill="grey",binwidth=0.05)+ylim(c(0,20))+scale_x_continuous(breaks=seq(from=0,to=2,by=0.2),limits=c(0,2))+ggtitle(">4 genes")+geom_vline(xintercept=c(0.7,1.15),lty=20)
 dev.off()
 
+write.table(sel_recurring_trend_pat[,list(diff_trend_dist_norm,patID),],"Source Data Figure6c.csv",sep=";",quote=FALSE,row.names=FALSE)
+
+
 sel_recurring_trend=merge(sel_recurring,sel_recurring_trend_pat,by="patID")
 sel_recurring_trend[,annot:=ifelse(diff_trend_dist_norm>=1,"anti-trend",ifelse(diff_trend_dist_norm<0.8,"trend",NA)),]
 sel_recurring_trend[,gene_name:=factor(gene_name,levels=levels(sub_expand$gene_name)),]
-
+####Figure 6b lower
 pdf("promoter_diff_meth_recurrent_trend.pdf",width=5.15,height=3)
-ggplot(sel_recurring_trend[!is.na(annot)],aes(x=gene_name,y=methyl.2-methyl.1))+geom_point(position=position_jitter(height=0,width=0.3),aes(group=patID,col=annot),alpha=0.2)+geom_smooth(se=FALSE,aes(group=annot,col=annot),span=0.3)+geom_hline(yintercept=c(0,0.75,-0.75),lty=20,col="black")+theme(axis.text.x=element_text(angle = -90, hjust = 0,vjust=0.5))+theme(legend.position="bottom",legend.box = "vertical")+scale_color_manual(values=c("navy","firebrick"))
+ggplot(sel_recurring_trend[!is.na(annot)][!is.na(annot),list(gene_name,methyl.2,methyl.1,patID,annot),],aes(x=gene_name,y=methyl.2-methyl.1))+geom_point(position=position_jitter(height=0,width=0.3),aes(group=patID,col=annot),alpha=0.2)+geom_smooth(se=FALSE,aes(group=annot,col=annot),span=0.3)+geom_hline(yintercept=c(0,0.75,-0.75),lty=20,col="black")+theme(axis.text.x=element_text(angle = -90, hjust = 0,vjust=0.5))+theme(legend.position="bottom",legend.box = "vertical")+scale_color_manual(values=c("navy","firebrick"))
 dev.off()
+
+write.table(sel_recurring_trend[!is.na(annot),list(gene_name,methyl.2,methyl.1,patID,annot),],"Source Data Figure6b_lower.csv",sep=";",quote=FALSE,row.names=FALSE)
 
 write.table(sel_recurring_trend_pat,"sel_recurring_trend_pat.tsv",sep="\t",quote=FALSE,row.names=FALSE)
 
@@ -129,9 +143,11 @@ enrichr_res_sub[,annot:=ifelse(grepl("devel|gastru|guidance",category),"Developm
 
 enrichr_res_sub[,category_simpl:=factor(category_simpl,levels=category_simpl[order(-pval)]),]
 
+####Figure 6e
 pdf("promoter_diff_meth_enrichr.pdf",width=6,height=3)
 ggplot(enrichr_res_sub,aes(x=category_simpl,y=-log10(pval)))+geom_bar(stat="identity",aes(fill=annot),alpha=0.6)+coord_flip()+geom_text(aes(label=genes),hjust=1)+scale_fill_manual(values=c("Development"="#7fc97f","Apoptosis"="#beaed4","Immune response"="#fb9a99","Wnt signalling"="#fdc086"))+geom_hline(yintercept=-log10(0.05),lty=20,col="grey")+facet_wrap(~hypo_meth,labeller="label_both",scale="free_y",ncol=1)+xlab("")
 dev.off()
+write.table(enrichr_res_sub[,list(pval,genes,hypo_meth,category_simpl,annot),],"Source Data Figure6e.csv",sep=";",quote=FALSE,row.names=FALSE)
 
 #now group samples according to methylation status in developmental/ DNA damage response genes (from enrichr)
 enrichr_genes=fread(file.path(getOption("PROJECT.DIR"),"metadata/gene_lists/Panther_2016_from_enrichr"),col.names=c("category","genes"))
@@ -165,16 +181,20 @@ write.table(sub_all_agg,"DPM.tsv",sep="\t",quote=FALSE,row.names=FALSE)
 
 sub_cyc=sub_all_agg[cycles.1<16&cycles.2<16&cycles.1>12&cycles.2>12]
 sub_cyc[,log10_DPM:=log10(DPM),]
-cors=sub_cyc[,cor.test(timeToSecSurg,log10_DPM,alternative="less"),]
+cors=sub_cyc[,list(unlist(cor.test(timeToSecSurg,log10_DPM,alternative="less")[c("estimate","p.value")]),length(timeToSecSurg)),]
 
 pdf("DPT_comps.pdf",height=3.5,width=3)
-ggplot(sub_cyc,aes(y=log10_DPM,x=timeToSecSurg/30))+geom_point(shape=21,size=3,fill="grey")+geom_smooth(method="lm",fill="lightgrey")+annotate("text",x=-Inf,y=Inf,label=paste0("r=",round(cors$estimate,2),"\np.value=",round(cors$p.value,2)),hjust=-0.2,vjust=1.2)+xlab("timeToSecSurg (months)")
+####Figure 5e
+ggplot(sub_cyc,aes(y=log10_DPM,x=timeToSecSurg/30))+geom_point(shape=21,size=3,fill="grey")+geom_smooth(method="lm",fill="lightgrey")+annotate("text",x=-Inf,y=Inf,label=paste0("r=",round(cors$V1[1],2),"\np.value=",round(cors$V1[2],2),"\nN=",cors$V2[2]),hjust=-0.2,vjust=1.2)+xlab("timeToSecSurg (months)")
 
 ggplot(sub_cyc,aes(y=log10_DPM,x=as.factor(progression_location),group=progression_location))+geom_point(shape=21,position=position_jitter(width=0.2))+geom_boxplot(fill="transparent",outlier.shape=NA)
 
 ggplot(sub_cyc,aes(y=log10_DPM,x=as.factor(extentOfResection),group=extentOfResection))+geom_point(shape=21,position=position_jitter(width=0.2))+geom_boxplot(outlier.shape=NA,fill="transparent")
 
 dev.off()
+write.table(sub_cyc[,list(log10_DPM,timeToSecSurg,patID),],"Source Data Figure5e.csv",sep=";",quote=FALSE,row.names=FALSE)
+
+
 
 #follow-up on Wnt genes (specifically SFRP2)
 

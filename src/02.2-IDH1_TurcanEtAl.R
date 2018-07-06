@@ -128,6 +128,7 @@ for(x.nam in c("table6_pnFC")){
   xPlot <- xPlot[turcan[[x.nam]][cPos %in% rownames(xPlot)][order(-Foldchange)]$cPos,]	
 
 	# HEATMAP
+  ####Figure 1D
 	pdf(dirout(out,"IDH_heatmap_", x.nam,".pdf"),width=50,height=22)
 	pheatmap(xPlot,
 		show_rownames=F,
@@ -137,7 +138,7 @@ for(x.nam in c("table6_pnFC")){
 		color=colorRampPalette(c("blue" ,"red"))(20),
 		kmeans_k=NA,
 		clustering_distance_cols=colDist,
-		cluster_rows=F)
+		cluster_rows=F,main=paste0(dim(xPlot)[1]," CpGs ",dim(xPlot)[2]," samples"))
   pheatmap(xPlot_ordered,
    show_rownames=F,
    annotation_col=annot_col,
@@ -146,8 +147,10 @@ for(x.nam in c("table6_pnFC")){
    color=colorRampPalette(c("blue" ,"red"))(20),
    kmeans_k=NA,
    clustering_distance_cols=colDist,
-   cluster_rows=F,cluster_cols=F)
+   cluster_rows=F,cluster_cols=F,main=paste0(dim(xPlot_ordered)[1]," CpGs ",dim(xPlot_ordered)[2]," samples"))
 
 	dev.off()
+  
+  write.table(as.data.table(xPlot_ordered,keep.rownames="pos"), dirout(out,"Source Data Figure 1d.csv"),sep=";",quote=FALSE,row.names=FALSE)
 }
 

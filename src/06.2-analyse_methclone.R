@@ -77,9 +77,9 @@ tiled_entropy=function(methclone_dt,tiles,exclude=NULL){
   return(rrbsAgentropy)
 }
 
-simpleCache(paste0("rrbsAgEntropy_min",min_reads,"_1k"),tiled_entropy(get(paste0("rrbs_entropy_min",min_reads)),SV$tiles1000hg38),cacheSubDir="entropy",recreate=FALSE)
-simpleCache(paste0("rrbsAgEntropy_min",min_reads,"_5k"),tiled_entropy(get(paste0("rrbs_entropy_min",min_reads)),SV$tiles5000hg38),cacheSubDir="entropy",recreate=FALSE)
-simpleCache(paste0("rrbsAgEntropy_min",min_reads,"_prom1k"),tiled_entropy(get(paste0("rrbs_entropy_min",min_reads)),prom1k),cacheSubDir="entropy",recreate=FALSE)
+simpleCache(paste0("rrbsAgEntropy_min",min_reads,"_1k"),tiled_entropy(get(paste0("rrbs_entropy_min",min_reads)),SV$tiles1000hg38),cacheSubDir="entropy",recreate=FALSE, noload=TRUE)
+simpleCache(paste0("rrbsAgEntropy_min",min_reads,"_5k"),tiled_entropy(get(paste0("rrbs_entropy_min",min_reads)),SV$tiles5000hg38),cacheSubDir="entropy",recreate=FALSE, noload=TRUE)
+simpleCache(paste0("rrbsAgEntropy_min",min_reads,"_prom1k"),tiled_entropy(get(paste0("rrbs_entropy_min",min_reads)),prom1k),cacheSubDir="entropy",recreate=FALSE, noload=TRUE)
 
 
 
@@ -147,12 +147,13 @@ sub=EPM_tab[IDH=="wt"&category=="GBMatch"&timepoint_2<3&timepoint_1!=timepoint_2
 sub[,comparison:=factor(comparison,levels=c("ctr_5vs1","ctr_5vs2","1vs2")),]
 sub=sub[!is.na(comparison)]
 
-sign_1=sub[,wilcox.test(x=EPM[comparison=="ctr_5vs2"],y=EPM[comparison=="ctr_5vs1"])$p.value,]
-sign_2=sub[,wilcox.test(x=EPM[comparison=="ctr_5vs1"],y=EPM[comparison=="1vs2"])$p.value,]
-sign_3=sub[,wilcox.test(x=EPM[comparison=="ctr_5vs2"],y=EPM[comparison=="1vs2"])$p.value,]
+sign_1=sub[,signif(wilcox.test(x=EPM[comparison=="ctr_5vs2"],y=EPM[comparison=="ctr_5vs1"])$p.value,3),]
+sign_2=sub[,signif(wilcox.test(x=EPM[comparison=="ctr_5vs1"],y=EPM[comparison=="1vs2"])$p.value,3),]
+sign_3=sub[,signif(wilcox.test(x=EPM[comparison=="ctr_5vs2"],y=EPM[comparison=="1vs2"])$p.value,3),]
 
+####Figure S12d
 pdf("EPM_boxplot.pdf",height=3.5,width=2)
-print(ggplot(sub,aes(y=log10(EPM+1),x=comparison))+geom_point(size=2,position=position_jitter(width=0.3),alpha=0.6,shape=21,aes(fill=comparison,col=comparison))+geom_boxplot(outlier.shape=NA,fill="transparent",col="black")+theme(legend.position='none')+annotate("text",x=c(1.5,1,2),y=5.9,label=signif(c(sign_1,sign_2,sign_3),3))+scale_fill_manual(values=c("ctr_5vs1"="#bdc9e1","ctr_5vs2"="#9ecae1","1vs2"="#31a354"))+scale_colour_manual(values=c("ctr_5vs1"="#bdc9e1","ctr_5vs2"="#9ecae1","1vs2"="#31a354")))
+print(ggplot(sub,aes(y=log10(EPM+1),x=comparison))+geom_point(size=2,position=position_jitter(width=0.3),alpha=0.6,shape=21,aes(fill=comparison,col=comparison))+geom_boxplot(outlier.shape=NA,fill="transparent",col="black")+theme(legend.position='none')+annotate("text",x=c(1.5,1,2),y=5.9,label=c(sign_1,sign_2,sign_3))+scale_fill_manual(values=c("ctr_5vs1"="#bdc9e1","ctr_5vs2"="#9ecae1","1vs2"="#31a354"))+scale_colour_manual(values=c("ctr_5vs1"="#bdc9e1","ctr_5vs2"="#9ecae1","1vs2"="#31a354"))+stat_summary(fun.data=addN, geom="text", vjust=-0.5, col="blue"))
 dev.off()
 
 sub[,patient:=factor(patient,levels=unique(patient[comparison=="1vs2"][order(EPM[comparison=="1vs2"])])),]
@@ -164,25 +165,26 @@ dev.off()
 #EPM comparisons
 sub_cyc=sub
 sub_cyc[,log10_EPM:=log10(EPM),]
-cors=sub_cyc[,list(cor=cor(timeToSecSurg,log10_EPM),y=max(log10_EPM)),by="comparison"]
+cors=sub_cyc[,list(cor=cor(timeToSecSurg,log10_EPM),N=length(timeToSecSurg),y=max(log10_EPM)),by="comparison"]
 
 pdf("EPM_comps.pdf",height=3.5,width=7)
-print(ggplot(sub_cyc,aes(y=log10_EPM,x=timeToSecSurg/30))+geom_point(shape=21)+geom_smooth(method="lm")+geom_text(data=cors,x=10,aes(y=y,label=paste0("r=",round(cor,3))))+facet_wrap(~comparison,scale="free")+xlab("timeToSecSurg (months)"))
+print(ggplot(sub_cyc,aes(y=log10_EPM,x=timeToSecSurg/30))+geom_point(shape=21)+geom_smooth(method="lm")+geom_text(data=cors,x=10,aes(y=y,label=paste0("r=",round(cor,3)," N=",N)))+facet_wrap(~comparison,scale="free")+xlab("timeToSecSurg (months)"))
 
 print(ggplot(sub_cyc,aes(y=log10_EPM,x=as.factor(progression_location),group=progression_location))+geom_point(shape=21,position=position_jitter(width=0.2))+geom_boxplot(fill="transparent",outlier.shape=NA)+facet_wrap(~comparison,scale="free"))
 
 print(ggplot(sub_cyc,aes(y=log10_EPM,x=as.factor(extentOfResection),group=extentOfResection))+geom_point(shape=21,position=position_jitter(width=0.2))+geom_boxplot(outlier.shape=NA,fill="transparent")+facet_wrap(~comparison))
 dev.off()
 
+####Figure S12f
 pdf("EPM_comps_1vs2.pdf",height=3.5,width=3)
-print(ggplot(sub_cyc[comparison=="1vs2"],aes(y=log10_EPM,x=timeToSecSurg/30))+geom_point(shape=21,size=3,fill="grey",alpha=0.6)+geom_smooth(method="lm",fill="lightgrey")+geom_text(data=cors[comparison=="1vs2"],x=10,aes(y=y,label=paste0("r=",round(cor,3))))+xlab("timeToSecSurg (months)"))
+print(ggplot(sub_cyc[comparison=="1vs2"],aes(y=log10_EPM,x=timeToSecSurg/30))+geom_point(shape=21,size=3,fill="grey",alpha=0.6)+geom_smooth(method="lm",fill="lightgrey")+geom_text(data=cors[comparison=="1vs2"],x=10,aes(y=y,label=paste0("r=",round(cor,3)," N=",N)))+xlab("timeToSecSurg (months)"))
 
 print(ggplot(sub_cyc[comparison=="1vs2"],aes(y=log10_EPM,x=as.factor(progression_location),group=progression_location))+geom_point(shape=21,position=position_jitter(width=0.2))+geom_boxplot(fill="transparent",outlier.shape=NA))
 
 print(ggplot(sub_cyc[comparison=="1vs2"],aes(y=log10_EPM,x=as.factor(extentOfResection),group=extentOfResection))+geom_point(shape=21,position=position_jitter(width=0.2))+geom_boxplot(outlier.shape=NA,fill="transparent"))
 dev.off()
 
-
+####Figure S12g
 pdf("distance_loci_tss_1vs2.pdf",height=5,width=6)
 print(ggplot(methclone_anno[comparison_simpl%in%c("1vs2","0vs0")&((cycles.1<16&cycles.2<16&cycles.1>12&cycles.2>12)|comparison_simpl%in%c("0vs0"))],aes(x=distancetoFeature_log10,linetype=entropy<(entropy_cutoff),col=comparison_simpl=="0vs0"))+geom_density()+scale_color_discrete(name="Control")+scale_linetype_discrete(name="Eloci"))
 dev.off()
@@ -192,6 +194,8 @@ dev.off()
 #first run LOLA on eloci in any 1vs2 comparison
 uset_all=unique(subset(methclone_gr,entropy<(entropy_cutoff)&grepl("__1vs2",sample)&sample%in%methclone_anno[(cycles.1<16&cycles.2<16&cycles.1>12&cycles.2>12)]$sample))
 univ_all=unique(subset(methclone_gr,grepl("__1vs2",sample)&sample%in%methclone_anno[(cycles.1<16&cycles.2<16&cycles.1>12&cycles.2>12)]$sample))
+N_samples=length(unique(uset_all$sample))
+N_regions=length(uset_all)
 
 simpleCache(cacheName=paste0("allEloci_",min_reads,"epy",abs(entropy_cutoff)),{df=runLOLA(userSets=GRangesList(allEloci__all1vsall2__1vs2all=uset_all),userUniverse=univ_all,regionDB=regionDB_core);return(df)},cacheSubDir="methcloneLOLA",recreate=FALSE)
 
@@ -242,9 +246,10 @@ pdf("LOLA_signif_all.pdf",height=7,width=9)
 print(ggplot(sub,aes(x=dbSet,y=-log10(p.adjust),col=target))+geom_boxplot()+geom_abline(intercept=-log10(0.001),slope=0,lty=2)+facet_wrap(~facet_label,scale = "free_x")+coord_flip())
 dev.off()
 
+####Figure S12h
 pdf("LOLA_signif_combined.pdf",height=3,width=4)
-print(ggplot(sub[sample=="allEloci__all1vsall2__1vs2all"&p.adjust<0.001],aes(x=dbSet,y=-log10(p.adjust),col=target,size=logOddsRatio))+geom_point()+geom_abline(intercept=-log10(0.001),slope=0,lty=2)+facet_wrap(~facet_label,scale = "free_x")+ylim(0,NA)+coord_flip())
-print(ggplot(sub[sample=="allEloci__all1vsall2__1vs2all"&p.adjust<0.001],aes(x=dbSet,y=logOddsRatio,size=-log10(p.adjust),col=target))+geom_point()+facet_wrap(~facet_label,scale = "free_x")+coord_flip())
+print(ggplot(sub[sample=="allEloci__all1vsall2__1vs2all"&p.adjust<0.001],aes(x=dbSet,y=-log10(p.adjust),col=target,size=logOddsRatio))+geom_point()+geom_abline(intercept=-log10(0.001),slope=0,lty=2)+facet_wrap(~facet_label,scale = "free_x")+ylim(0,NA)+coord_flip()+ggtitle(paste0("N=", N_regions,"regions/",N_samples," samples")))
+print(ggplot(sub[sample=="allEloci__all1vsall2__1vs2all"&p.adjust<0.001],aes(x=dbSet,y=logOddsRatio,size=-log10(p.adjust),col=target))+geom_point()+facet_wrap(~facet_label,scale = "free_x")+coord_flip()+ggtitle(paste0("N=", N_regions,"regions/",N_samples," samples")))
 dev.off()
 
 

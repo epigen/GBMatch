@@ -7,6 +7,7 @@ library(yaml, quietly=TRUE)
 
 cfg = load.config("GBMatch")
 theme_set(theme_bw())
+theme_update(axis.text=element_text(color="black"))
 pdf.options(useDingbats=FALSE)
 cfg
 nenv()
@@ -14,6 +15,15 @@ genome = cfg$genome$human
 psa = fread(cfg$metadata$sample_annotation)
 
 extData="/data/groups/lab_bock/jklughammer/projects/Glioblastoma_match/"
+
+#use like this with ggplot: +stat_summary(fun.data=addN, geom="text", vjust=-0.5, col="blue")
+addN <- function(y) 
+  c(label=length(y), y=median(y))
+
+addNmin <- function(y) 
+  c(label=length(y), y=min(y))
+
+
 
 g_legend<-function(a.gplot){
   tmp <- ggplot_gtable(ggplot_build(a.gplot))

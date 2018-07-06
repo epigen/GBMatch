@@ -82,7 +82,7 @@ segments_uni=merge(segments_uni,setnames(annotation[,c("patID","N_number_seq","s
 segments_uni[is.na(surgery.x),surgery.x:=0,]
 segments_uni[,sample_ID:=paste0(patID,"_",surgery.x),]
 
-
+####Figure S4a
 pdf("chrom_foldChange.pdf",height=6,width=6)
 for (chr in c(as.character(1:22),"X","Y")){
   sub=segments_uni[chromosome==chr]
@@ -186,7 +186,7 @@ ROC_sig_0.5_int=segments_cb_combined_exp[sig_0.5_true>0&sig_0.5_false>0,get_ROC(
 ROC_sig_0.5[,facet_label:=paste0("Chr",chromosome," ",variant,"\nAUC=",unique(round(AUC[rand==FALSE],2)),"/",round(mean(AUC[rand==TRUE]),2),"\nture=",sig_0.5_true," false=",sig_0.5_false),by=c("chromosome","variant")]
 ROC_sig_0.5_int[,facet_label:=paste0("Chr",chromosome," ",variant,"\nAUC=",unique(round(AUC[rand==FALSE],2)),"/",round(mean(AUC[rand==TRUE]),2),"\nture=",sig_0.5_true," false=",sig_0.5_false),by=c("chromosome","variant")]
 
-
+####Figure S4b
 pdf("chromArm_foldChange_ROC_sig_0.5_rand.pdf",height=10,width=27)
 ggplot(ROC_sig_0.5,aes(x=FPR,y=TPR,col=rand,group=run,alpha=rand))+geom_line()+facet_wrap(~facet_label,nrow=4,scale="free")+scale_color_manual(values=c("TRUE"="grey","FALSE"="blue"))+scale_alpha_manual(values=c("TRUE"=0.5,"FALSE"=1))
 
@@ -199,7 +199,7 @@ plot(roc(sub$sig_0.1_WGS,sub$log2_mean_RRBS))
 plot(roc(sub$sig_0.3_WGS,sub$log2_mean_RRBS))
 plot(roc(sub$sig_0.5_WGS,sub$log2_mean_RRBS))
 
-#more automated way (select sange of significance levels based on actual lo2FC values)
+#more automated way (select range of significance levels based on actual lo2FC values)
 
 create_roc_family=function(data,chrom,var){
   sub=data[chromosome==chrom&variant==var]
@@ -229,7 +229,6 @@ ROC_chr10_del=create_roc_family(data=segments_cb_combined,chrom="10",var="deleti
 ROC_chr7_ampl=create_roc_family(data=segments_cb_combined,chrom="7",var="amplification")
 ROC_chr19_del=create_roc_family(data=segments_cb_combined,chrom="19",var="deletion")
 ROC_chr1_del=create_roc_family(data=segments_cb_combined,chrom="1",var="deletion")
-
 
 pdf("chromArm_foldChange_ROC.pdf",height=6,width=11)
 ggplot(ROC_chr10_del,aes(x=`1-Specificity`,y=Sensitivity,col=sig_thres))+geom_line()+facet_wrap(~paste0("log2FC=",round(sig_thres,3))+paste0("AUC=",round(AUC,3),"\nture=",N_true," false=",N_false),nrow=2)+ggtitle("Chromosome 10 deletion")

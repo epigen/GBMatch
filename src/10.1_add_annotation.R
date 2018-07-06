@@ -117,7 +117,7 @@ combined_annotation[,surgery:=NULL]
 setnames(combined_annotation,"surgery.x","surgery")
 
 
-#test if all columns are contained in column annoations
+#test if all columns are contained in column annoations (only N_number columns should be missing)
 sort(names(combined_annotation)[!names(combined_annotation)%in%unlist(column_annotation_combined_clean)])
 
 #when none are missing --> save
@@ -133,6 +133,16 @@ toRename=c("N_number_seq","cell","sub_group","auc","auc_rand","sub_group_prob","
 newNames=c("id","Cell density","transcSubtype","transcSubtype_auc","transcSubtype_auc_rand","transcSubtype_classProb","mgmt_meth_max","mgmt_meth_min")
 combined_annotation_forPublic=combined_annotation[,-removeCols,with=FALSE]
 setnames(combined_annotation_forPublic,toRename,newNames)
+
+#add EGA and GEO ids
+EGA=fread(file.path(getOption("PROJECT.DIR"),"metadata/sample_annotations/ega_samples.tsv"))
+GEO=fread(file.path(getOption("PROJECT.DIR"),"metadata/sample_annotations/geo_samples.tsv"))
+combined_annotation_forPublic=merge(merge(EGA,GEO,by=c("patID","id")),combined_annotation_forPublic,by=c("patID","id"),all.y=TRUE)
+
+#order colums and rows
+setcolorder(combined_annotation_forPublic,append(grep("^surgery$",names(combined_annotation_forPublic),invert=TRUE,value=TRUE),values="surgery",after=1))
+
+combined_annotation_forPublic=combined_annotation_forPublic[order(patID,surgery)]
 
 write.table(combined_annotation_forPublic,"GBMatch_sampleAnnotation.tsv",sep="\t",row.names=FALSE,quote=FALSE)
 write.table(data.table(columnName=names(combined_annotation_forPublic)),"GBMatch_columnAnnotation.tsv",sep="\t",row.names=FALSE,quote=FALSE)

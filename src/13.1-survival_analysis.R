@@ -23,7 +23,7 @@ binarize2=function(vector,low,high){
 
 
 ##function for survival plotting
-plot_surv=function(data,type="surv"){
+plot_surv=function(data,data_name,type="surv"){
   pl=list()
   pl2=list()
   ret=data.table()
@@ -39,9 +39,11 @@ plot_surv=function(data,type="surv"){
   
   categories=grep("patID|event|follow_up|category|annoclass",names(data),invert=TRUE,value=TRUE)
   
+  source_data=data.table()
+  stats=data.table()
   for (category in categories){
     print(category)
-    sub=na.omit(data[,grepl(paste0("patID|event|follow_up|",category),names(data)),with=FALSE])
+    sub=na.omit(data[,grepl(paste0("patID|event|follow_up|^",category,"$"),names(data)),with=FALSE])
     if (length(unique(unlist(sub[,category,with=FALSE])))<2){
       print("Too fiew categories!")
       next
@@ -50,11 +52,28 @@ plot_surv=function(data,type="surv"){
     pvalue=signif(get_pval(survfit_1),2)
     print(pvalue)
     
+    #prepare source_data
+    sub[,category_name:=category,]
+    sub[,analysis:=data_name,]
+    sub[,analysis_type:=type,]
+    setnames(sub,category,"category")
+    source_data=rbindlist(list(source_data,sub))
+    
+    #calculate sample number
+    sample_N=sub[,.N,by="category"]
+    sample_N[,annot:=paste0("N(",category,")=",N),]
+    
+    #collect stats
+    forStats=sub[,list(N=.N,events=sum(event),mean_follow_up=signif(mean(follow_up),3),sd_follow_up=signif(sd(follow_up),3)),by=category]
+    stats=rbindlist(list(stats,data.table(V1=forStats$category[1],V2=forStats$category[2],V3=forStats$category[3],N_V1=forStats$N[1],N_V2=forStats$N[2],N_V3=forStats$N[3],events_V1=forStats$events[1],events_V2=forStats$events[2],events_V3=forStats$events[3],mean_follow_up_V1=forStats$mean_follow_up[1],mean_follow_up_V2=forStats$mean_follow_up[2],mean_follow_up_V3=forStats$mean_follow_up[3],sd_follow_up_V1=forStats$sd_follow_up[1],sd_follow_up_V2=forStats$sd_follow_up[2],sd_follow_up_V3=forStats$sd_follow_up[3],p.value=pvalue,category_name=category,analysis=data_name,analysis_type=type  )))
+    
     if (type=="surv"){ylab="Overall survival probability"}else if (type=="rel"){ylab="Progression-free survival probability"}
-    pl[category]=ggsurvplot(fit=survfit_1,conf.int=TRUE,main=paste0(category,"\np-value=",pvalue),palette="Set2",font.main=c(10, "plain", "black"),ylab = ylab,xlab="Months")
+    pl[category]=ggsurvplot(fit=survfit_1,conf.int=TRUE,main=paste0(category,"\np-value=",pvalue,"\n",paste0(sample_N$annot,collapse=" ")),palette="Set2",font.main=c(10, "plain", "black"),ylab = ylab,xlab="Months")
     ret=rbindlist(list(ret,data.table(category=category,p.value=pvalue)))
     
   }
+  write.table(source_data,paste0(data_name,"_data.csv"),sep=";",quote=FALSE,row.names=FALSE)
+  write.table(stats,paste0(data_name,"_stats.tsv"),sep="\t",quote=FALSE,row.names=FALSE)
   return(list(pl,ret))
 }
 
@@ -113,17 +132,18 @@ prom_diff_bin[,`mean_diffmeth.Wnt signalling`:=factor(`mean_diffmeth.Wnt signall
 prom_diff_surv=merge(prom_diff_bin,annot_surv,by="patID")
 prom_diff_relapse=merge(prom_diff_bin,annot_relapse,by="patID")
 
-
+####Figure 6d,f
 pdf("prom_diff_annotation_surv.pdf",height=4,width=3)
-print(plot_surv(prom_diff_surv)[[1]])
+print(plot_surv(prom_diff_surv,"prom_diff_surv")[[1]])
 dev.off()
 
 pdf("prom_diff_annotation_surv_dp.pdf",height=4,width=3)
 print(plot_dots(prom_diff_surv))
 dev.off()
 
+####Figure 6d,f
 pdf("prom_diff_annotation_relapse.pdf",height=4,width=3)
-print(plot_surv(prom_diff_relapse,type="rel")[[1]])
+print(plot_surv(prom_diff_relapse,"prom_diff_relapse",type="rel")[[1]])
 dev.off()
 
 pdf("prom_diff_annotation_relapse_dp.pdf",height=4,width=3)
@@ -155,16 +175,18 @@ entropy_relapse_est=merge(entropy,annot_relapse_est,by=c("patID","category"))
 categories=c("GBMatch")
 
 for (sel_category in categories){
+####Figure S12e
 pdf(paste0("methclone_annotation_surv_",sel_category,".pdf"),height=3.5,width=3.0)
-print(plot_surv(entropy_surv[category==sel_category])[[1]])
+print(plot_surv(entropy_surv[category==sel_category],paste0("methclone_annotation_surv_",sel_category))[[1]])
 dev.off()
 
 pdf(paste0("methclone_annotation_surv_dp_",sel_category,".pdf"),height=2,width=2)
 print(plot_dots(entropy_surv[category==sel_category]))
 dev.off()
 
+####Figure S12e
 pdf(paste0("methclone_annotation_relapse_",sel_category,".pdf"),height=3.5,width=3.0)
-print(plot_surv(entropy_relapse[category==sel_category],type="rel")[[1]])
+print(plot_surv(entropy_relapse[category==sel_category],paste0("methclone_annotation_relapse_",sel_category),type="rel")[[1]])
 dev.off()
 
 pdf(paste0("methclone_annotation_relapse_dp_",sel_category,".pdf"),height=2,width=2)
@@ -172,7 +194,7 @@ print(plot_dots(entropy_relapse[category==sel_category]))
 dev.off()
 
 pdf(paste0("methclone_annotation_relapse_est_",sel_category,".pdf"),height=3.5,width=3.0)
-print(plot_surv(entropy_relapse_est[category==sel_category],type="rel")[[1]])
+print(plot_surv(entropy_relapse_est[category==sel_category],paste0("methclone_annotation_relapse_est_",sel_category),type="rel")[[1]])
 dev.off()
 
 pdf(paste0("methclone_annotation_relapse_est_dp_",sel_category,".pdf"),height=2,width=2)
@@ -206,24 +228,27 @@ het_relapse_est=merge(het_wide,annot_relapse_est,by=c("patID","category"))
 categories=c("GBMatch","GBmatch_val")
 
 for (sel_category in categories){
+####Figure 5d; S12c
 pdf(paste0("heterogeneity_annotation_surv_",sel_category,".pdf"),height=3.5,width=3)
-print(plot_surv(het_surv[category==sel_category])[[1]])
+print(plot_surv(het_surv[category==sel_category],paste0("heterogeneity_annotation_surv_",sel_category))[[1]])
 dev.off()
 
 pdf(paste0("heterogeneity_annotation_surv_dp_",sel_category,".pdf"),height=4,width=3)
 print(plot_dots(het_surv[category==sel_category]))
 dev.off()
 
+####Figure 5d
 pdf(paste0("heterogeneity_annotation_relapse_",sel_category,".pdf"),height=3.5,width=3)
-print(plot_surv(het_relapse[category==sel_category],type="rel")[[1]])
+print(plot_surv(het_relapse[category==sel_category],paste0("heterogeneity_annotation_relapse_",sel_category),type="rel")[[1]])
 dev.off()
 
 pdf(paste0("heterogeneity_annotation_relapse_dp_",sel_category,".pdf"),height=4,width=3)
 print(plot_dots(het_relapse[category==sel_category]))
 dev.off()
 
+####Figure S12c
 pdf(paste0("heterogeneity_annotation_relapse_est_",sel_category,".pdf"),height=3.5,width=3)
-print(plot_surv(het_relapse_est[category==sel_category],type="rel")[[1]])
+print(plot_surv(het_relapse_est[category==sel_category],paste0("heterogeneity_annotation_relapse_est_",sel_category),type="rel")[[1]])
 dev.off()
 
 pdf(paste0("heterogeneity_annotation_relapse_est_dp_",sel_category,".pdf"),height=4,width=3)
@@ -255,7 +280,7 @@ bissnp_relapse=merge(bissnp_wide,annot_relapse,by=c("patID","category"))
 categories=c("GBMatch","GBmatch_val")
 for (sel_category in categories){
 pdf(paste0("bissnp_annotation_surv_",sel_category,".pdf"),height=3.5,width=3)
-print(plot_surv(bissnp_surv[category==sel_category])[[1]])
+print(plot_surv(bissnp_surv[category==sel_category],paste0("bissnp_annotation_surv_",sel_category))[[1]])
 dev.off()
 
 pdf(paste0("bissnp_annotation_surv_dp_",sel_category,".pdf"),height=2,width=2)
@@ -264,7 +289,7 @@ dev.off()
 
 
 pdf(paste0("bissnp_annotation_relapse_",sel_category,".pdf"),height=3.5,width=3)
-print(plot_surv(bissnp_relapse[category==sel_category],type="rel")[[1]])
+print(plot_surv(bissnp_relapse[category==sel_category],paste0("bissnp_annotation_relapse_",sel_category),type="rel")[[1]])
 dev.off()
 
 pdf(paste0("bissnp_annotation_relapse_dp_",sel_category,".pdf"),height=2,width=2)
@@ -295,16 +320,19 @@ subtypes_relapse=merge(subtypes_wide,annot_relapse,by=c("patID","category"))
 
 categories=c("GBMatch","GBmatch_val")
 for (sel_category in categories){
+
+####Figure 2e; S6h
 pdf(paste0("subtype_annotation_surv_",sel_category,".pdf"),height=4,width=4)
-print(plot_surv(subtypes_surv[category==sel_category],type="surv")[[1]])
+print(plot_surv(subtypes_surv[category==sel_category],paste0("subtype_annotation_surv_",sel_category),type="surv")[[1]])
 dev.off()
 
 pdf(paste0("subtype_annotation_surv_dp_",sel_category,".pdf"),height=4,width=4)
 print(plot_dots(subtypes_surv[category==sel_category]))
 dev.off()
 
+####Figure 2e; S6h
 pdf(paste0("subtype_annotation_relapse_",sel_category,".pdf"),height=4,width=4)
-print(plot_surv(subtypes_relapse[category==sel_category],type="rel")[[1]])
+print(plot_surv(subtypes_relapse[category==sel_category],paste0("subtype_annotation_relapse_",sel_category),type="rel")[[1]])
 dev.off()
 
 pdf(paste0("subtype_annotation_relapse_dp_",sel_category,".pdf"),height=4,width=4)
@@ -363,16 +391,18 @@ fisher.test(mat,alternative="two.sided")
 
 categories=c("GBMatch","GBmatch_val")
 for (sel_category in categories){
+####Figure S3b
 pdf(paste0("copywriter_date_annotation_surv_",sel_category,".pdf"),height=3.5,width=3)
-print(plot_surv(copywriter_date_surv[category==sel_category])[[1]])
+print(plot_surv(copywriter_date_surv[category==sel_category],paste0("copywriter_date_annotation_surv_",sel_category))[[1]])
 dev.off()
 
 pdf(paste0("copywriter_date_annotation_surv_dp_",sel_category,".pdf"),height=4,width=3)
 print(plot_dots(copywriter_date_surv[category==sel_category]))
 dev.off()
 
+####Figure S3b
 pdf(paste0("copywriter_date_annotation_relapse_",sel_category,".pdf"),height=3.5,width=3)
-print(plot_surv(copywriter_date_relapse[category==sel_category],type="rel")[[1]])
+print(plot_surv(copywriter_date_relapse[category==sel_category],paste0("copywriter_date_annotation_relapse_",sel_category),type="rel")[[1]])
 dev.off()
 
 pdf(paste0("copywriter_date_annotation_relapse_dp_",sel_category,".pdf"),height=4,width=3)
@@ -405,16 +435,18 @@ annot_pat_relapse=merge(annot_pat,annot_relapse,by="patID")
 
 categories=c("GBMatch","GBmatch_val")
 for (sel_category in categories){
+####Figure 4j
 pdf(paste0("general_annotation_surv_",sel_category,".pdf"),height=3.5,width=3)
-print(plot_surv(annot_pat_surv[category==sel_category])[[1]])
+print(plot_surv(annot_pat_surv[category==sel_category],paste0("general_annotation_surv_",sel_category))[[1]])
 dev.off()
 
 pdf(paste0("general_annotation_surv_dp_",sel_category,".pdf"),height=4,width=4)
 print(plot_dots(annot_pat_surv[category==sel_category]))
 dev.off()
 
+####Figure 4j
 pdf(paste0("general_annotation_relapse_",sel_category,".pdf"),height=3.5,width=3)
-print(plot_surv(annot_pat_relapse[category==sel_category],type="rel")[[1]])
+print(plot_surv(annot_pat_relapse[category==sel_category],paste0("general_annotation_relapse_",sel_category,".pdf"),type="rel")[[1]])
 dev.off()
 
 pdf(paste0("general_annotation_relapse_dp_",sel_category,".pdf"),height=4,width=4)
@@ -445,17 +477,17 @@ annot_pat_relapse=merge(annot_pat,annot_relapse,by=c("patID","category"))
 
 categories=c("GBMatch","GBmatch_val")
 for (sel_category in categories){
+
 pdf(paste0("segmentation_annotation_surv_",sel_category,".pdf"),height=3.5,width=3)
-print(plot_surv(annot_pat_surv[category==sel_category])[[1]])
+print(plot_surv(annot_pat_surv[category==sel_category],paste0("segmentation_annotation_surv_",sel_category))[[1]])
 dev.off()
 
 pdf(paste0("segmentation_annotation_surv_dp_",sel_category,".pdf"),height=4,width=3)
 print(plot_dots(annot_pat_surv[category==sel_category]))
 dev.off()
 
-
 pdf(paste0("segmentation_annotation_relapse_",sel_category,".pdf"),height=3.5,width=3)
-print(plot_surv(annot_pat_relapse[category==sel_category],type="rel")[[1]])
+print(plot_surv(annot_pat_relapse[category==sel_category],paste0("segmentation_annotation_relapse_",sel_category,".pdf"),type="rel")[[1]])
 dev.off()
 
 pdf(paste0("segmentation_annotation_relapse_dp_",sel_category,".pdf"),height=4,width=3)
@@ -481,25 +513,27 @@ annot_pat_relapse_est=merge(annot_pat,annot_relapse_est,by="patID")
 
 categories=c("GBMatch","GBmatch_val")
 for (sel_category in categories){
+####Figure S2d
 pdf(paste0("mgmt_annotation_surv_",sel_category,".pdf"),height=3.5,width=3)
-print(plot_surv(annot_pat_surv[category==sel_category])[[1]])
+print(plot_surv(annot_pat_surv[category==sel_category],paste0("mgmt_annotation_surv_",sel_category))[[1]])
 dev.off()
 
 pdf(paste0("mgmt_annotation_surv_dp_",sel_category,".pdf"),height=4,width=3)
 print(plot_dots(annot_pat_surv[category==sel_category]))
 dev.off()
 
-
+####Figure S2d
 pdf(paste0("mgmt_annotation_relapse_",sel_category,".pdf"),height=3.5,width=3)
-print(plot_surv(annot_pat_relapse[category==sel_category],type="rel")[[1]])
+print(plot_surv(annot_pat_relapse[category==sel_category],paste0("mgmt_annotation_relapse_",sel_category),type="rel")[[1]])
 dev.off()
 
 pdf(paste0("mgmt_annotation_relapse_dp_",sel_category,".pdf"),height=4,width=3)
 print(plot_dots(annot_pat_relapse[category==sel_category]))
 dev.off()
 
+####Figure S2d
 pdf(paste0("mgmt_annotation_relapse_est_",sel_category,".pdf"),height=3.5,width=3)
-print(plot_surv(annot_pat_relapse_est[category==sel_category],type="rel")[[1]])
+print(plot_surv(annot_pat_relapse_est[category==sel_category],paste0("mgmt_annotation_relapse_est_",sel_category),type="rel")[[1]])
 dev.off()
 
 pdf(paste0("mgmt_annotation_relapse_est_dp_",sel_category,".pdf"),height=4,width=3)
@@ -510,7 +544,7 @@ dev.off()
 #progression and extension cohort together
 
 pdf(paste0("mgmt_annotation_surv_",paste0(categories,collapse="_"),".pdf"),height=3.5,width=3)
-print(plot_surv(annot_pat_surv[category%in%categories])[[1]])
+print(plot_surv(annot_pat_surv[category%in%categories],paste0("mgmt_annotation_surv_",paste0(categories,collapse="_")))[[1]])
 dev.off()
 
 pdf(paste0("mgmt_annotation_surv_dp_",paste0(categories,collapse="_"),".pdf"),height=4,width=3)
@@ -519,7 +553,7 @@ dev.off()
 
 
 pdf(paste0("mgmt_annotation_relapse_est_",paste0(categories,collapse="_"),".pdf"),height=3.5,width=3)
-print(plot_surv(annot_pat_relapse_est[category%in%categories],type="rel")[[1]])
+print(plot_surv(annot_pat_relapse_est[category%in%categories],paste0("mgmt_annotation_relapse_est_",paste0(categories,collapse="_")),type="rel")[[1]])
 dev.off()
 
 pdf(paste0("mgmt_annotation_relapse_est_dp_",paste0(categories,collapse="_"),".pdf"),height=4,width=3)
@@ -544,16 +578,18 @@ annot_pat_relapse=merge(annot_pat,annot_relapse,by=c("patID","category"))
 
 categories=c("GBMatch","GBmatch_val")
 for (sel_category in categories){
+####Figure 3c; 4b; S8f; S11b
 pdf(paste0("immune_annotation_surv_",sel_category,".pdf"),height=3.5,width=3)
-print(plot_surv(annot_pat_surv[category==sel_category])[[1]])
+print(plot_surv(annot_pat_surv[category==sel_category],paste0("immune_annotation_surv_",sel_category))[[1]])
 dev.off()
 
 pdf(paste0("immune_annotation_surv_dp_",sel_category,".pdf"),height=4,width=3)
 print(plot_dots(annot_pat_surv[category==sel_category]))
 dev.off()
 
+####Figure 3c; 4b; S8f; S11b
 pdf(paste0("immune_annotation_relapse_",sel_category,".pdf"),height=3.5,width=3)
-print(plot_surv(annot_pat_relapse[category==sel_category],type="rel")[[1]])
+print(plot_surv(annot_pat_relapse[category==sel_category],paste0("immune_annotation_relapse_",sel_category),type="rel")[[1]])
 dev.off()
 
 pdf(paste0("immune_annotation_relapse_dp_",sel_category,".pdf"),height=4,width=3)
@@ -590,16 +626,18 @@ annot_pat_relapse=merge(annot_pat,annot_relapse,by=c("patID","category"))
 
 categories=c("GBMatch","GBmatch_val")
 for (sel_category in categories){
+####Figure S9e,g
 pdf(paste0("imaging_annotation_surv_",sel_category,".pdf"),height=3.5,width=3)
-print(plot_surv(annot_pat_surv[category==sel_category])[[1]])
+print(plot_surv(annot_pat_surv[category==sel_category],paste0("imaging_annotation_surv_",sel_category))[[1]])
 dev.off()
 
 pdf(paste0("imaging_annotation_surv_dp_",sel_category,".pdf"),height=4,width=4)
 print(plot_dots(annot_pat_surv[category==sel_category]))
 dev.off()
 
+####Figure S9e,g
 pdf(paste0("imaging_annotation_relapse_",sel_category,".pdf"),height=3.5,width=3)
-print(plot_surv(annot_pat_relapse[category==sel_category],type="rel")[[1]])
+print(plot_surv(annot_pat_relapse[category==sel_category],paste0("imaging_annotation_relapse_",sel_category),type="rel")[[1]])
 dev.off()
 
 pdf(paste0("imaging_annotation_relapse_dp_",sel_category,".pdf"),height=4,width=4)

@@ -63,17 +63,18 @@ sign_1_epy=sub_cycles[,wilcox.test(x=mean_entropy[surgery.x==1&category=="GBMatc
 sign_2_epy=sub_cycles[,wilcox.test(x=mean_entropy[surgery.x==1&category=="GBMatch"],y=mean_entropy[surgery.x==1&category=="GBmatch_val"])$p.value,]
 sign_3_epy=sub_cycles[,wilcox.test(x=mean_entropy[surgery.x==2&category=="GBMatch"],y=mean_entropy[surgery.x==1&category=="GBmatch_val"])$p.value,]
 
-
+####Figure 5b
 pdf("means_comp.pdf",height=3.5,width=3)
-ggplot(sub_cycles,aes(y=mean_entropy,x=paste0(category,"\nSurg: ",surgery.x),group=paste0(category,"\nSurg: ",surgery.x)))+geom_point(shape=21,size=3,col="grey",position=position_jitter(width=0.2,height=0))+geom_boxplot(fill="transparent",outlier.shape=NA)+guides(fill=FALSE)
+ggplot(sub_cycles,aes(y=mean_entropy,x=paste0(category,"\nSurg: ",surgery.x),group=paste0(category,"\nSurg: ",surgery.x)))+geom_point(shape=21,size=3,col="grey",position=position_jitter(width=0.2,height=0))+geom_boxplot(fill="transparent",outlier.shape=NA)+guides(fill=FALSE)+stat_summary(fun.data=addN, geom="text", vjust=-0.5, col="blue")
 
-ggplot(sub_cycles,aes(y=mean_entropy,x=paste0(category,"\nSurg: ",surgery.x),group=paste0(category,"\nSurg: ",surgery.x)))+geom_point(aes(fill=annot_entropy),shape=21,size=3,col="grey",alpha=0.7,position=position_jitter(width=0.2,height=0))+geom_boxplot(fill="transparent",outlier.shape=NA)+annotate("text",x=0.5,y=30,label=paste0(round(c(sign_1_epy,sign_2_epy,sign_3_epy),6),collapse="  "),hjust=0)+guides(fill=FALSE)+scale_fill_brewer(palette="Set2")
+ggplot(sub_cycles,aes(y=mean_entropy,x=paste0(category,"\nSurg: ",surgery.x),group=paste0(category,"\nSurg: ",surgery.x)))+geom_point(aes(fill=annot_entropy),shape=21,size=3,col="grey",alpha=0.7,position=position_jitter(width=0.2,height=0))+geom_boxplot(fill="transparent",outlier.shape=NA)+annotate("text",x=0.5,y=30,label=paste0(signif(c(sign_1_epy,sign_2_epy,sign_3_epy),3),collapse="  "),hjust=0)+guides(fill=FALSE)+scale_fill_brewer(palette="Set2")+stat_summary(fun.data=addN, geom="text", vjust=-0.5, col="blue")
 
-ggplot(sub_cycles,aes(y=mean_pdr,x=paste0(category,"\nSurg: ",surgery.x),group=paste0(category,"\nSurg: ",surgery.x)))+geom_point(shape=21,size=3,col="grey",position=position_jitter(width=0.2,height=0))+geom_boxplot(fill="transparent",outlier.shape=NA)+guides(fill=FALSE)
+ggplot(sub_cycles,aes(y=mean_pdr,x=paste0(category,"\nSurg: ",surgery.x),group=paste0(category,"\nSurg: ",surgery.x)))+geom_point(shape=21,size=3,col="grey",position=position_jitter(width=0.2,height=0))+geom_boxplot(fill="transparent",outlier.shape=NA)+guides(fill=FALSE)+stat_summary(fun.data=addN, geom="text", vjust=-0.5, col="blue")
 
-ggplot(sub_cycles,aes(y=mean_pdr,x=paste0(category,"\nSurg: ",surgery.x),group=paste0(category,"\nSurg: ",surgery.x)))+geom_point(aes(fill=annot_pdr),shape=21,size=3,col="grey",alpha=0.7,position=position_jitter(width=0.2,height=0))+geom_boxplot(fill="transparent",outlier.shape=NA)+guides(fill=FALSE)+annotate("text",x=0.5,y=0.27,label=paste0(round(c(sign_1_pdr,sign_2_pdr,sign_3_pdr),6),collapse="  "),hjust=0)+guides(fill=FALSE)+scale_fill_brewer(palette="Set2")
+ggplot(sub_cycles,aes(y=mean_pdr,x=paste0(category,"\nSurg: ",surgery.x),group=paste0(category,"\nSurg: ",surgery.x)))+geom_point(aes(fill=annot_pdr),shape=21,size=3,col="grey",alpha=0.7,position=position_jitter(width=0.2,height=0))+geom_boxplot(fill="transparent",outlier.shape=NA)+guides(fill=FALSE)+annotate("text",x=0.5,y=0.27,label=paste0(signif(c(sign_1_pdr,sign_2_pdr,sign_3_pdr),3),collapse="  "),hjust=0)+guides(fill=FALSE)+scale_fill_brewer(palette="Set2")+stat_summary(fun.data=addN, geom="text", vjust=-0.5, col="blue")
 dev.off()
 
+write.table(sub_cycles[,list(mean_entropy,  mean_pdr,surgery.x,category,annot_entropy, annot_pdr),],"Source Data Figure5b.csv",sep=";",quote=FALSE,row.names=FALSE)
 
 #compare single regions
 merged_heterogeneity_annot_red=na.omit(merged_heterogeneity_annot)[enrichmentCycles<16&enrichmentCycles>12&category%in%c("GBMatch","GBmatch_val")&IDH=="wt"&CpGcount>15]
@@ -100,7 +101,7 @@ condensed[,rel_freq:=sum/(Nregions),]
 condensed[,plotID:=paste0(patID,"_",surgery.x),]
 condensed[,variable:=factor(variable,levels=c("p0000","p0001","p0010","p0100","p1000","p0011","p0101","p1001","p0110","p1010","p1100","p0111","p1011","p1101","p1110","p1111"))]
 
-#condensed[,epi_var:=sum(rel_freq[!variable%in%c("p0000","p1111")]),by=plotID]
+condensed[,epi_var:=sum(rel_freq[!variable%in%c("p0000","p1111")]),by=plotID]
 #condensed[,epi_var:=sum(ifelse(rel_freq==0|variable%in%c("p0000","p1111"),0,rel_freq*log2(rel_freq))),by=plotID]
 #condensed[,plotID:=factor(plotID,levels=unique(plotID[order(epi_var,decreasing=TRUE)])),]
 
@@ -116,10 +117,13 @@ pl4=ggplot(condensed[!(is.na(annot_entropy)&is.na(annot_pdr))&variable!="p0000"]
 
 pl5=ggplot(condensed[!(is.na(annot_entropy)&is.na(annot_pdr))&variable!="p0000"],aes(x=plotID))+geom_point(aes(y=3,col=annot_entropy))+geom_point(aes(y=0,col=annot_pdr))+theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(),axis.title.x=element_blank(),axis.text.x=element_blank(),axis.ticks.x=element_blank(), legend.box = "vertical",legend.position="bottom")+facet_wrap(~surgery.x,scale="free")+ scale_color_brewer(palette="Set2")+guides(fill = guide_legend(nrow = 1))+ylab("epy_class")
 
+####Figure 5c
 pdf(paste0("epiallele-freqs_",sel_category,".pdf"),height=8,width=ifelse(sel_category=="GBMatch",8,3.5))
 grid.arrange(pl3, pl2,pl4,pl5, pl1, ncol=1, nrow=5, heights=c(1,1,1.5,1.5,4))
 dev.off()
 }
+
+write.table(condensed[!(is.na(annot_entropy)&is.na(annot_pdr))&variable!="p0000",list(category,variable, annot_entropy, annot_pdr, surgery.x,rel_freq ,   plotID)],"Source Data Figure5c.csv",sep=";",quote=FALSE,row.names=FALSE)
 
 ##investigate effect of enrichment cycles
 #make correlation plot of mean heterogeneity measures and multiple quality measures
@@ -148,7 +152,7 @@ all_means_annot_long=melt(sub,id.vars=c("patID","surgery.x","enrichmentCycles","
 all_means_annot_wide=reshape(all_means_annot_long, idvar=c("patID","variable","category"),timevar="surgery.x",direction="wide")
 
 coords=all_means_annot_wide[,list(max=max(c(unlist(value.1),unlist(value.2)),na.rm=TRUE)),by=c("variable","category")]
-
+####Figure S12a
 pdf(paste0("heterogeneity_cycles.pdf"),height=3,width=11)
 ggplot()+geom_segment(aes(x = 0, y = 0, xend = max, yend = max),lty=20,lwd=2,colour = "grey",data=coords)+geom_point(data=all_means_annot_wide[category=="GBMatch"],aes(x=value.1,y=value.2,fill=log2(enrichmentCycles.1/enrichmentCycles.2)),shape=21,size=3)+facet_wrap(~variable, scales="free")+scale_fill_gradient2(high="red",mid="white",low="green",name="cy_rat")+xlab("Primary tumor")+ylab("Recurring tumor")+ theme(aspect.ratio=1)
 

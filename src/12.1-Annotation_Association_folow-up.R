@@ -35,15 +35,17 @@ test_difference=function(values,groups,ntests){
   combinations=combinations[!duplicated(id)]
   
   if (length(na.omit(values))>5){
-  combinations[,p.value:=ifelse(sum(!is.na(values[groups==V2]))>0&sum(!is.na(values[groups==V1]))>0,try(as.numeric(wilcox.test(x=values[groups==V1],y=values[groups==V2])$p.value),silent=TRUE),1),by=1:nrow(combinations)]}else{
+  combinations[,p.value:=ifelse(sum(!is.na(values[groups==V2]))>0&sum(!is.na(values[groups==V1]))>0,try(signif(as.numeric(wilcox.test(x=values[groups==V1],y=values[groups==V2])$p.value),3),silent=TRUE),1),by=1:nrow(combinations)]}else{
     combinations[,p.value:=1]
   }
   combinations[,p.value.round:=ifelse(p.value<0.001,"<0.001",paste0("=",as.character(signif(p.value,2)))),]
-  combinations[,annot:=paste0("p-val(",id,")",p.value.round),]
-  combinations[,meanV1:=mean(values[groups==V1],na.rm=TRUE),by=1:nrow(combinations)]
-  combinations[,meanV2:=mean(values[groups==V2],na.rm=TRUE),by=1:nrow(combinations)]
-  combinations[,sdV1:=sd(values[groups==V1],na.rm=TRUE),by=1:nrow(combinations)]
-  combinations[,sdV2:=sd(values[groups==V2],na.rm=TRUE),by=1:nrow(combinations)]
+  combinations[,annot:=paste0("p-val(",id,")=",p.value),]
+  combinations[,N_V1:=length(na.omit(values[groups==V1])),by=1:nrow(combinations)]
+  combinations[,N_V2:=length(na.omit(values[groups==V2])),by=1:nrow(combinations)]
+  combinations[,meanV1:=signif(mean(values[groups==V1],na.rm=TRUE),3),by=1:nrow(combinations)]
+  combinations[,meanV2:=signif(mean(values[groups==V2],na.rm=TRUE),3),by=1:nrow(combinations)]
+  combinations[,sdV1:=signif(sd(values[groups==V1],na.rm=TRUE),3),by=1:nrow(combinations)]
+  combinations[,sdV2:=signif(sd(values[groups==V2],na.rm=TRUE),3),by=1:nrow(combinations)]
   return(combinations)
 }
 
@@ -65,7 +67,11 @@ plot_boxplots=function(sub,test,test_category,transc_stats,class,by){
   
   pl=ggplot()+geom_point(data=sub,aes(x=substr(get(class),1,3),y=get(test),group=get(class)),shape=21,color="grey",alpha=1,size=3,position=position_jitter(width=0.2,height=0))+geom_text(data=sig_annot,lineheight=0.9,aes(x=xpos,y=ypos,label=annot),hjust=0,vjust=1,size=2.5)+geom_boxplot(data=sub,aes(x=substr(get(class),1,3),y=get(test),group=get(class)),outlier.size=NA,fill="transparent")+ylab(test)+xlab("")+facet_wrap(as.formula(paste0("~",paste0(by,collapse="+"))))
   print(pl)
-  return(transc_stats)
+  source_data=sub
+  setnames(source_data,c(class,test),c("varX","varY"))
+  source_data[,varY_name:=test,]
+  source_data[,varX_name:=class,]
+  return(list(transc_stats[N_V1>0&N_V2>0],source_data))
 }
 
 summarize_stats=function(stats,test_category,height=6,width=6,by){
@@ -89,9 +95,11 @@ classes=list(c("sub_group",3,4),c("surgery",3,4),c("progression_types",4,4),c("S
 for(class in classes){
   message(class)
 transc_stats=data.table()
+source_data=data.table()
 pdf(paste0(class[1],"_dip-score.pdf"),height=as.numeric(class[2]),width=as.numeric(class[3]))
 for (test in test_list){
   if (class[1]=="sub_group"){
+    ####Figure 2i; S7a; S7f
   sub=unique(annotation[sub_group_prob>=class_prob&category%in%c("GBMatch","GBmatch_val")&IDH=="wt",c("N_number_st",test,class[1],"surgery","category"),with=FALSE])
   by="category"
   }
@@ -112,25 +120,29 @@ for (test in test_list){
     by="surgery"
   }
   
-  transc_stats=plot_boxplots(sub,test,"dip-score",transc_stats,class=class[1],by=by)
+  res=plot_boxplots(sub,test,"dip-score",transc_stats,class=class[1],by=by)
+  transc_stats=res[[1]]
+  source_data=rbindlist(list(source_data,res[[2]]))
 }
 dev.off()
-transc_stats[,p.value.BH:=p.adjust(p.value,"BH"),by=c(by,"id")]
-transc_stats[,p.value.BF:=p.adjust(p.value,"bonferroni"),by=c(by,"id")]
+transc_stats[,p.value.BH:=signif(p.adjust(p.value,"BH"),3),by=c(by,"id")]
+transc_stats[,p.value.BF:=signif(p.adjust(p.value,"bonferroni"),3),by=c(by,"id")]
 write.table(transc_stats,paste0(class[1],"_dip-score_stats.tsv"),sep="\t",quote=FALSE,row.names=FALSE)
+write.table(source_data,paste0(class[1],"_dip-score_stats_data.csv"),sep=";",quote=FALSE,row.names=FALSE)
 summarize_stats(transc_stats,paste0(class[1],"_dip-score"),by=by)
 }
 
 #correlation between class probability and MIRA score
+####Figure S7b
 auc_thres=0.8
 classes=c("Classical","Mesenchymal","Proneural")
 pdf("transcSG-dip_cor.pdf",height=6,width=7)
 for (test in test_list){
   sub=unique(annotation[auc>=auc_thres&category%in%c("GBMatch","GBmatch_val")&IDH=="wt",c("N_number_seq",test,classes,"surgery","category"),with=FALSE])
   sub_long=melt(sub,id.vars=c("N_number_seq",test,"category"),measure.vars=c("Classical","Mesenchymal","Proneural"))
-  my_cors=sub_long[,list(xpos=min(value,na.rm=TRUE)+0.1,ypos=max(get(test),na.rm=TRUE)+0.1,cor=cor(get(test),value,use="complete.obs"),cor.test=cor.test(get(test),value,use="complete.obs")$p.value),by=c("variable","category")]
+  my_cors=sub_long[,list(xpos=min(value,na.rm=TRUE)+0.1,ypos=max(get(test),na.rm=TRUE)+0.1,cor=cor(get(test),value,use="complete.obs"),cor.test=cor.test(get(test),value,use="complete.obs")$p.value,N=nrow(na.omit(cbind(get(test),value)))),by=c("variable","category")]
   
-  pl=ggplot(sub_long, aes(x=value,y=get(test)))+geom_point(shape=21,color="grey",alpha=0.7,size=2)+geom_text(data=my_cors,hjust=0,vjust=1,aes(y=ypos,x=xpos,label=paste0("r= ",round(cor,3),"\np= 10^",round(log10(cor.test),0))))+geom_smooth(method="lm",aes(fill=variable,col=variable))+facet_wrap(category~variable,scale="free")+ggtitle(test)+xlim(c(0,1))+xlab("Class probability")+ylab("MIRA score")+theme(aspect.ratio=1)
+  pl=ggplot(sub_long, aes(x=value,y=get(test)))+geom_point(shape=21,color="grey",alpha=0.7,size=2)+geom_text(data=my_cors,hjust=0,vjust=1,aes(y=ypos,x=xpos,label=paste0("r= ",round(cor,3),"\np=",signif(cor.test,3),"\nN= ",N)))+geom_smooth(method="lm",aes(fill=variable,col=variable))+facet_wrap(category~variable,scale="free")+ggtitle(test)+xlim(c(0,1))+xlab("Class probability")+ylab("MIRA score")+theme(aspect.ratio=1)
   print(pl)
 }
 dev.off()
@@ -143,21 +155,26 @@ classes=list(c("sub_group",3,3.5),c("surgery",3,3.5),c("progression_types",3,3),
 for(class in classes){
   message(class)
   transc_stats=data.table()
+  source_data=data.table()
 pdf(paste0(class[1],"_histo_immune.pdf"),height=as.numeric(class[2]),width=as.numeric(class[3]))
 for (test in test_list){
   if (class[1]=="sub_group"){
+    ####Figure 3a; 4a; S7d; S8a; S8c
     sub=unique(annotation[sub_group_prob>=class_prob&category%in%c("GBMatch","GBmatch_val")&IDH=="wt",c("N_number_st",test,class[1],"surgery","category"),with=FALSE])
     by="category"
   }
   if (class[1]=="surgery"){
+    ####Figure 3d; S7d; S8c; S11a
     sub=unique(annotation[surgery%in%c(1,2,3)&category%in%c("GBMatch","GBmatch_val")&IDH=="wt",c("N_number_st",test,class[1],"category"),with=FALSE])
     by="category"  
   }
   if (class[1]=="progression_types"){
+    ####Figure 3f
     sub=unique(annotation[!is.na(progression_types)&surgery%in%c(1,2)&category%in%c("GBMatch","GBmatch_val")&IDH=="wt",c("N_number_st",test,class[1],"surgery","category"),with=FALSE])
     by="surgery"
   }
   if (class[1]=="ShiftPhenotype"){
+    ####Figure 4h
     sub=unique(annotation[ShiftPhenotype%in%c("classic to sarcoma","stable")&surgery%in%c(1,2)&category%in%c("GBMatch","GBmatch_val")&IDH=="wt",c("N_number_st",test,class[1],"surgery","category"),with=FALSE])
     by="surgery"
   }
@@ -169,20 +186,27 @@ for (test in test_list){
     sub=unique(annotation[surgery%in%c(1,2)&category%in%c("GBMatch","GBmatch_val")&IDH=="wt",c("N_number_st",test,class[1],"surgery"),with=FALSE])
     by="surgery"
   }
-  transc_stats=plot_boxplots(sub,test,"histo_immuno",transc_stats,class=class[1],by=by)
+  res=plot_boxplots(sub,test,"histo_immuno",transc_stats,class=class[1],by=by)
+  transc_stats=res[[1]]
+  source_data=rbindlist(list(source_data,res[[2]]))
 }
 dev.off()
-transc_stats[,p.value.BH:=p.adjust(p.value,"BH"),by=c(by,"id")]
-transc_stats[,p.value.BF:=p.adjust(p.value,"bonferroni"),by=c(by,"id")]
+transc_stats[,p.value.BH:=signif(p.adjust(p.value,"BH"),3),by=c(by,"id")]
+transc_stats[,p.value.BF:=signif(p.adjust(p.value,"bonferroni"),3),by=c(by,"id")]
 write.table(transc_stats,paste0(class[1],"_histo_immuno_stats.tsv"),sep="\t",quote=FALSE,row.names=FALSE)
+write.table(source_data,paste0(class[1],"_histo_immuno_stats_data.csv"),sep=";",quote=FALSE,row.names=FALSE)
 summarize_stats(transc_stats,paste0(class[1],"_histo_immuno"),by=by)
 }
 
 #correlateion between EZH2+ cells and EZH2 dip score
 sub=annotation[category%in%c("GBMatch")&IDH=="wt",c("N_number_st","EZH2","EZH2_(39875)__NH-A_None_6488","sub_group","Mesenchymal","sub_group_prob","surgery"),with=FALSE]
 cors=unique(sub[,cor.test(EZH2,`EZH2_(39875)__NH-A_None_6488`,use="complete.obs"),by="sub_group"][,c("sub_group","p.value","estimate"),with=FALSE])
+Ns=unique(sub[,list(N=nrow(na.omit(cbind(EZH2,`EZH2_(39875)__NH-A_None_6488`)))),by="sub_group"])
+cors=merge(cors,Ns,by="sub_group")
+
+####Figure S7c
 pdf("EZH2_validation.pdf",height=2.5,width=4.5)
-ggplot(sub,aes(x=EZH2,y=`EZH2_(39875)__NH-A_None_6488`,fill=sub_group,col=sub_group))+geom_point(shape=21,alpha=0.7)+geom_smooth(method="lm")+geom_text(data=cors,x=0.5,y=c(0.7,0.63,0.56),aes(label=paste0("r=",round(estimate,2)," p=",round(p.value,2))))+ylab("MIRA score EZH2 (Astrocytes)")+xlab("Fraction EZH2+ cells")
+ggplot(sub,aes(x=EZH2,y=`EZH2_(39875)__NH-A_None_6488`,fill=sub_group,col=sub_group))+geom_point(shape=21,alpha=0.7)+geom_smooth(method="lm")+geom_text(data=cors,x=0.4,y=c(0.7,0.63,0.56),aes(label=paste0("r=",round(estimate,2)," p=",round(p.value,2)," N=",N)))+ylab("MIRA score EZH2 (Astrocytes)")+xlab("Fraction EZH2+ cells")
 dev.off()
 
 ##################histo_segmentation#######################################
@@ -192,13 +216,16 @@ classes=list(c("sub_group",3,3.5),c("surgery",3,3.5),c("progression_types",3,3),
 for(class in classes){
   message(class)
   transc_stats=data.table()
+  source_data=data.table()
 pdf(paste0(class[1],"_histo_segmentation.pdf"),height=as.numeric(class[2]),width=as.numeric(class[3]))
 for (test in test_list){
   if (class[1]=="sub_group"){
+    ####Figure S8d
     sub=unique(annotation[sub_group_prob>=class_prob&category%in%c("GBMatch","GBmatch_val")&IDH=="wt",c("N_number_st",test,class[1],"surgery","category"),with=FALSE])
     by="category"
   }
   if (class[1]=="surgery"){
+    ####Figure S8e; S11f
     sub=unique(annotation[surgery%in%c(1,2,3)&category%in%c("GBMatch","GBmatch_val")&IDH=="wt",c("N_number_st",test,class[1],"category"),with=FALSE])
     by="category"  
   }
@@ -207,6 +234,7 @@ for (test in test_list){
     by="surgery"
   }
   if (class[1]=="ShiftPhenotype"){
+    ####Figure 4f,h
     sub=unique(annotation[ShiftPhenotype%in%c("classic to sarcoma","stable")&surgery%in%c(1,2)&category%in%c("GBMatch","GBmatch_val")&IDH=="wt",c("N_number_st",test,class[1],"surgery","category"),with=FALSE])
     by="surgery"
   }
@@ -218,12 +246,16 @@ for (test in test_list){
     sub=unique(annotation[surgery%in%c(1,2)&category%in%c("GBMatch","GBmatch_val")&IDH=="wt",c("N_number_st",test,class[1],"surgery"),with=FALSE])
     by="surgery"
   }
-  transc_stats=plot_boxplots(sub,test,"histo_segmentation",transc_stats,class=class[1],by=by)
+  res=plot_boxplots(sub,test,"histo_segmentation",transc_stats,class=class[1],by=by)
+  transc_stats=res[[1]]
+  source_data=rbindlist(list(source_data,res[[2]]))
 }
 dev.off()
-transc_stats[,p.value.BH:=p.adjust(p.value,"BH"),by=c(by,"id")]
-transc_stats[,p.value.BF:=p.adjust(p.value,"bonferroni"),by=c(by,"id")]
+transc_stats[,p.value.BH:=signif(p.adjust(p.value,"BH"),3),by=c(by,"id")]
+transc_stats[,p.value.BF:=signif(p.adjust(p.value,"bonferroni"),3),by=c(by,"id")]
 write.table(transc_stats,paste0(class[1],"_histo_segmentation.tsv"),sep="\t",quote=FALSE,row.names=FALSE)
+write.table(source_data,paste0(class[1],"_histo_segmentation_data.csv"),sep=";",quote=FALSE,row.names=FALSE)
+
 summarize_stats(transc_stats,paste0(class[1],"_histo_segmentation"),by=by)
 }
 
@@ -236,13 +268,16 @@ classes=list(c("sub_group",3,3.5),c("surgery",3,3.5),c("progression_types",3,3),
 for(class in classes){
   message(class)
   transc_stats=data.table()
+  source_data=data.table()
 pdf(paste0(class[1],"_imaging_segmentation.pdf"),height=as.numeric(class[2]),width=as.numeric(class[3]))
 for (test in test_list){
   if (class[1]=="sub_group"){
+    ####Figure S9b,c
     sub=unique(annotation[sub_group_prob>=class_prob&category%in%c("GBMatch","GBmatch_val")&IDH=="wt",c("N_number_st",test,class[1],"surgery","category"),with=FALSE])
     by="category"
   }
   if (class[1]=="surgery"){
+    ####Figure S9b,d
     sub=unique(annotation[surgery%in%c(1,2)&category%in%c("GBMatch","GBmatch_val")&IDH=="wt",c("N_number_st",test,class[1],"category"),with=FALSE])
     by="category"  
   }
@@ -262,12 +297,15 @@ for (test in test_list){
     sub=unique(annotation[surgery%in%c(1,2)&category%in%c("GBMatch","GBmatch_val")&IDH=="wt",c("N_number_st",test,class[1],"surgery"),with=FALSE])
     by="surgery"
   }
-  transc_stats=plot_boxplots(sub,test,"imaging_segmentation",transc_stats,class=class[1],by=by)
+  res=plot_boxplots(sub,test,"imaging_segmentation",transc_stats,class=class[1],by=by)
+  transc_stats=res[[1]]
+  source_data=rbindlist(list(source_data,res[[2]]))
 }
 dev.off()
 transc_stats[,p.value.BH:=p.adjust(p.value,"BH"),by=c(by,"id")]
 transc_stats[,p.value.BF:=p.adjust(p.value,"bonferroni"),by=c(by,"id")]
 write.table(transc_stats,paste0(class[1],"_imaging_segmentation.tsv"),sep="\t",quote=FALSE,row.names=FALSE)
+write.table(transc_stats,paste0(class[1],"_imaging_segmentation_data.csv"),sep=";",quote=FALSE,row.names=FALSE)
 summarize_stats(transc_stats,paste0(class[1],"_imaging_segmentation"),by=by)
 }
 
@@ -279,6 +317,7 @@ classes=list(c("sub_group",3,3.5),c("surgery",3,3.5),c("progression_types",3,3),
 for(class in classes){
   message(class)
   transc_stats=data.table()
+  source_data=data.table()
   pdf(paste0(class[1],"_meth_het.pdf"),height=as.numeric(class[2]),width=as.numeric(class[3]))
   for (test in test_list){
     if (class[1]=="sub_group"){
@@ -309,12 +348,15 @@ for(class in classes){
       sub=unique(annotation[surgery%in%c(1,2)&category%in%c("GBMatch","GBmatch_val")&IDH=="wt"&enrichmentCycles>12&enrichmentCycles<16,c("N_number_st",test,class[1],"surgery"),with=FALSE])
       by="surgery"
     }
-    transc_stats=plot_boxplots(sub,test,"meth_het",transc_stats,class=class[1],by=by)
+    res=plot_boxplots(sub,test,"meth_het",transc_stats,class=class[1],by=by)
+    transc_stats=res[[1]]
+    source_data=rbindlist(list(source_data,res[[2]]))
   }
   dev.off()
   transc_stats[,p.value.BH:=p.adjust(p.value,"BH"),by=c(by,"id")]
   transc_stats[,p.value.BF:=p.adjust(p.value,"bonferroni"),by=c(by,"id")]
   write.table(transc_stats,paste0(class[1],"_meth_het.tsv"),sep="\t",quote=FALSE,row.names=FALSE)
+  write.table(transc_stats,paste0(class[1],"_meth_het_data.csv"),sep=";",quote=FALSE,row.names=FALSE)
   summarize_stats(transc_stats,paste0(class[1],"_meth_het"),by=by)
 }
 
@@ -326,16 +368,17 @@ sub=annotation[category%in%c("GBMatch","GBmatch_val")&IDH=="wt"&surgery%in%c(1,2
 
 factors=c("Area total [mm²]","Area tumor [mm²]","Total (mm3)","Enhancing (mm3)","Relative share tumor","immune_cells")
 
+####Figure S12b
 pdf(paste0("heterogeneity_size.pdf"),height=2.5,width=5.5)
 for (factor in factors){
-cor=sub[,cor(get(factor),mean_entropy,use="pairwise.complete.obs"),by=c("surgery","category")]
-x=sub[,max(get(factor),na.rm=TRUE)/2,]
-ggpl=ggplot(sub,aes(x=get(factor),y=mean_entropy))+geom_point(shape=21,fill="grey",alpha=0.6)+geom_smooth(method="lm",fill="lightgrey")+geom_text(data=cor,aes(x=x,y=45,label=paste0("r=",round(V1,3))))+facet_wrap(~surgery+category,scale="free")+xlab(factor)
+cor=sub[,list(cor(get(factor),mean_entropy,use="pairwise.complete.obs"),N=nrow(na.omit(cbind(get(factor),mean_entropy)))),by=c("surgery","category")]
+x=sub[,max(get(factor),na.rm=TRUE)/3,]
+ggpl=ggplot(sub,aes(x=get(factor),y=mean_entropy))+geom_point(shape=21,fill="grey",alpha=0.6)+geom_smooth(method="lm",fill="lightgrey")+geom_text(data=cor,aes(x=x,y=45,label=paste0("r=",round(V1,3)," N=",N)))+facet_wrap(~surgery+category,scale="free")+xlab(factor)
 print(ggpl)
 
-cor=sub[,cor(get(factor),mean_pdr,use="pairwise.complete.obs"),by=c("surgery","category")]
-x=sub[,max(get(factor),na.rm=TRUE)/2,]
-ggpl=ggplot(sub,aes(x=get(factor),y=mean_pdr*100))+geom_point(shape=21,fill="grey",alpha=0.6)+geom_smooth(method="lm",fill="lightgrey")+geom_text(data=cor,aes(x=x,y=30,label=paste0("r=",round(V1,3))))+facet_wrap(~surgery+category,scale="free")+xlab(factor)
+cor=sub[,list(cor(get(factor),mean_pdr,use="pairwise.complete.obs"),N=nrow(na.omit(cbind(get(factor),mean_entropy)))),by=c("surgery","category")]
+x=sub[,max(get(factor),na.rm=TRUE)/3,]
+ggpl=ggplot(sub,aes(x=get(factor),y=mean_pdr*100))+geom_point(shape=21,fill="grey",alpha=0.6)+geom_smooth(method="lm",fill="lightgrey")+geom_text(data=cor,aes(x=x,y=30,label=paste0("r=",round(V1,3)," N=",N)))+facet_wrap(~surgery+category,scale="free")+xlab(factor)
 print(ggpl)
 }
 dev.off()

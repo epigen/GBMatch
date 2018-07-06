@@ -40,9 +40,12 @@ setnames(cellType_anno_seg,"Epigenome name (from EDACC Release 9 directory)","ce
 regionDB_seg$regionAnno[,GRL_id:=1:nrow(regionDB_seg$regionAnno),]
 regionDB_seg$regionAnno=merge(regionDB_seg$regionAnno,cellType_anno_seg,by="filename",all.x=TRUE)
 
+#select region sets to focus on (also used for follow-up analysis --> data export/last section)
+select=c("CTCF__Gliobla_None_62750","CTCF__H1-hESC_None_66533","CTCF__NH-A_None_38465","CHD1_(A301-218A)__H1-hESC_None_7245","NRSF__H1-hESC_None_13281","NRSF__U87_None_11741","NANOG__Embryonic Stem Cell_NA_18532","SOX2__Embryonic Stem Cell_NA_5204","Pol2__Gliobla_None_17405","Pol2__H1-hESC_None_20311","EZH2_(39875)__NH-A_None_6488","EZH2__Embryonic Stem Cell_NA_3204","POU5F1__Embryonic Stem Cell_NA_10374","POU5F1_(SC-9081)__H1-hESC_None_3996","RBBP5_(A300-109A)__H1-hESC_None_16143","POLR2A__Embryonic Stem Cell_NA_14498","KDM4A__Embryonic Stem Cell_NA_20621")
+select_seg=c("Active_TSS__H1_Cell_Line__E003_17209","Active_TSS__NH-A_Astrocytes__E125_20684","Bivalent_enhancers__H1_Cell_Line__E003_15759","Bivalent_enhancers__NH-A_Astrocytes__E125_5604","Bivalent_Poised_TSS__H1_Cell_Line__E003_9125","Bivalent_Poised_TSS__NH-A_Astrocytes__E125_3212","Enhancers__H1_Cell_Line__E003_98851","Enhancers__NH-A_Astrocytes__E125_100086","Heterochromatin__H1_Cell_Line__E003_35494","Heterochromatin__NH-A_Astrocytes__E125_19974","Quiescent__H1_Cell_Line__E003_82316","Quiescent__NH-A_Astrocytes__E125_63717","Repressed_polycomb__H1_Cell_Line__E003_17100","Repressed_polycomb__NH-A_Astrocytes__E125_19527")
+
 
 total_width=5000
-
 #analysis for TFs
 #select single factors/cell types
 factor="Astrocyte|ESC"
@@ -87,18 +90,27 @@ dev.off()
 
 
 #plot profiles by subgroup only GBMatch IDH=="wt"
+####Figure 2i
 pdf(paste0("aggregatedMeth_subgroup_GBMatch_",factor,".pdf"),height=3.5,width=4)
 for(assay in names(binResults)){
   spl=unlist(strsplit(gsub("_\\([0-9]*\\)","",assay),"_"))
   ab=spl[1]
   cellType=ifelse(grepl("embryonic|ESC",spl[3],ignore.case=TRUE),"ESC",ifelse(grepl("Astro|NH-A",spl[3],ignore.case=TRUE),"Astrocytes",spl[3]))
   annot=paste0(ab," (",cellType,")")
-  pl=ggplot(binResults[[assay]]$binnedBSDT[readCount>1000&auc>0.8&sub_group_prob>0.8&category=="GBMatch"&IDH=="wt"],aes(x=factor(regionGroupID),y=methyl,col=sub_group))+geom_line(alpha=0.2,aes(group=id))+geom_smooth(aes(group=sub_group), se=FALSE)+annotate(geom="text",x=11,y=0.7,label=annot)+ggtitle(assay)+scale_x_discrete(breaks = c(1,6,11,16,21),labels=labelBinCenter(binCount)[c(1,6,11,16,21)])+xlab(paste0("Genome bins surrounding sites (",total_width/1000,"kb)"))+ylab("DNA methylation")
+  data=binResults[[assay]]$binnedBSDT[readCount>1000&auc>0.8&sub_group_prob>0.8&category=="GBMatch"&IDH=="wt",list(regionGroupID,methyl,sub_group,id)]
+  data[,label:=annot,]
+  data[,title:=assay,]
+  pl=ggplot(data,aes(x=factor(regionGroupID),y=methyl,col=sub_group))+geom_line(alpha=0.2,aes(group=id))+geom_smooth(aes(group=sub_group), se=FALSE)+annotate(geom="text",x=11,y=0.7,label=annot)+ggtitle(assay)+scale_x_discrete(breaks = c(1,6,11,16,21),labels=labelBinCenter(binCount)[c(1,6,11,16,21)])+xlab(paste0("Genome bins surrounding sites (",total_width/1000,"kb)"))+ylab("DNA methylation")
   print(pl)
+  if(assay %in% select){
+    write.table(data,paste0("aggregatedMeth_subgroup_GBMatch_",assay,".csv"),sep=";",row.names=FALSE,quote=FALSE)
+  }
+  
 }
 dev.off()
 
 #plot profiles by subgroup only GBMatch IDH=="wt" for segmentation
+####Figure S7e
 pdf(paste0("aggregatedMeth_subgroup_GBMatch_",factor_seg,"_seg.pdf"),height=3.5,width=4)
 for(assay in names(binResults_seg)){
   spl=unlist(strsplit(assay,"__"))
@@ -176,8 +188,6 @@ if (length(combined_dipScores)==0){combined_dipScores=dipScores}else{
 }
 
 sort(names(combined_dipScores))
-select=c("CTCF__Gliobla_None_62750","CTCF__H1-hESC_None_66533","CTCF__NH-A_None_38465","CHD1_(A301-218A)__H1-hESC_None_7245","NRSF__H1-hESC_None_13281","NRSF__U87_None_11741","NANOG__Embryonic Stem Cell_NA_18532","SOX2__Embryonic Stem Cell_NA_5204","Pol2__Gliobla_None_17405","Pol2__H1-hESC_None_20311","EZH2_(39875)__NH-A_None_6488","EZH2__Embryonic Stem Cell_NA_3204","POU5F1__Embryonic Stem Cell_NA_10374","POU5F1_(SC-9081)__H1-hESC_None_3996","RBBP5_(A300-109A)__H1-hESC_None_16143","POLR2A__Embryonic Stem Cell_NA_14498","KDM4A__Embryonic Stem Cell_NA_20621")
-
 write.table(combined_dipScores[,c("id",select),with=FALSE],paste0("dipScores_",factor,"_sel.tsv"),sep="\t",row.names=FALSE,quote=FALSE)
 
 
@@ -195,9 +205,7 @@ for(assay in names(binResults_seg)){
 }
 
 sort(names(combined_dipScores_seg))
-select=c("Active_TSS__H1_Cell_Line__E003_17209","Active_TSS__NH-A_Astrocytes__E125_20684","Bivalent_enhancers__H1_Cell_Line__E003_15759","Bivalent_enhancers__NH-A_Astrocytes__E125_5604","Bivalent_Poised_TSS__H1_Cell_Line__E003_9125","Bivalent_Poised_TSS__NH-A_Astrocytes__E125_3212","Enhancers__H1_Cell_Line__E003_98851","Enhancers__NH-A_Astrocytes__E125_100086","Heterochromatin__H1_Cell_Line__E003_35494","Heterochromatin__NH-A_Astrocytes__E125_19974","Quiescent__H1_Cell_Line__E003_82316","Quiescent__NH-A_Astrocytes__E125_63717","Repressed_polycomb__H1_Cell_Line__E003_17100","Repressed_polycomb__NH-A_Astrocytes__E125_19527")
-
-write.table(combined_dipScores_seg[,c("id",select),with=FALSE],paste0("dipScores_",factor_seg,"_sel_seg.tsv"),sep="\t",row.names=FALSE,quote=FALSE)
+write.table(combined_dipScores_seg[,c("id",select_seg),with=FALSE],paste0("dipScores_",factor_seg,"_sel_seg.tsv"),sep="\t",row.names=FALSE,quote=FALSE)
 
 
 

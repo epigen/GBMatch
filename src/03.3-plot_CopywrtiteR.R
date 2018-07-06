@@ -176,6 +176,7 @@ segments_ctr_annot_mean_cb_1p19q_red[category=="GBmatch_val"&is.na(WHO2016_class
 segments_ctr_annot_mean_cb_1p19q_wide=reshape(segments_ctr_annot_mean_cb_1p19q_red,idvar=c("sample_short","WHO2016_classification","category","IDH"),timevar="region",direction="wide")
 segments_ctr_annot_mean_cb_1p19q_wide[,mean_len_perc:=mean(c(percent.1_p,percent.19_q)),by="sample_short"]
 
+####Figure S3c
 pdf(file.path("summary/1p19q.pdf"),height=7,width=3)
 pl=ggplot(segments_ctr_annot_mean_cb_1p19q_wide[category%in%c("GBMatch","GBmatch_add","GBmatch_val")],aes(x=dom_set.1_p,y=dom_set.19_q,col=category,fill=WHO2016_classification,size=mean_len_perc))+geom_point(shape=21,position=position_jitterdodge(jitter.width = 0.5, jitter.height = 0.25, dodge.width = NULL),alpha=0.5)+xlab(label="Chromosome 1p")+ylab(label="Chromosome 19q")+scale_color_manual(values=c("grey","red","black"))+scale_fill_manual(values=c("red","grey","grey","grey","grey","red","grey"))+scale_size_continuous(range=c(1,3))
       print(pl+ theme(legend.position="none")+ coord_fixed())
@@ -188,6 +189,8 @@ dev.off()
 unique(segments_ctr_annot_mean_cb[category%in%c("GBMatch","GBmatch_add","GBmatch_val")&status=="fail"]$sample_short)
 
 numeric_1p19q_val=segments_ctr_annot_mean_cb_1p19q_wide[category%in%c("GBMatch","GBmatch_add","GBmatch_val"),list(total_samples=.N,del_1p19q=length(sample_short[dom_set.1_p=="deletion"&dom_set.19_q=="deletion"])),by=c("category")]
+
+####Figure S3c
 pdf(file.path("summary/1p19q_num.pdf"),height=2,width=2)
 ggplot(numeric_1p19q_val,aes(y=category,x="del_1p19q"))+geom_text(aes(label=paste0(del_1p19q,"/",total_samples)))+xlab("")+ylab("")
 dev.off()
@@ -260,7 +263,7 @@ sig_CNA[surgery%in%c(1)&category=="GBmatch_val"&IDH=="wt",length_rank_sep_val:=r
 sig_CNA[,length_rank_sep_val:=ifelse(set_sig=="deletion",-length_rank_sep_val,length_rank_sep_val),]
 
 
-
+####Figure S3a
 pdf(file.path("summary/CNA_combiProfile_genes_primary.pdf"),height=height*0.25,width=30)
 ggplot(sig_CNA[surgery%in%c(1,2)&category=="GBMatch"&IDH=="wt"])+geom_segment(aes(col=set_sig,y=length_rank_sep_prim,yend=length_rank_sep_prim,x = loc.start, xend = loc.end))+geom_point(data=GOIs_comb,aes(x=transc_start,y=ypos))+geom_text_repel(data=GOIs_comb,force=20,aes(x=transc_start,y=ypos,label=gene,col=classification))+facet_wrap(~surgery+chrom,scales="free_x",ncol=24)+xlab("")+ylab("")+theme(axis.ticks = element_blank(), axis.text.x = element_blank())+scale_color_manual(values=c("ND"="black","DRG"="blue","OG"="red","TSG"="green","amplification"="red","deletion"="green","nc"="black"))+ylim(c(-250,250))
 dev.off()
