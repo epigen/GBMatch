@@ -93,6 +93,7 @@ dev.off()
 merged_heterogeneity_annot_red=merge(merged_heterogeneity_annot_red,sub_cycles[,c("id","annot_entropy","annot_pdr"),with=FALSE],by="id")
 merged_heterogeneity_annot_red_long=melt(merged_heterogeneity_annot_red,id.vars=c("id","patID","category","Follow-up_years","surgery.x","annot_entropy", "annot_pdr","regionID","entropy1","PDRa"),measure.vars=grep("^p[10].*",names(merged_heterogeneity_annot_red),value=TRUE,perl=TRUE))
 
+sourceData=data.table()
 categories=c("GBMatch","GBmatch_val")
 for (sel_category in categories){
 
@@ -121,9 +122,12 @@ pl5=ggplot(condensed[!(is.na(annot_entropy)&is.na(annot_pdr))&variable!="p0000"]
 pdf(paste0("epiallele-freqs_",sel_category,".pdf"),height=8,width=ifelse(sel_category=="GBMatch",8,3.5))
 grid.arrange(pl3, pl2,pl4,pl5, pl1, ncol=1, nrow=5, heights=c(1,1,1.5,1.5,4))
 dev.off()
-}
 
-write.table(condensed[!(is.na(annot_entropy)&is.na(annot_pdr))&variable!="p0000",list(category,variable, annot_entropy, annot_pdr, surgery.x,rel_freq ,   plotID)],"Source Data Figure5c.csv",sep=";",quote=FALSE,row.names=FALSE)
+sourceData=rbindlist(list(sourceData,condensed[!(is.na(annot_entropy)&is.na(annot_pdr))&variable!="p0000",list(category,variable, annot_entropy, annot_pdr, surgery.x,rel_freq ,   plotID)]))
+
+}
+write.table(sourceData,"Source Data Figure5c.csv",sep=";",quote=FALSE,row.names=FALSE)
+
 
 ##investigate effect of enrichment cycles
 #make correlation plot of mean heterogeneity measures and multiple quality measures
