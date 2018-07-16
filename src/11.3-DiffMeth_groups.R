@@ -1,3 +1,5 @@
+#NOTE: This script performs differential DNA methylation analysis between groups of samples.
+#Original author: N. Fortelny, adapted by J. Klughammer
 library(project.init)
 library(pheatmap)
 project.init2("GBMatch")
@@ -5,7 +7,7 @@ project.init2("GBMatch")
 # Parameters
 preProcessing <- "RAW"
 minCoverage <- 5
-minCntPerAnnot <- 5 #originally 5 but reduced to 4 to enable analysis in validation cohort
+minCntPerAnnot <- 5
 
 if(!is.na(minCoverage)){
   minCoverage <- as.numeric(minCoverage)
@@ -33,7 +35,7 @@ if(!file.exists(dirout(out, "Matrix.RData"))){
   ret=ret[id%in%annotation_orig$N_number_seq]
   
   ret$region <- paste0(ret$chr,"_", ret$start,"_",ret$end)
-
+  
   if(!is.na(minCoverage)){
     ret <- ret[readCount >= minCoverage]
   }
@@ -68,22 +70,8 @@ annotation_orig <- annotation_orig[category %in% c("GBMatch","GBmatch_val") & ID
 colnames(annotation_orig)
 (load(paste0(dirout(),"01.1-combined_annotation/","column_annotation_combined.RData")))
 immuno <- column_annotation_combined_clean$histo_immuno
-#fcts <- c("category","classic T1",
-#  "cT1 flare up",
-#  "T2 diffus", 
-#  "T2 circumscribed",
-#  "Siteofsurgery", 
-#  "progression_location", 
-#  "WHO2016_classification", 
-#  "surgery",
-#  "sub_group",
-#  "Sex")
-# fcts <- c(immuno, fcts)
 
 fcts <- c("category","sub_group","CD163","CD68","CD3","CD8","EZH2","MIB","Enhancing (mm3)")
-
-
-
 
 # Do differential analysis
 cohorts=list("GBMatch","GBmatch_val",c("GBMatch","GBmatch_val"))
@@ -110,7 +98,6 @@ for (sel_cohort in cohorts){
         print("Only one group. Skipping.")
         next
       }
-      
       
       if(factorOfInterest == "sub_group"){
         aDat <- annotation[!is.na(get(factorOfInterest))][sub_group_prob >= 0.8][,c(factorOfInterest, "N_number_seq"), with=F]
@@ -143,12 +130,12 @@ for (sel_cohort in cohorts){
             i <- 1
             for(i in 1:nrow(meth_data_mat)){
               if((sum(!is.na(m1[i,])) >= minCntPerAnnot & sum(!is.na(m2[i,])) >= minCntPerAnnot) & abs(medianDiff[i]) >= 0.1){
-                  pval[i] <- tryCatch({
-                    wilcox.test(m1[i,], m2[i,])$p.value * sign(medianDiff[i]) 
-                    }, error = function(e){
-                      print(e)
-                      return(1)
-                    })
+                pval[i] <- tryCatch({
+                  wilcox.test(m1[i,], m2[i,])$p.value * sign(medianDiff[i]) 
+                }, error = function(e){
+                  print(e)
+                  return(1)
+                })
               } else {
                 pval[i] <- NA # these have not enough values and aren't tested
               }

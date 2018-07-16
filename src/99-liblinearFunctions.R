@@ -1,7 +1,7 @@
+#Note: This script contains functions based on LiblineaR used for several machine learning applications
 library(LiblineaR)
 library(ROCR)
 library(caret)
-
 
 #####Functions#############################################################################
 
@@ -11,9 +11,7 @@ multi_roc=function(class,decisionValues,true_labels){
   true_labels[true_labels!="_sel_"]="_noSel_"
   true_labels[true_labels=="_sel_"]=1
   true_labels[true_labels=="_noSel_"]=0
-  
   nas=is.na(as.data.frame(decisionValues)[,class])
-  #print(class)
   if (length(unique(true_labels[!nas]))==2){
     pred <- prediction(as.data.frame(decisionValues)[,class],true_labels)
     perf <- performance(pred, measure = "tpr", x.measure = "fpr")
@@ -30,11 +28,9 @@ binarize=function(vector,low,high){
   return(as.character(ret))
 }
 
-#liblinear function
-
+#LiblineaR functions
+#parameter selection
 find_param=function(data,labels,type=NULL,cost=NULL,scaleAndCenter=FALSE){
-  #parameter selection
-  
   if(is.null(type)){
     tryTypes=c(0:7)}else{tryTypes=type}
   if(is.null(cost)){
@@ -47,12 +43,12 @@ find_param=function(data,labels,type=NULL,cost=NULL,scaleAndCenter=FALSE){
   set.seed(1234)
   train_test <- createDataPartition(labels, p = .5,list = FALSE, times = 1)
   if(scaleAndCenter==TRUE){
-  train_train_data=scale(data[-train_test,],center=TRUE,scale=TRUE)
+    train_train_data=scale(data[-train_test,],center=TRUE,scale=TRUE)
   }else{train_train_data=data[-train_test,]}
   
   train_train_annot=labels[-train_test]
   if(scaleAndCenter==TRUE){
-  train_test_data=scale(data[train_test,],attr(train_train_data,"scaled:center"),attr(train_train_data,"scaled:scale"))
+    train_test_data=scale(data[train_test,],attr(train_train_data,"scaled:center"),attr(train_train_data,"scaled:scale"))
   }else{train_test_data=data[train_test,]}
   train_test_annot=labels[train_test]
   
@@ -82,14 +78,11 @@ find_param=function(data,labels,type=NULL,cost=NULL,scaleAndCenter=FALSE){
     }
   }
   cat("Best model: ",bestType,"--Best cost: ",bestCost,"--Best meanAUC: ",bestScore)
-  
   return(list(type=bestType,cost=bestCost))
-  
 }
 
 
-
-
+#Train and validate models using cross-validation
 run_pred=function(data,labels,samples,cross=10,param,scaleAndCenter=FALSE){
   feature_mat_all=data.table()
   decision_mat_all=data.table()
@@ -121,7 +114,7 @@ run_pred=function(data,labels,samples,cross=10,param,scaleAndCenter=FALSE){
     
     train_data=train_data[,!colnames(train_data)%in%remove,drop=FALSE]
     test_data=test_data[,!colnames(test_data)%in%remove,drop=FALSE]
-      
+    
     # Re-train best model with best cost value.
     m=LiblineaR(data=train_data,target=train_annot,type=param$type,cost=param$cost,bias=TRUE,verbose=FALSE,svr_eps=0.01)
     
@@ -156,14 +149,13 @@ run_pred=function(data,labels,samples,cross=10,param,scaleAndCenter=FALSE){
     #plot(perf)
   }
   
-  
-  #train model on ALL data for classification task of other data e.g. RRBS
+  #train model on ALL data for classification task of other data e.g. TCGA-->RRBS or validation cohort
   message("Training final model...")
   if(scaleAndCenter==TRUE){
-  data_scaled=scale(data,scale=TRUE,center=TRUE)
-  m_combined=LiblineaR(data=data_scaled,target=labels,type=param$type,cost=param$cost,bias=TRUE,verbose=FALSE,svr_eps=0.01)
-  attr_center=attr(data_scaled,"scaled:center")
-  attr_scale=attr(data_scaled,"scaled:scale")
+    data_scaled=scale(data,scale=TRUE,center=TRUE)
+    m_combined=LiblineaR(data=data_scaled,target=labels,type=param$type,cost=param$cost,bias=TRUE,verbose=FALSE,svr_eps=0.01)
+    attr_center=attr(data_scaled,"scaled:center")
+    attr_scale=attr(data_scaled,"scaled:scale")
   }else{
     m_combined=LiblineaR(data=data,target=labels,type=param$type,cost=param$cost,bias=TRUE,verbose=FALSE,svr_eps=0.01)
     attr_center=NA
@@ -172,10 +164,8 @@ run_pred=function(data,labels,samples,cross=10,param,scaleAndCenter=FALSE){
   return(list(features=feature_mat_all,decisions=decision_mat_all,model=m_combined,attr_center=attr_center,attr_scale=attr_scale)) 
 }
 
-#assess and plot prediction also with random labels
+#assess and plot prediction also with randomized labels to check for overfitting
 check_prediction=function(data,labels,samples,cross=10,nReps=10,type=NULL,cost=NULL,scaleAndCenter=FALSE,cores=1){
-  
-  
   param=find_param(data,labels,type,cost,scaleAndCenter=FALSE)
   pred=run_pred(data=data,labels=labels,samples=samples,param=param,cross = cross,scaleAndCenter=scaleAndCenter)
   
@@ -183,19 +173,8 @@ check_prediction=function(data,labels,samples,cross=10,nReps=10,type=NULL,cost=N
   nReps=nReps
   set.seed(1234)
   rand_labs=lapply(seq_len(nReps), function(x) sample(labels))
-  
-#serial version  
-#  i=0
-#  decision_mat_all=data.table()
-#  for (rand_lab in rand_labs){
-#    i=i+1
-#    param_rand=find_param(data,rand_lab,type,cost,scaleAndCenter=FALSE)
-#    pred_rand=run_pred(data=data,labels=rand_lab,samples=samples,param=param_rand,cross = cross,scaleAndCenter=scaleAndCenter)
-#    decision_mat=pred_rand$decisions
-#    decision_mat[,rep:=i,]
-#    decision_mat_all=rbindlist(list(decision_mat_all,decision_mat))
-#  }
-#parallel version (to speed it up if many repetions needed)
+ 
+  #######parallel version (to speed it up if many repetions needed)##########################
   names(rand_labs)=1:length(rand_labs)
   random_pred=function(data,rand_lab,samples,type,cost,cross,scaleAndCenter){
     param_rand=find_param(data,rand_lab,type,cost,scaleAndCenter=scaleAndCenter)
@@ -206,8 +185,8 @@ check_prediction=function(data,labels,samples,cross=10,nReps=10,type=NULL,cost=N
   }
   decision_mat_list=mclapply(X=rand_labs,mc.silent=TRUE,mc.preschedule=FALSE,mc.cores=cores,mc.cleanup=TRUE,FUN=function(x)random_pred(data=data,rand_lab=x,samples=samples,type=type,cost=cost,cross=cross,scaleAndCenter=scaleAndCenter))
   decision_mat_all=rbindlist(decision_mat_list,idcol="rep")
-###### parallel end ##################
-
+  ###### parallel end ######################################################################
+  
   decision_mat_all[,rand:=TRUE,]
   decision_mat_all=rbindlist(list(decision_mat_all,pred$decisions[,c("rand","rep"):=list(FALSE,1),]),use.names = TRUE)
   
@@ -236,16 +215,13 @@ check_prediction=function(data,labels,samples,cross=10,nReps=10,type=NULL,cost=N
     pl=ggplot(roc_mat_cv[class==plot_class],aes(x=fpr,y=tpr,col=rand))+geom_line(aes(group=paste0(rep,rand),alpha=rand))+geom_text(data=auc_annot[class==plot_class],alpha=1,aes(x=x,y=y,label=label))+scale_color_manual(values=c("TRUE"="darkgrey","FALSE"="blue"))+scale_alpha_manual(values=c("TRUE"=0.4,"FALSE"=1))+annotate(geom="text",x=0,y=1,hjust=0,vjust=1,label=plot_class)+ylab("TPR")+xlab("FPR")
     
     pl_int=ggplot(roc_mat_cv_int[class==plot_class],aes(x=fpr,y=tpr,group=rand))+stat_summary(geom="ribbon", fun.ymin = function(x) quantile(x, 0.025), fun.ymax = function(x) quantile(x, 0.975), fill="lightgrey",alpha=0.4)+stat_summary(geom="line",aes(col=rand), fun.y=mean)+geom_text(data=auc_annot[class==plot_class],alpha=1,aes(x=x,y=y,label=label))+scale_color_manual(values=c("TRUE"="darkgrey","FALSE"="blue"))+annotate(geom="text",x=0,y=1,hjust=0,vjust=1,label=plot_class)+ylab("TPR")+xlab("FPR")
-  
+    
     inernal_plot_list[[plot_class]]=pl
     inernal_plot_list_int[[plot_class]]=pl_int
   }
   
   return(list(plot=inernal_plot_list,decision_mat=decision_mat_wide,model=pred$model,attr_center=pred$attr_center,attr_scale=pred$attr_scale,auc=mean(auc_annot[rand==FALSE]$mean_auc),auc_rand=mean(auc_annot[rand==TRUE]$mean_auc),plot_int=inernal_plot_list_int))
 }
-#############################################################################################
-
-##################for predicting properties from methylation prediction######################
 
 #########prepare the data#################
 prepare_data=function(meth_data_dt,annotation_all,min_na_ratio=0.9,min_na_ratio_samp=0.8){
@@ -285,13 +261,6 @@ prepare_data_fixed=function(meth_data_dt,annotation_all,features){
   meth_data_mat=dcast(meth_data_dt[region%in%features],id~region,value.var="methyl")
   row.names(meth_data_mat)=meth_data_mat$id
   meth_data_mat$id=NULL
-  
-  #region_na_ratios=apply(meth_data_mat,2,function(x){sum(!is.na(x))/length(x)})
-  #min_na_ratio=min_na_ratio
-  
-  #check for low coverage regions --> select regions to include
-  #meth_data_mat_sel=meth_data_mat[,region_na_ratios>min_na_ratio]
-  #check for low coverage sample --> select samples to include
   sample_na_ratios=apply(meth_data_mat,1,function(x){sum(!is.na(x))/length(x)})
   meth_data_mat=meth_data_mat[sample_na_ratios>0.8,]
   
@@ -313,11 +282,7 @@ prepare_data_fixed=function(meth_data_dt,annotation_all,features){
 }
 
 
-
-
-
-
-#############prediction##########################################
+#############wrapper to efficiently run, evaluate, and visualize and save predictions/models##########################################
 meth_pred_analysis=function(meth_data_imputed,annotation,column_annotation,set_targets=NULL,to_analyse,meth_sel,set_scale=FALSE,type=4,cost=1,cross=NULL,nReps=10,cores=1){
   for(selected in to_analyse){
     
@@ -339,8 +304,8 @@ meth_pred_analysis=function(meth_data_imputed,annotation,column_annotation,set_t
     }
     if (is.null(set_targets)){
       targets=column_annotation[[selected]]}else{
-      targets=set_targets  
-    }
+        targets=set_targets  
+      }
     pl=list()
     for (target in targets){
       if(!target%in%names(annotation)){

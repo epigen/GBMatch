@@ -1,3 +1,5 @@
+#NOTE: This script was used to collect and prepare data for submission to GEO and EGA
+
 library(project.init)
 project.init2("GBMatch")
 
@@ -10,7 +12,6 @@ submission_dir="/data/groups/lab_bock/jklughammer/projects/Glioblastoma_match/fo
 annotation=fread(file.path(getOption("PROCESSED.PROJECT"),"results_analysis/01.2-sample_stats/RRBS_stats.tsv"))
 annotation=annotation[Category%in%c("GBmatch_val","GBmatch_valF")]
 annotation[,Multisector:="No",]
-
 
 out_dir=file.path(submission_dir)
 dir.create(file.path(out_dir,"christoph_bock/processed_data"), recursive=TRUE)
@@ -29,7 +30,6 @@ annotation_sub=annotation_sub[order(Sample_name)]
 annotation_sub[,processed_checksum:=unlist(strsplit(system(paste0(" md5sum ",processed_data_path),intern=TRUE)," "))[1],by=1:nrow(annotation_sub)]
 #calculate raw checksum
 annotation_sub[,raw_checksum:=unlist(strsplit(system(paste0(" md5sum ",raw_data_path),intern=TRUE)," "))[1],by=1:nrow(annotation_sub)]
-
 
 #copy processed data to destination
 annotation_sub[,system(paste0("cp ",processed_data_path," ",getwd(),"/christoph_bock/processed_data/",processed_data_file)),by=1:nrow(annotation_sub)]
@@ -96,19 +96,19 @@ annotation_sub_RNA=annotation_sub_RNA[order(Sample_name)]
 
 #prepare processed data and copy raw data
 prep_processed_data=function(sampleAnnot_merged,results_dir,prefix){
-
-for (i in 1:nrow(sampleAnnot_merged)){
-  sample_name=sampleAnnot_merged[i]$`Sample ID`
-  sampleID=sampleAnnot_merged[i]$Sample_name
   
-  #prep processed
-  tr=fread(paste0(results_dir,sample_name,"/",prefix,"/bitSeq/",sample_name,".tr"))
-  setnames(tr,names(tr),c("ensG","ensT","transcript_length","transcript_length_adj"))
-  mean=fread(paste0(results_dir,sample_name,"/",prefix,"/bitSeq/",sample_name,".mean"))
-  setnames(mean,names(mean),c("RPKM","RPKM_variance"))
-  mean=cbind(tr,mean)
-  write.table(mean,sampleAnnot_merged[i]$processed_data_path,sep="\t",quote=FALSE,row.names=FALSE)
-}
+  for (i in 1:nrow(sampleAnnot_merged)){
+    sample_name=sampleAnnot_merged[i]$`Sample ID`
+    sampleID=sampleAnnot_merged[i]$Sample_name
+    
+    #prep processed
+    tr=fread(paste0(results_dir,sample_name,"/",prefix,"/bitSeq/",sample_name,".tr"))
+    setnames(tr,names(tr),c("ensG","ensT","transcript_length","transcript_length_adj"))
+    mean=fread(paste0(results_dir,sample_name,"/",prefix,"/bitSeq/",sample_name,".mean"))
+    setnames(mean,names(mean),c("RPKM","RPKM_variance"))
+    mean=cbind(tr,mean)
+    write.table(mean,sampleAnnot_merged[i]$processed_data_path,sep="\t",quote=FALSE,row.names=FALSE)
+  }
 }
 prep_processed_data(sampleAnnot_merged=annotation_sub_RNA,results_dir=file.path(getOption("PROCESSED.PROJECT"),"results_pipeline_rna/"),prefix="bowtie1_hg38_nc")
 

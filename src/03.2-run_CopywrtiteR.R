@@ -1,3 +1,4 @@
+#NOTE: This script runs CopywriteR to detect copynumber variants (CNVs)
 library(project.init)
 project.init2("GBMatch")
 library(CopywriteR)
@@ -15,14 +16,10 @@ dir.create(ref, recursive=TRUE)
 #make input for copywriteR
 suffix="single_100kb"
 
-
-
-#use this for single
+#use combined controls as "control"
 control_bam=normalizePath(list.files("merged_bams","controls.bam$",full.names=TRUE))
-#primary run
-#sample.control=data.frame(samples=c(control_bam,annotation[material=="FFPE"]$aligned_bam),controls=control_bam)
 
-#validation run
+#run for all samples except for the RCL samples (low quality)
 sample.control=data.frame(samples=c(control_bam,annotation[material!="RCL"]$aligned_bam),controls=control_bam)
 
 
@@ -35,11 +32,11 @@ preCopywriteR(output.folder = file.path(ref),
 #parameter for parallelisation
 bp.param <- SnowParam(workers = 12, type = "SOCK")
 
-#actrually run CopywrteR (--> median normalisations)
+#actrually run CopywrteR (with additional median normalisations)
 CopywriteR(sample.control = sample.control,
-               destination.folder = file.path(out),
-               reference.folder = file.path(ref, "hg38_100kb_chr"),
-               bp.param = bp.param, keep.intermediary.files=FALSE)
+           destination.folder = file.path(out),
+           reference.folder = file.path(ref, "hg38_100kb_chr"),
+           bp.param = bp.param, keep.intermediary.files=FALSE)
 
 #use more conservative of control and median of all samples as control
 #define samples that should not be included to calculate the set median
@@ -58,10 +55,8 @@ file.rename(file.path(out,"/CNAprofiles/log2_read_counts.igv"), file.path(out,"/
 write.table("#track viewLimits=-3:3 graphType=heatmap color=255,0,0", file = file.path(out,"/CNAprofiles/log2_read_counts.igv"), sep = "\t", col.names=FALSE,row.names = FALSE, quote = FALSE)
 write.table(log2_counts[,log2.controls.bam:=log2_counts_summary$set_control], file =file.path(out,"/CNAprofiles/log2_read_counts.igv"), sep = "\t", row.names = FALSE, quote = FALSE,append=TRUE)
 
-
 save(log2_counts_summary,file = file.path(out, "CNAprofiles/log2_counts_summary.Rdata"))
 
 #normalisation to control and plotting
 plotCNA(destination.folder = file.path(out))
-
 file.rename(file.path(out,"CNAprofiles"), paste0(file.path(out,"CNAprofiles_"),suffix))

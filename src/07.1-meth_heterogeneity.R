@@ -1,3 +1,4 @@
+#NOTE: This script analyses both measures of DNA methylation heterogeneity (PDR and entropy) together on the level of promoters
 library(project.init)
 project.init2("GBMatch")
 library(LOLA)
@@ -17,7 +18,6 @@ setnames(annotation,"N_number_seq","id")
 
 
 #get measures of DNA Meth heterogeneity
-
 simpleCache("pdrPromoters1ksub", assignToVariable="pdr_ag")
 simpleCache("entropy/rrbsAgEntropy_min40_prom1k",assignToVariable="entropy_ag")
 simpleCache("rrbsProm1kb",assignToVariable="meth_ag")
@@ -40,12 +40,10 @@ regions_count
 
 all_means=merged_heterogeneity[!chr%in%c("chrY","chrX"),list(mean_entropy=mean(entropy1[regionID%in%core_regions[entropy==TRUE]$regionID],na.rm=TRUE),mean_pdr=mean(PDRa[(readCount/CpGcount_meth)>20&regionID%in%core_regions[pdr==TRUE]$regionID],na.rm=TRUE),mean_meth=mean(methyl[(readCount/CpGcount_meth)>20&regionID%in%core_regions[meth==TRUE]$regionID],na.rm=TRUE)),by="id"]
 
-#chach this to include in general annotation and use in other analyses (e.g. survival)
+#cache this to include in general annotation and use in other analyses (e.g. survival)
 simpleCache("combined_heterogeneity",all_means,recreate=FALSE,assignToVariable="all_means")
 
-
 all_means_annot=merge(all_means,annotation[,c("id","rand_frag_perc","Unique_CpGs","enrichmentCycles","Ct_postLigation","Ct_postConversion","Follow-up_years","Age","surgery.x","patID","category","IDH"),with=FALSE],by="id")
-
 
 #plot heterogeneity per surgery
 sub_cycles=all_means_annot[category%in%c("GBMatch","GBmatch_val")&IDH=="wt"&surgery.x%in%c(1,2)&enrichmentCycles<16&enrichmentCycles>12]
@@ -53,8 +51,6 @@ sub_cycles[,annot_entropy:=ifelse(mean_entropy>quantile(mean_entropy,0.8),"high"
 sub_cycles[,annot_pdr:=ifelse(mean_pdr>quantile(mean_pdr,0.8),"high",ifelse(mean_pdr<quantile(mean_pdr,0.2),"low",NA)),by=c("surgery.x","category")]
 
 #calculate significance of difference
-
-
 sign_1_pdr=sub_cycles[,wilcox.test(x=mean_pdr[surgery.x==1&category=="GBMatch"],y=mean_pdr[surgery.x==2&category=="GBMatch"])$p.value,]
 sign_2_pdr=sub_cycles[,wilcox.test(x=mean_pdr[surgery.x==1&category=="GBMatch"],y=mean_pdr[surgery.x==1&category=="GBmatch_val"])$p.value,]
 sign_3_pdr=sub_cycles[,wilcox.test(x=mean_pdr[surgery.x==2&category=="GBMatch"],y=mean_pdr[surgery.x==1&category=="GBmatch_val"])$p.value,]
@@ -88,7 +84,6 @@ ggplot(merged_heterogeneity_annot_red,aes(x=methyl,y=entropy1))+stat_binhex(aes(
 ggplot(merged_heterogeneity_annot_red,aes(x=methyl,y=PDRa))+stat_binhex(aes(fill=log10(..count..)))+scale_fill_gradient(low="white",high="blue")+geom_smooth(se=FALSE,col="black")+facet_wrap(category~surgery.x)
 dev.off()
 
-
 #assess epi-allel distribution in high and low heterogeneity samples
 merged_heterogeneity_annot_red=merge(merged_heterogeneity_annot_red,sub_cycles[,c("id","annot_entropy","annot_pdr"),with=FALSE],by="id")
 merged_heterogeneity_annot_red_long=melt(merged_heterogeneity_annot_red,id.vars=c("id","patID","category","Follow-up_years","surgery.x","annot_entropy", "annot_pdr","regionID","entropy1","PDRa"),measure.vars=grep("^p[10].*",names(merged_heterogeneity_annot_red),value=TRUE,perl=TRUE))
@@ -96,35 +91,31 @@ merged_heterogeneity_annot_red_long=melt(merged_heterogeneity_annot_red,id.vars=
 sourceData=data.table()
 categories=c("GBMatch","GBmatch_val")
 for (sel_category in categories){
-
-condensed=merged_heterogeneity_annot_red_long[category==sel_category,list(sum=sum(value),Nregions=.N),by=c("id","patID","category","Follow-up_years","variable","annot_entropy", "annot_pdr","surgery.x")]
-condensed[,rel_freq:=sum/(Nregions),]
-condensed[,plotID:=paste0(patID,"_",surgery.x),]
-condensed[,variable:=factor(variable,levels=c("p0000","p0001","p0010","p0100","p1000","p0011","p0101","p1001","p0110","p1010","p1100","p0111","p1011","p1101","p1110","p1111"))]
-
-condensed[,epi_var:=sum(rel_freq[!variable%in%c("p0000","p1111")]),by=plotID]
-#condensed[,epi_var:=sum(ifelse(rel_freq==0|variable%in%c("p0000","p1111"),0,rel_freq*log2(rel_freq))),by=plotID]
-#condensed[,plotID:=factor(plotID,levels=unique(plotID[order(epi_var,decreasing=TRUE)])),]
-
-condensed[,plotID:=factor(plotID,levels=unique(plotID[order(rel_freq[variable=="p0000"])]))]
-
-pl1=ggplot(condensed[!(is.na(annot_entropy)&is.na(annot_pdr))&variable!="p0000"],aes(x=plotID,y=rel_freq,fill=variable))+geom_bar(stat="identity")+geom_bar(stat="identity")+theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(),axis.text.x = element_text(angle = 90, hjust = 1,vjust=0.5), legend.box = "vertical",legend.position="bottom")+scale_fill_manual(values=colorRampPalette(brewer.pal(name="Blues", n = 9)[2:9])(15))+ylim(c(0,22))+facet_wrap(~surgery.x,scale="free")+scale_color_brewer(palette="Set2")+ guides(fill = guide_legend(nrow = 2))
-
-pl2=ggplot(unique(condensed[,c("plotID","category","surgery.x","annot_entropy","annot_pdr"),with=FALSE])[!(is.na(annot_entropy)&is.na(annot_pdr))],aes(x=plotID))+geom_density(aes(group=annot_pdr,col=annot_pdr,fill=annot_pdr),alpha=0.2)+facet_wrap(~surgery.x,scale="free")+annotate("text",label="PDR class",x=1,hjust=0,y=0)+guides(col=FALSE,fill=FALSE)+theme(axis.title.x=element_blank(),axis.text=element_blank(),axis.ticks=element_blank())+scale_color_brewer(palette="Set2")+scale_fill_brewer(palette="Set2")
-
-pl3=ggplot(unique(condensed[,c("plotID","category","surgery.x","annot_entropy","annot_pdr"),with=FALSE])[!(is.na(annot_entropy)&is.na(annot_pdr))],aes(x=plotID))+geom_density(aes(group=annot_entropy,col=annot_entropy,fill=annot_entropy),alpha=0.2)+facet_wrap(~surgery.x,scale="free")+annotate("text",label="EPY class",x=1,hjust=0,y=0)+guides(col=FALSE,fill=FALSE)+theme(axis.title.x=element_blank(),axis.text=element_blank(),axis.ticks=element_blank())+scale_color_brewer(palette="Set2")+scale_fill_brewer(palette="Set2")
-
-pl4=ggplot(condensed[!(is.na(annot_entropy)&is.na(annot_pdr))&variable!="p0000"],aes(x=plotID,y=0,fill=epi_var))+geom_tile()+theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(),axis.title.x=element_blank(),axis.text.x=element_blank(),axis.ticks=element_blank(), legend.box = "vertical",legend.position="bottom")+facet_wrap(~surgery.x,scale="free")+ guides(fill = guide_legend(nrow = 1))+ylab("epi_var")+scale_fill_gradient(high="black",low="lightgrey")
-
-pl5=ggplot(condensed[!(is.na(annot_entropy)&is.na(annot_pdr))&variable!="p0000"],aes(x=plotID))+geom_point(aes(y=3,col=annot_entropy))+geom_point(aes(y=0,col=annot_pdr))+theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(),axis.title.x=element_blank(),axis.text.x=element_blank(),axis.ticks.x=element_blank(), legend.box = "vertical",legend.position="bottom")+facet_wrap(~surgery.x,scale="free")+ scale_color_brewer(palette="Set2")+guides(fill = guide_legend(nrow = 1))+ylab("epy_class")
-
-####Figure 5c
-pdf(paste0("epiallele-freqs_",sel_category,".pdf"),height=8,width=ifelse(sel_category=="GBMatch",8,3.5))
-grid.arrange(pl3, pl2,pl4,pl5, pl1, ncol=1, nrow=5, heights=c(1,1,1.5,1.5,4))
-dev.off()
-
-sourceData=rbindlist(list(sourceData,condensed[!(is.na(annot_entropy)&is.na(annot_pdr))&variable!="p0000",list(category,variable, annot_entropy, annot_pdr, surgery.x,rel_freq ,   plotID)]))
-
+  
+  condensed=merged_heterogeneity_annot_red_long[category==sel_category,list(sum=sum(value),Nregions=.N),by=c("id","patID","category","Follow-up_years","variable","annot_entropy", "annot_pdr","surgery.x")]
+  condensed[,rel_freq:=sum/(Nregions),]
+  condensed[,plotID:=paste0(patID,"_",surgery.x),]
+  condensed[,variable:=factor(variable,levels=c("p0000","p0001","p0010","p0100","p1000","p0011","p0101","p1001","p0110","p1010","p1100","p0111","p1011","p1101","p1110","p1111"))]
+  
+  condensed[,epi_var:=sum(rel_freq[!variable%in%c("p0000","p1111")]),by=plotID]
+  condensed[,plotID:=factor(plotID,levels=unique(plotID[order(rel_freq[variable=="p0000"])]))]
+  
+  pl1=ggplot(condensed[!(is.na(annot_entropy)&is.na(annot_pdr))&variable!="p0000"],aes(x=plotID,y=rel_freq,fill=variable))+geom_bar(stat="identity")+geom_bar(stat="identity")+theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(),axis.text.x = element_text(angle = 90, hjust = 1,vjust=0.5), legend.box = "vertical",legend.position="bottom")+scale_fill_manual(values=colorRampPalette(brewer.pal(name="Blues", n = 9)[2:9])(15))+ylim(c(0,22))+facet_wrap(~surgery.x,scale="free")+scale_color_brewer(palette="Set2")+ guides(fill = guide_legend(nrow = 2))
+  
+  pl2=ggplot(unique(condensed[,c("plotID","category","surgery.x","annot_entropy","annot_pdr"),with=FALSE])[!(is.na(annot_entropy)&is.na(annot_pdr))],aes(x=plotID))+geom_density(aes(group=annot_pdr,col=annot_pdr,fill=annot_pdr),alpha=0.2)+facet_wrap(~surgery.x,scale="free")+annotate("text",label="PDR class",x=1,hjust=0,y=0)+guides(col=FALSE,fill=FALSE)+theme(axis.title.x=element_blank(),axis.text=element_blank(),axis.ticks=element_blank())+scale_color_brewer(palette="Set2")+scale_fill_brewer(palette="Set2")
+  
+  pl3=ggplot(unique(condensed[,c("plotID","category","surgery.x","annot_entropy","annot_pdr"),with=FALSE])[!(is.na(annot_entropy)&is.na(annot_pdr))],aes(x=plotID))+geom_density(aes(group=annot_entropy,col=annot_entropy,fill=annot_entropy),alpha=0.2)+facet_wrap(~surgery.x,scale="free")+annotate("text",label="EPY class",x=1,hjust=0,y=0)+guides(col=FALSE,fill=FALSE)+theme(axis.title.x=element_blank(),axis.text=element_blank(),axis.ticks=element_blank())+scale_color_brewer(palette="Set2")+scale_fill_brewer(palette="Set2")
+  
+  pl4=ggplot(condensed[!(is.na(annot_entropy)&is.na(annot_pdr))&variable!="p0000"],aes(x=plotID,y=0,fill=epi_var))+geom_tile()+theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(),axis.title.x=element_blank(),axis.text.x=element_blank(),axis.ticks=element_blank(), legend.box = "vertical",legend.position="bottom")+facet_wrap(~surgery.x,scale="free")+ guides(fill = guide_legend(nrow = 1))+ylab("epi_var")+scale_fill_gradient(high="black",low="lightgrey")
+  
+  pl5=ggplot(condensed[!(is.na(annot_entropy)&is.na(annot_pdr))&variable!="p0000"],aes(x=plotID))+geom_point(aes(y=3,col=annot_entropy))+geom_point(aes(y=0,col=annot_pdr))+theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(),axis.title.x=element_blank(),axis.text.x=element_blank(),axis.ticks.x=element_blank(), legend.box = "vertical",legend.position="bottom")+facet_wrap(~surgery.x,scale="free")+ scale_color_brewer(palette="Set2")+guides(fill = guide_legend(nrow = 1))+ylab("epy_class")
+  
+  ####Figure 5c
+  pdf(paste0("epiallele-freqs_",sel_category,".pdf"),height=8,width=ifelse(sel_category=="GBMatch",8,3.5))
+  grid.arrange(pl3, pl2,pl4,pl5, pl1, ncol=1, nrow=5, heights=c(1,1,1.5,1.5,4))
+  dev.off()
+  
+  sourceData=rbindlist(list(sourceData,condensed[!(is.na(annot_entropy)&is.na(annot_pdr))&variable!="p0000",list(category,variable, annot_entropy, annot_pdr, surgery.x,rel_freq ,   plotID)]))
 }
 write.table(sourceData,"Source Data Figure5c.csv",sep=";",quote=FALSE,row.names=FALSE)
 
@@ -150,7 +141,6 @@ dev.off()
 
 
 #compare surgery 1 and 2
-
 sub=all_means_annot[category%in%c("GBMatch","GBmatch_val")&IDH=="wt"&surgery.x%in%c(1,2),c("mean_entropy",  "mean_pdr", "mean_meth","surgery.x","patID","enrichmentCycles","category"),with=FALSE]
 all_means_annot_long=melt(sub,id.vars=c("patID","surgery.x","enrichmentCycles","category"))
 all_means_annot_wide=reshape(all_means_annot_long, idvar=c("patID","variable","category"),timevar="surgery.x",direction="wide")

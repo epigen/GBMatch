@@ -1,3 +1,7 @@
+#NOTE: This script assesses the MGMT promoter methylation status considering published work (Bady P, Delorenzi M, Hegi ME. Sensitivity
+#Analysis of the MGMT-STP27 Model and Impact of Genetic and Epigenetic Context to Predict the MGMT Methylation Status in Gliomas and 
+#Other Tumors. J Mol Diagn. 2016 May;18(3):350-361. doi:10.1016/j.jmoldx.2015.11.009. Epub 2016 Feb 27. PubMed PMID: 26927331.)
+
 library(project.init)
 project.init2("GBMatch")
 
@@ -7,8 +11,6 @@ setwd(out_dir)
 
 annotation=fread(file.path(getOption("PROCESSED.PROJECT"),"results_analysis/01.1-combined_annotation/annotation_combined.tsv"))
 
-
-###################MGMT methylation#####################################################################
 loadCaches("rrbsCgNoMin")
 setnames(rrbsCgNoMin,"id","sample")
 
@@ -16,7 +18,7 @@ setnames(rrbsCgNoMin,"id","sample")
 array_loc=fread(list.files(file.path(extData,"extData/TCGA/"),pattern=paste0(".*hg38.txt"),recursive = TRUE,full.names=TRUE)[1],select = c(1,3,4,5))
 setnames(array_loc,names(array_loc),c("id","chr","start","end"))
 
-#positions:
+#relevant CpG positions:
 #cg12981137:chr10  129467311
 #cg12434587: chr10  129466945
 
@@ -27,25 +29,23 @@ MGMT_loc=array_loc[id%in%MGMT_cpgs]
 MGMT_meth_RRBS=rrbsCgNoMin[chr%in%MGMT_loc$chr&start%in%MGMT_loc$start]
 sel="_all"
 
-#calculate score
+#calculate mean methylation across the designated CpGs for each sample
 MGMT_meth_RRBS_combined=MGMT_meth_RRBS[,list(methyl=mean(methyl),meth_max=max(methyl),meth_min=min(methyl),readCount=sum(readCount),CpGcount=.N),by="sample"]
 MGMT_meth_RRBS_combined=merge(MGMT_meth_RRBS_combined,setnames(annotation[,c("patID","IDH","category","surgery.x","N_number_seq"),with=FALSE],"N_number_seq","sample"),by="sample")
 
-
+#check different thresholds to classify a sample as MGMT methyalted
 MGMT_meth_RRBS_combined[,mgmt_conf1:=ifelse(readCount>5,ifelse(methyl==1,"meth","unmeth"),NA),]
 MGMT_meth_RRBS_combined[,mgmt_conf2:=ifelse(readCount>5,ifelse(methyl>0.5,"meth","unmeth"),NA),]
 MGMT_meth_RRBS_combined[,mgmt_conf3:=ifelse(readCount>5,ifelse(methyl>0.36,"meth","unmeth"),NA),]
 MGMT_meth_RRBS_combined[,mgmt_conf4:=ifelse(methyl>0.36,"meth","unmeth"),]
 
 setnames(MGMT_meth_RRBS_combined,c("methyl","readCount","CpGcount"),c("mgmt_methyl","mgmt_readCount","mgmt_CpGcount"))
-
 write.table(MGMT_meth_RRBS_combined,file.path(paste0("mgmt_status",sel,".tsv")),sep="\t",quote=FALSE,row.names=FALSE)
-#MGMT_meth_RRBS_combined=fread(file.path(paste0("mgmt_status",sel,".tsv")))
 
-
+#now only focus on samples in the progression or validation cohort
 MGMT_meth_RRBS_combined_red=MGMT_meth_RRBS_combined[category%in%c("GBMatch","GBmatch_val")&IDH=="wt"]
 
-MGMT_meth_RRBS_combined_red[mgmt_readCount>40,mgmt_readCount:=40,]
+MGMT_meth_RRBS_combined_red[mgmt_readCount>40,mgmt_readCount:=40,] #cap at 40 to improve color scale for lower numbers
 MGMT_meth_RRBS_combined_red[,id:=paste0(patID,"_",surgery.x),]
 
 MGMT_meth_RRBS_combined_red[,sample:=factor(sample,levels=sample[order(mgmt_methyl,decreasing=TRUE)]),]

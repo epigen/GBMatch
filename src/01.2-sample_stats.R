@@ -1,3 +1,4 @@
+#NOTE: This script creates sample statistics overview plots
 library(project.init)
 project.init2("GBMatch")
 library(ggmap)
@@ -14,7 +15,6 @@ annotation=fread(file.path(getOption("PROCESSED.PROJECT"),"results_analysis/01.1
 ###############################
 ##plot sequencing/ RRBS stats##
 ###############################
-
 annotation[,sample_group:=ifelse(N_number_st%in%annotation[material=="RCL"]$N_number_st,N_number_st,NA),]
 
 pdf("rand_frag_RCL.pdf",height=5,width=6)
@@ -42,10 +42,10 @@ cor_CpG=annotation[,list(Raw_reads=max(Raw_reads),Unique_CpGs=Unique_CpGs[which.
 pdf("readsVSCpG.pdf",height=3.5,width=4.5)
 ggplot(annotation,aes(x=Raw_reads/1000000,y=Unique_CpGs/1000000,fill=material_cohort,group=material_cohort,col=material_cohort))+geom_point(alpha=0.5,shape=21,size=3)+geom_text(data=cor_CpG,hjust=1,aes(label=paste0(material_cohort,": r=",round(cor,3)," (N=",N,")")))+geom_smooth(method="lm")+ylab("Unique CpGs (Million)")+xlab("Raw reads (Million)")
 dev.off()
-####Figure S1C start #################################
+####Figure S1C end #################################
 
 
-#bisylfite conversion
+#bisulfite conversion
 ####Figure S1D
 pdf("bisulfite_conversion.pdf",width=4.5,height=2.5)
 ggplot(annotation)+geom_point(aes(x=material,y=K1_unmethylated_meth*100,col="Unmethylated",fill="Unmethylated"),position=position_jitter(width=0.3,height=0),alpha=0.5,shape=21)+geom_point(aes(x=material,y=K3_methylated_meth*100,col="Methylated",fill="Methylated"),position=position_jitter(width=0.3,height=0),alpha=0.5,shape=21)+geom_hline(yintercept=5,color="grey",lty=20)+geom_hline(yintercept=95,color="grey",lty=20)+facet_grid(~cohort,space="free_x",scale="free_x")+ylab("Control methylation (%)")
@@ -54,7 +54,7 @@ dev.off()
 ########################
 ##Supplementary tables##
 ########################
-
+#NOTE: these tables form the basis for the published oneds which have been manually edited to make them more intuitive
 #Supplementary Table 1 (patients)
 pat_stats=annotation[,list(N_number_1st=N_number_seq[order(category,surgery.x)][1],AgeAtDiag=min(Age),categories=paste0(unique(category),collapse=","),cohorts=paste0(unique(cohort),collapse=","),materials=paste0(unique(material),collapse=","),WHO2016_classification=paste0(unique(WHO2016_classification[order(surgery.x)]),collapse=","),Nsamples=.N),by=c("patID","Center","Sex","IDH","NoOfSurgeries","timeToFirstProg","Follow-up_years", "VitalStatus","StuppComplete")]
 setcolorder(pat_stats,c("N_number_1st","patID","Center","Sex","AgeAtDiag","IDH","WHO2016_classification","NoOfSurgeries","Nsamples","timeToFirstProg","Follow-up_years", "VitalStatus","StuppComplete","cohorts","categories","materials"))
@@ -129,7 +129,6 @@ dev.off()
 dataFig1b=clinical_annot_long_date[Event!="DateOfBirth"&!is.na(Date_form)&category=="GBMatch"][,list(Date_form,patID,surgery.x,VitalStatus,Event,category)]
 write.table(dataFig1b,"Source Data Figure 1b.csv",sep=";",quote=FALSE,row.names=FALSE)
 
-
 #single patient
 ####Figure 1A
 patient="pat_014"
@@ -150,7 +149,7 @@ print(pl)
 dev.off()
 
 
-#plot locations
+#plot center locations
 ####Figure S1A
 mapWorld <- borders("world","austria", colour="gray50", fill="white") # create a layer of borders
 
@@ -159,7 +158,7 @@ centers[Center=="Rudolfstiftung",Center:="Rudolfstiftung Vienna",]
 centers[,Center_simpl:=gsub("MedUni |Rudolfstiftung ","",Center),]
 centers=cbind(centers,as.data.table(geocode(centers$Center_simpl)))
 while(any(is.na(c(centers$lon,centers$lat)))){
-try(centers[is.na(lon),c("lon","lat"):=try(geocode(Center_simpl),silent=TRUE),],silent=TRUE)
+  try(centers[is.na(lon),c("lon","lat"):=try(geocode(Center_simpl),silent=TRUE),],silent=TRUE)
 }
 centers
 

@@ -1,3 +1,6 @@
+#NOTE: This script compares mutational load as determined from RRBS data with mutational load as determined from low coverage WGS data.
+#Two different approaches for WGS: based on VCF (commented out) or summary stats file(active).
+
 library(project.init)
 project.init2("GBMatch")
 library("VariantAnnotation")
@@ -105,54 +108,54 @@ annotation_val[,wgs_bcf_cpm:=wgs_bcf_var/wgs_bcf_effgenome*1000000]
 modes=c("rrbs","wgs")
 
 for (mode in modes){
-covThres=0 #irrelevant for bissnp
-
-if (mode=="rrbs"){rrbs_var=data.table()}
-if (mode=="wgs"){wgs_var=data.table()}
-
-for(i in c(1:nrow(annotation_val))){
-  if (mode=="wgs"){
-  cachename=paste0("wgs_",annotation_val$N_number_seq[i])
-  message(cachename)
-##for bcftools
-##  simpleCache(recreate=FALSE,cachename,{dt=condense_vcf(sample=annotation_val$N_number_seq[i],patient=annotation_val$patID[i],vcf_file=annotation_val$vcfs[i],vcf_bg_file=annotation_val$vcf_bg[i],covThres=covThres);return(dt)},cacheSubDir=paste0("wgs_var_cov",covThres))
-#for bissnp
-  simpleCache(recreate=FALSE,cachename,{dt=condense_vcf(sample=annotation_val$N_number_seq[i],patient=annotation_val$patID[i],vcf_file=annotation_val$vcfs[i],vcf_bg_file=annotation_val$vcf_bg[i],covThres=covThres);return(dt)},cacheSubDir=paste0("wgs_var_bissnp_cov",covThres))  
-  }
-if (mode=="rrbs"){
-cachename=paste0("rrbs_",annotation_val$N_number_seq[i])
-message(cachename)
-simpleCache(recreate=FALSE,cachename,{dt=condense_vcf(sample=annotation_val$N_number_seq[i],patient=annotation_val$patID[i],vcf_file=annotation_val$vcfs_RRBS[i],vcf_bg_file=annotation_val$vcf_bg_RRBS[i],covThres=covThres);return(dt)},cacheSubDir=paste0("rrbs_var_bissnp_cov",covThres))
-}
-  if (!"data.table"%in%is(get(cachename))){next}
+  covThres=0 #irrelevant for bissnp
   
-  var=get(cachename)
-  anno_vars=c("patID","surgery.x","category","wgs_bcf_changerate","wgs_bcf_cpm","Unique_CpGs","enrichmentCycles", "Aligned_reads", "Total_CpGs", "meanCoverage", "bisulfiteConversionRate","rand_frag_perc")
-  vals=annotation_val[i,anno_vars,with=FALSE]
-  var[,(anno_vars):=vals,]
-
-if (mode=="wgs"){wgs_var=rbindlist(list(wgs_var,var))}
-if (mode=="rrbs"){rrbs_var=rbindlist(list(rrbs_var,var))}
-}
-
-#postprocess wgs and rrbs calls
-
-if (mode=="wgs"){
-#for bcftools
-#wgs_var[,DP:=as.numeric(DP),]
-#covThres_sec=5
-#wgs_var_samp=wgs_var[QUAL>=20&DP>covThres_sec,list(all_count=.N,H_count=sum(H_count>0),M_count=sum(M_count>0),bg_calls=as.numeric(unlist(strsplit(bg_calls[1],"\\|"))[covThres_sec+2]),category=category[1]),by=c("patID","sample_name","surgery")]
-
-wgs_var_samp=wgs_var[,list(all_count=.N,H_count=sum(H_count>0),M_count=sum(M_count>0),wgs_bg_calls=as.numeric(bg_calls_conf[1]),wgs_bg_calls_reads=as.numeric(bg_calls_reads[1]),category=category[1]),by=c("patID","sample_name","surgery.x")] #needs to be adapted upon rerun (include bg_calls_reads and bg_calls --> bg_calls_conf)
-wgs_var_samp_long=melt(wgs_var_samp,id.vars=c( "patID","sample_name", "surgery.x", "category", "wgs_bg_calls","wgs_bg_calls_reads"),variable.name="count_type",value.name="wgs_var_count")
-
-}
-
-if (mode=="rrbs"){
-  rrbs_var_samp=rrbs_var[,list(all_count=.N,H_count=sum(H_count>0),M_count=sum(M_count>0),rrbs_bg_calls=as.numeric(bg_calls_conf[1]),rrbs_bg_calls_reads=as.numeric(bg_calls_reads[1])),by=c("sample_name",anno_vars)]
-  rrbs_var_samp_long=melt(rrbs_var_samp,id.vars=c("sample_name","rrbs_bg_calls","rrbs_bg_calls_reads",anno_vars),variable.name="count_type",value.name="rrbs_var_count")
-
-}
+  if (mode=="rrbs"){rrbs_var=data.table()}
+  if (mode=="wgs"){wgs_var=data.table()}
+  
+  for(i in c(1:nrow(annotation_val))){
+    if (mode=="wgs"){
+      cachename=paste0("wgs_",annotation_val$N_number_seq[i])
+      message(cachename)
+      ##for bcftools
+      ##  simpleCache(recreate=FALSE,cachename,{dt=condense_vcf(sample=annotation_val$N_number_seq[i],patient=annotation_val$patID[i],vcf_file=annotation_val$vcfs[i],vcf_bg_file=annotation_val$vcf_bg[i],covThres=covThres);return(dt)},cacheSubDir=paste0("wgs_var_cov",covThres))
+      #for bissnp
+      simpleCache(recreate=FALSE,cachename,{dt=condense_vcf(sample=annotation_val$N_number_seq[i],patient=annotation_val$patID[i],vcf_file=annotation_val$vcfs[i],vcf_bg_file=annotation_val$vcf_bg[i],covThres=covThres);return(dt)},cacheSubDir=paste0("wgs_var_bissnp_cov",covThres))  
+    }
+    if (mode=="rrbs"){
+      cachename=paste0("rrbs_",annotation_val$N_number_seq[i])
+      message(cachename)
+      simpleCache(recreate=FALSE,cachename,{dt=condense_vcf(sample=annotation_val$N_number_seq[i],patient=annotation_val$patID[i],vcf_file=annotation_val$vcfs_RRBS[i],vcf_bg_file=annotation_val$vcf_bg_RRBS[i],covThres=covThres);return(dt)},cacheSubDir=paste0("rrbs_var_bissnp_cov",covThres))
+    }
+    if (!"data.table"%in%is(get(cachename))){next}
+    
+    var=get(cachename)
+    anno_vars=c("patID","surgery.x","category","wgs_bcf_changerate","wgs_bcf_cpm","Unique_CpGs","enrichmentCycles", "Aligned_reads", "Total_CpGs", "meanCoverage", "bisulfiteConversionRate","rand_frag_perc")
+    vals=annotation_val[i,anno_vars,with=FALSE]
+    var[,(anno_vars):=vals,]
+    
+    if (mode=="wgs"){wgs_var=rbindlist(list(wgs_var,var))}
+    if (mode=="rrbs"){rrbs_var=rbindlist(list(rrbs_var,var))}
+  }
+  
+  #postprocess wgs and rrbs calls
+  
+  if (mode=="wgs"){
+    #for bcftools
+    #wgs_var[,DP:=as.numeric(DP),]
+    #covThres_sec=5
+    #wgs_var_samp=wgs_var[QUAL>=20&DP>covThres_sec,list(all_count=.N,H_count=sum(H_count>0),M_count=sum(M_count>0),bg_calls=as.numeric(unlist(strsplit(bg_calls[1],"\\|"))[covThres_sec+2]),category=category[1]),by=c("patID","sample_name","surgery")]
+    
+    wgs_var_samp=wgs_var[,list(all_count=.N,H_count=sum(H_count>0),M_count=sum(M_count>0),wgs_bg_calls=as.numeric(bg_calls_conf[1]),wgs_bg_calls_reads=as.numeric(bg_calls_reads[1]),category=category[1]),by=c("patID","sample_name","surgery.x")] #needs to be adapted upon rerun (include bg_calls_reads and bg_calls --> bg_calls_conf)
+    wgs_var_samp_long=melt(wgs_var_samp,id.vars=c( "patID","sample_name", "surgery.x", "category", "wgs_bg_calls","wgs_bg_calls_reads"),variable.name="count_type",value.name="wgs_var_count")
+    
+  }
+  
+  if (mode=="rrbs"){
+    rrbs_var_samp=rrbs_var[,list(all_count=.N,H_count=sum(H_count>0),M_count=sum(M_count>0),rrbs_bg_calls=as.numeric(bg_calls_conf[1]),rrbs_bg_calls_reads=as.numeric(bg_calls_reads[1])),by=c("sample_name",anno_vars)]
+    rrbs_var_samp_long=melt(rrbs_var_samp,id.vars=c("sample_name","rrbs_bg_calls","rrbs_bg_calls_reads",anno_vars),variable.name="count_type",value.name="rrbs_var_count")
+    
+  }
 }
 #combine and compare wgs and rrbs stats 
 
@@ -176,22 +179,3 @@ dev.off()
 write.table(var_samp_compare,"validation_compare.tsv",sep="\t",quote=FALSE,row.names=FALSE)
 write.table(rrbs_var,"validation_rrbs_var.tsv",sep="\t",quote=FALSE,row.names=FALSE)
 write.table(wgs_var,"validation_wgs_var.tsv",sep="\t",quote=FALSE,row.names=FALSE)
-
-
-#################################################################################################
-#testspace
-rrbs_var_samp_long_ctall=rrbs_var_samp_long[count_type=="all_count"]
-ggplot(rrbs_var_samp_long_ctall,aes(rrbs_bg_calls,rrbs_var_count))+geom_point()+geom_smooth()
-ggplot(rrbs_var_samp_long_ctall,aes(rrbs_bg_calls_reads,rrbs_var_count))+geom_point()+geom_smooth()
-ggplot(rrbs_var_samp_long_ctall,aes(rrbs_bg_calls_reads,(rrbs_var_count/rrbs_bg_calls)))+geom_point()+geom_smooth()+ylim(c(0,NA))+xlim(c(0,NA))
-
-ggplot(wgs_var_samp_long[count_type=="all_count"],aes(1,wgs_var_count/wgs_bg_calls))+geom_point()+geom_smooth()
-
-rrbs_var_samp_long_ctall[,rrbs_var_count_lm:=lm(rrbs_var_count~rrbs_bg_calls+rrbs_bg_calls_reads)$residuals,]
-rrbs_var_samp_long_ctall[,rrbs_var_count_lm:=lm(rrbs_var_count~rrbs_bg_calls)$residuals,]
-rrbs_var_samp_long_ctall[,rrbs_var_count_lm:=lm(lm(rrbs_var_count~rrbs_bg_calls)$residuals~rrbs_bg_calls_reads)$residuals,]
-ggplot(rrbs_var_samp_long_ctall,aes(rrbs_bg_calls,rrbs_var_count_lm))+geom_point()+geom_smooth()
-ggplot(rrbs_var_samp_long_ctall,aes(rrbs_bg_calls_reads,rrbs_var_count_lm))+geom_point()+geom_smooth()
-ggplot(rrbs_var_samp_long_ctall,aes(rank(wgs_cpm),rank(rrbs_var_count_lm)))+geom_point()+geom_smooth()
-ggplot(rrbs_var_samp_long_ctall,aes(rrbs_var_count,rrbs_var_count_lm))+geom_point()+geom_smooth()
-ggplot(rrbs_var_samp_long_ctall,aes(rrbs_bg_calls,rrbs_bg_calls_reads))+geom_point()+geom_smooth()

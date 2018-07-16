@@ -1,15 +1,15 @@
+#NOTE: This script performs LOLA analysis on differentially methylated regions as identified 
+#in the group-wise differential DNA methylation analysis and plots the differentially methylated regions as heatmap.
+#Original author: N. Fortelny, adapted by J. Klughammer
 library(project.init)
 library(pheatmap)
 library(LOLA)
 project.init2("GBMatch")
 
-
-
 preProcessing <- "RAW_5"
 use.tiles <- TRUE
 equalize.hits <- FALSE
 qCutoff <- 0.05 
-
 
 out1 = paste0('11.3-DiffMeth_groups/',preProcessing, "/")
 stopifnot(dir.exists(dirout(out1)))
@@ -78,8 +78,7 @@ for (lola_cohort in cohorts){
       ))
     ggsave(dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_Example"), i,".pdf"))
   }
-  
-  
+
   # Convert to granges --------------------------------------------------------------------
   regions <- data.table(do.call(rbind, strsplit(res$cpg, "_")))
   regions$V2 <- as.numeric(regions$V2)
@@ -135,7 +134,6 @@ for (lola_cohort in cohorts){
     geom_bar(stat="identity") + coord_flip()+theme_bw(24)
   ggsave(dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_Hit_counts_afterTiles.pdf")), height=20, width=15)
   
-  
   # LOLA --------------------------------------------------------------------
   if(!file.exists(dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_LOLA_FULL.tsv")))){
     resLOLA <- data.table()
@@ -174,12 +172,7 @@ for (lola_cohort in cohorts){
     resLOLA_seg=merge(resLOLA_seg,segmentation_annot,by="filename",all.x=TRUE)
     write.table(resLOLA_seg, file=dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_LOLA_seg_FULL.tsv")), sep="\t", quote=F, row.names=F)
     write.table(resLOLA_seg[BY < qCutoff], file=dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_LOLA_seg_HITS.tsv")), sep="\t", quote=F, row.names=F)
-    
-    #  resLOLA_seg[userSet=="category_GBMatch_GBmatchval"&BY < qCutoff,.N,by="seg_code"][order(N,decreasing=TRUE)]
-    #  resLOLA_seg[userSet=="category_GBMatch_GBmatchval"&BY < qCutoff,.N,by="EID"][order(N,decreasing=TRUE)]
-    #  resLOLA_seg[userSet=="category_GBmatchval_GBMatch"&BY < qCutoff,.N,by="seg_code"][order(N,decreasing=TRUE)]
-    #  resLOLA_seg[userSet=="category_GBmatchval_GBMatch"&BY < qCutoff,.N,by="EID"][order(N,decreasing=TRUE)]
-    
+
     # GET RESULTS -------------------------------------------------------------
     resLOLA[,mlog10p.adjust:=-log10(BY),]
     resLOLA[cellType==""|is.na(cellType),cellType:="Not defined",]
@@ -218,7 +211,6 @@ for (lola_cohort in cohorts){
   # LOLA RESULTS IN SMALL DOTPLOT
   
   LOLA_res=fread(dirout(out,paste0(paste0(lola_cohort,collapse="_"),"_LOLA_HITS_AstroOrESC.tsv")))
-  #LOLA_res=fread(dirout(out,paste0(paste0("GBMatch",collapse="_"),"_LOLA_HITS_AstroOrESC.tsv")))
   LOLA_res=LOLA_res[grepl("subgroup",userSet)&collection%in%c("codex","encode_tfbs")&cellState!="Malignant"]
   LOLA_res[,target_max:=min(BY),by=target]
   LOLA_res[,target:=factor(target,levels=unique(target[order(target_max)])),]
@@ -233,8 +225,6 @@ for (lola_cohort in cohorts){
   pdf(dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_LOLA_res_subgroup_BY0.05.pdf")),height=5,width=8)
   print(ggplot(LOLA_res[BY<0.05],aes(x=target,y=-log10(BY),fill=cellType_corr),,size=logOddsRatio)+geom_point(position=position_jitter(height=0,width=0.1),shape=21,size=3,alpha=0.6,stroke=0.6)+geom_hline(yintercept=-log10(0.05),lty=20,col="grey")+theme(axis.text.x=element_text(angle = 90, hjust=1,vjust = 0.5))+facet_wrap(~userSet+userSet_N,ncol=1)+scale_fill_manual(values=c("Astrocyte"="#a6cee3","ESC"="#b2df8a"))+scale_color_manual(values=c("FALSE"="grey","TRUE"="black")))
   dev.off()
-  
-  
   
   # HIT CPGS HEATMAP ----------------------------------------------------------------
   
@@ -255,8 +245,6 @@ for (lola_cohort in cohorts){
     cpgs=c(cpgs,sel)
     row_annots=c(row_annots,sel_annot)
   }
-  
-  
   
   # PREPARE SAMPLE ANNOTATION ------------------------------------------------------
   annotation_all=fread(paste0(dirout(),"01.1-combined_annotation/","annotation_combined_final.tsv"))
@@ -280,8 +268,6 @@ for (lola_cohort in cohorts){
     hmMT <- meth_data_mat[unique(names(cpgs)),]
     hmMT <- hmMT[,aDat$N_number_seq]
     
-    
-    
     # Order by group ----------------------------------------------------------
     str(row_annot <- row_annot[rownames(hmMT),,drop=FALSE])
     row_annot$direction=sub("subgroup_","",row_annot$direction)
@@ -295,6 +281,5 @@ for (lola_cohort in cohorts){
     pheatmap(border_color=NA,hmMT[order(row_annot$direction),order(col_annot$sub_group,col_annot$category)], show_rownames=FALSE,show_colnames=FALSE,annotation_col=col_annot,annotation_row=row_annot,cluster_rows=F, cluster_cols=F,annotation_colors=colors,color=colorRampPalette(c("blue","red"))(20))
     dev.off()
     write.table(as.data.table(hmMT[order(row_annot$direction),order(col_annot$sub_group,col_annot$category)],keep.rownames="pos"),dirout(out, paste0(paste0(lola_cohort,collapse="_"),"_subgroup_HM_Clustered_",paste0(hm_cohort,collapse="_"),"_data.csv")),sep=";",row.names=FALSE,quote=FALSE)
-    
   }
 }

@@ -1,3 +1,4 @@
+#NOTE: Script to handle supplementary data for the website
 library(project.init)
 project.init2("GBMatch")
 

@@ -1,3 +1,4 @@
+#NOTE: This script detects and analyzes the transcriptional subtype composition of smples using published TCGA data as reference 
 library(project.init)
 project.init2("GBMatch")
 library(simpleCache)
@@ -19,23 +20,23 @@ annotation=fread(file.path(getOption("PROCESSED.PROJECT"),"results_analysis/01.1
 
 
 
-########Model training and testing on microarray data########################################
+########Model training and testing on microarray data (from TCGA)########################################
 
 annot_sub=annot[grepl("beta_27",beta_file)&`IDH1 status`=="WT"&`G-CIMP methylation`=="non-G-CIMP"&`Expression Subclass`!="Neural"]
 sub="27_noNeural"
 
 collect_beta=function(beta_annot){
-for(i in (1:nrow(beta_annot))){
-  if (i==1){
-    beta_mat=fread(beta_annot[i]$beta_file,select = c(1:2))
-    setnames(beta_mat,names(beta_mat),c("id",beta_annot[i]$`Case ID`))
-  }else{
-    temp=fread(beta_annot[i]$beta_file,select = c(1:2))
-    setnames(temp,names(temp),c("id",beta_annot[i]$`Case ID`))
-    beta_mat=merge(beta_mat,temp,by="id")
+  for(i in (1:nrow(beta_annot))){
+    if (i==1){
+      beta_mat=fread(beta_annot[i]$beta_file,select = c(1:2))
+      setnames(beta_mat,names(beta_mat),c("id",beta_annot[i]$`Case ID`))
+    }else{
+      temp=fread(beta_annot[i]$beta_file,select = c(1:2))
+      setnames(temp,names(temp),c("id",beta_annot[i]$`Case ID`))
+      beta_mat=merge(beta_mat,temp,by="id")
+    }
   }
-}
-return(beta_mat)
+  return(beta_mat)
 }
 
 beta_mat=simpleCache(paste0("beta_",sub),collect_beta(beta_annot=annot_sub),cacheSubDir="GBM_classifier",recreate=FALSE)
@@ -63,8 +64,7 @@ pl$plot
 dev.off()
 
 
-################Classification of GBMatch###############################################################
-#GBMatch
+################Classification of GBMatch samples###############################################################
 loadCaches("rrbsCg")
 setnames(rrbsCg,"id","sample")
 array_loc=fread(annot_sub$beta_file[1],select = c(1,3,4,5))
@@ -118,18 +118,16 @@ predict_RRBS=function(cpgID,RRBS_meth,type=NULL,cost=NULL,train_mat,scaleAndCent
 }
 
 #warning probably due to column check being of length 4 and column prediction being of length 3
-#beta without scaling
+#use beta without scaling
 simpleCache(paste0("res_",sub,"_predRRBS_notScaled"),"rrbs_annot[,predict_RRBS(cpgID=id,RRBS_meth=methyl,type = 0,cost=1,train_mat=beta_mat_t),by=c('sampleName','sample')]", cacheSubDir="GBM_classifier")
 
-
-#use not scaled beta values
 test_res_prob=res_27_noNeural_predRRBS_notScaled
 
 #calculate CpGs used for each prediction
 CpG_tab=test_res_prob[,ncol(check[[3]]$W),by="sampleName"]
 write.table(as.matrix(summary(CpG_tab$V1)),file=paste0("used_features_",sub,"_predRRBS.tsv"),sep="\t",quote=FALSE)
 
-#plot ROC curves
+#plot ROC curves (one for each sample)
 print_res=function(plots,title){
   for (plot in plots){
     print(plot+ggtitle(title)) 
@@ -143,10 +141,8 @@ dev.off()
 #make sure to analyse only samples that are in the annotation
 test_res_prob=test_res_prob[sample%in%annotation$N_number_seq]
 
-
 class_probs=test_res_prob[,list(sub_group=prediction[[1]][1],prob=prediction[[2]][which(colnames(prediction[[2]])==prediction[[1]][1])],auc=auc[1],auc_rand=auc_rand[1],val_rat=val_rat[1]),c("sampleName","sample")]
 write.table(class_probs,paste0("class_probs",sub,"_predRRBS.tsv"),sep="\t",quote=FALSE,row.names=FALSE)
-
 
 class_probs_all=test_res_prob[,list(sub_group=prediction[[1]][1],Classical=prediction[[2]][1],Proneural=prediction[[2]][2],Mesenchymal=prediction[[2]][3],auc=auc[1],auc_rand=auc_rand[1]),c("sampleName","sample")]
 
@@ -168,9 +164,7 @@ ggplot(class_probs_all_annot[category%in%c("GBMatch","GBmatch_val")],aes(y=sub_g
 ggplot(class_probs_all_annot[category%in%c("GBMatch","GBmatch_val")],aes(y=auc,x=substr(sub_group,1,3),group=sub_group))+geom_point(aes(fill=sub_group,col=sub_group),position=position_jitter(width=0.2,height=0),alpha=0.2,pch=21)+ylim(c(0,1))+geom_boxplot(outlier.shape=NA,fill="transparent")+geom_hline(yintercept=0.8,lty=20,col="grey")+xlab("")+ylab("ROC AUC")+facet_wrap(~cohort)+stat_summary(fun.data=addNmin, geom="text", vjust=3, col="blue")
 dev.off()
 
-
 class_probs_all_annot_long=melt(class_probs_all_annot,id.vars=c("sampleName","sample","patID","category","cohort","sub_group","sub_group_prob","switching","auc","auc_rand","surgery.x","WHO2016_classification","Follow-up_years","IDH"),value.name="prob")
-
 
 class_probs_all_annot_long[,variable:=factor(variable,levels=c("Classical","Mesenchymal","Proneural")),]
 
@@ -180,7 +174,6 @@ ggplot(class_probs_all_annot_long[category=="multiselector"&!is.na(prob)],aes(x=
 dev.off()
 
 write.table(class_probs_all_annot_long[category=="multiselector"&!is.na(prob)][patID%in%c("pat_008","pat_044"),list(surgery.x,sample,prob,variable,auc,patID)],"Source Data Figure2c.csv",sep=";",quote=FALSE,row.names=FALSE)
-
 
 class_probs_all_annot_long[,sample:=factor(sample,levels=unique(sample[order(sub_group_prob,decreasing=TRUE)])),]
 
@@ -217,8 +210,6 @@ ggplot(class_probs_all_annot[!is.na(sub_group)&auc>0.8&sub_group_prob>0.65&categ
 ggplot(class_probs_all_annot[!is.na(sub_group)&auc>0.8&sub_group_prob>0.65&category%in%c("GBMatch","GBmatch_val")&IDH=="wt"&surgery.x%in%c(1,2),],aes(x=paste0(category,"\n","Surgery:",surgery.x),fill=sub_group))+geom_bar(position="fill")+xlab("")+ggtitle("High fidelity assignments")+geom_text(stat="count",aes(label=..count..,col=sub_group),y=-0.02,position=position_dodge(width=0.5))+ylim(c(0,1))
 dev.off()
 
-
-
 #for IDH mut
 pdf(file.path(paste0("class_probs_stack_IDHmut",sub,"_predRRBS.pdf")),height=3,width=7.5)
 ggplot(class_probs_all_annot_long[!is.na(prob)&IDH=="mut"&category%in%c("GBMatch","GBmatch_add","GBmatch_val")],aes(x=paste0(patID,"_",surgery.x),y=prob,fill=variable,alpha=auc))+geom_bar(stat="identity",position="stack")+facet_grid(~.~patID,scales="free",space="free")+ ylab("Class probability")+theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust=0.5))+scale_alpha_continuous(range=c(0.6,1))
@@ -239,10 +230,8 @@ pdf(file.path(paste0("sub_group_follow-up",sub,"_predRRBS.pdf")),height=3,width=
 ggplot(class_probs_all_annot[!is.na(sub_group)&auc>0.8&sub_group_prob>0.65&category%in%c("GBMatch","GBmatch_val")&IDH=="wt"&surgery.x%in%c(1,2),],aes(x=sub_group,y=`Follow-up_years`))+geom_boxplot(outlier.shape=NA)+geom_point(aes(fill=sub_group),alpha=0.6,position=position_jitter(width=0.25),pch=21)+facet_wrap(surgery.x~category)
 dev.off()
 
-
 #transit analysis (river plot)
 class_probs_all_annot_long_transit=unique(class_probs_all_annot_long[surgery.x%in%c(1,2)&category=="GBMatch"&IDH=="wt",list(auc.1=auc[surgery.x==1],auc.2=auc[surgery.x==2],prob.1=sub_group_prob[surgery.x==1],prob.2=sub_group_prob[surgery.x==2],transit=paste0(sub_group[surgery.x==1],"_",sub_group[surgery.x==2])),by=patID])
-
 
 auc_trs=0.8
 transits=class_probs_all_annot_long_transit[auc.1>auc_trs&auc.2>auc_trs,.N,by=transit]
@@ -255,7 +244,6 @@ edges=list()
 for (type in unique(transits$N1)){
   for (trans in unique(transits[N1==type]$N2)){
     edges[[paste0(type,".1")]][paste0(trans,".2")]=transits[N1==type&N2==trans]$N
-    
   }
 }
 

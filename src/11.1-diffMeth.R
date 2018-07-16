@@ -1,3 +1,4 @@
+#NOTE:This script performs differential DNA methyaltion analysis between two samples (primary and recurring tumor) 
 library(project.init)
 project.init2("GBMatch")
 library(LOLA)
@@ -155,13 +156,10 @@ pairDiffmeth_fast.fisher=function(id,annotationTable,idColumn,sample_col1,sample
   buildEnvir=nlist(infile_s1,infile_s2, id, readFunction,i),...) # end simpleCache
   
   tryCatch( { 
-    #return(get(cacheName))
   }, error = function(e) { 
     return(NULL)
   })
 }
-
-
 
 # combine p-values using a generalization of Fisher's method
 rrbsExpectedTestCorrelation = 0.8
@@ -213,7 +211,6 @@ test_combinations=na.omit(test_combinations)
 test_combinations[,comparisonID:=paste0(patID,"_",c(1:length(s1))),by="patID"]
 test_combinations[,combi:=paste0(comparisonID,"__",s1,"vs",s2),]
 
-
 #create testcombinations with fresh frozen
 test_combinations_frozen=SV$psa[category=="GLASS",list(s1=sample_name[surgery.x==1],s2=sample_name[surgery.x==2],f1=BSFile[surgery.x==1],f2=BSFile[surgery.x==2]),by=c("patientID","patID")]
 test_combinations_frozen=na.omit(test_combinations_frozen)
@@ -221,9 +218,7 @@ test_combinations_frozen[,comparisonID:=paste0(patID,"_f",c(1:length(s1))),by="p
 test_combinations_frozen[,combi:=paste0(comparisonID,"__",s1,"vs",s2),]
 
 
-
-
-#try to calculate diffmeth using simple cache
+# calculate diffmeth using simple cache
 setLapplyAlias(12)
 subDir="diffMeth/cg_fastFisher_1vs2"
 test_combinations[,diffCache:=paste0(getOption("RCACHE.DIR"),subDir,"/diffMeth_",comparisonID,"__",s1,"vs",s2,".RData"),]
@@ -232,13 +227,13 @@ sel_comp=test_combinations$comparisonID
 
 simpleCache("rrbsDiffmeth_cg_fastFisher", {
   sampleSummaryList = lapplyAlias(sel_comp, pairDiffmeth_fast.fisher,
-  annotationTable=test_combinations, idColumn = "comparisonID", sample_col1="s1",
-  sample_col2="s2",file_col1="f1",file_col2="f2", cacheSubDir=subDir, 
-  readFunction=function(x) {
-   tmp = BSreadBiSeq(x);
-   tmp[,methyl:=round(hitCount/readCount,3)]
-   return(tmp)
-  }, recreate=FALSE, mc.preschedule=FALSE)
+                                  annotationTable=test_combinations, idColumn = "comparisonID", sample_col1="s1",
+                                  sample_col2="s2",file_col1="f1",file_col2="f2", cacheSubDir=subDir, 
+                                  readFunction=function(x) {
+                                    tmp = BSreadBiSeq(x);
+                                    tmp[,methyl:=round(hitCount/readCount,3)]
+                                    return(tmp)
+                                  }, recreate=FALSE, mc.preschedule=FALSE)
 }, recreate=TRUE, noload=TRUE)
 
 
@@ -251,15 +246,14 @@ sel_comp=test_combinations_frozen$comparisonID
 
 simpleCache("rrbsDiffmeth_cg_fastFisher_frozen", {
   sampleSummaryList = lapplyAlias(sel_comp, pairDiffmeth_fast.fisher,
-  annotationTable=test_combinations_frozen, idColumn = "comparisonID", sample_col1="s1",
-  sample_col2="s2",file_col1="f1",file_col2="f2", cacheSubDir=subDir, 
-  readFunction=function(x) {
-      tmp = BSreadBiSeq(x);
-      tmp[,methyl:=round(hitCount/readCount,3)]
-      return(tmp)
-  }, recreate=FALSE, mc.preschedule=FALSE)
+                                  annotationTable=test_combinations_frozen, idColumn = "comparisonID", sample_col1="s1",
+                                  sample_col2="s2",file_col1="f1",file_col2="f2", cacheSubDir=subDir, 
+                                  readFunction=function(x) {
+                                    tmp = BSreadBiSeq(x);
+                                    tmp[,methyl:=round(hitCount/readCount,3)]
+                                    return(tmp)
+                                  }, recreate=FALSE, mc.preschedule=FALSE)
 }, recreate=TRUE, noload=TRUE)
-
 
 
 #summarize diffmeth for region sets
@@ -267,8 +261,6 @@ cols=c("hitCount.1", "readCount.1", "methyl.1","hitCount.2", "readCount.2", "met
 funcs = c("sum", "sum", "mean","sum", "sum", "mean","unique","unique","unique")
 special=c("p.value.adj=combineTests(p.value.adj,testWeights=min_cov,correlated=TRUE)","CpGcount=length(na.omit(p.value.adj))")
 jCommand = buildJadd(cols,funcs,special)
-
-
 
 
 #summarize by promoters

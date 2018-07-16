@@ -1,10 +1,10 @@
+#NOTE: This script produces DNA methylation overview plots across all samples for quality assessment
 library(project.init)
 project.init2("GBMatch")
 library(LOLA)
 library(RGenomeUtils)
 library(MASS)
 library(gridExtra)
-
 
 ##set directories
 out_dir=file.path(getOption("PROCESSED.PROJECT"),"results_analysis/02-meth_overview/")
@@ -14,10 +14,7 @@ setwd(out_dir)
 ##get annotation
 annotation=fread(file.path(getOption("PROCESSED.PROJECT"),"results_analysis/01.1-combined_annotation/annotation_combined.tsv"))
 
-
-#overview in tiles
-#simpleCache("rrbsTiled1ksub")
-#rrbsTiled1ksub[,regions:="tiled_1kb",]
+#overview in different tiles/regions
 simpleCache("rrbsTiled5ksub")
 rrbsTiled5ksub[,regions:="tiled_5kb",]
 simpleCache("rrbsProm1kb")
@@ -27,14 +24,12 @@ rrbsCGI[,regions:="CGI",]
 simpleCache("rrbsEnhancers")
 rrbsEnhancers[,regions:="Enhancers",]
 
-
 #assess batch effects by MDS
 rrbsTiled5ksub_wide=as.data.table(dcast(rrbsTiled5ksub[id%in%annotation$N_number_seq],regionID~id,value.var="methyl"))
 rrbsTiled5ksub_wide_mat=as.matrix(rrbsTiled5ksub_wide[,-c("regionID"),with=FALSE])
 row.names(rrbsTiled5ksub_wide_mat)=rrbsTiled5ksub_wide$regionID
 
 simpleCache(cacheName="rrbsTiled5ksub_dist",instruction="dist(t(rrbsTiled5ksub_wide_mat))",cacheDir=getwd(),assignToVariable="d")
-##save(d,file="rrbsTiled5ksub_dist.RData") ##only needed first time when run without simpleCache
 mds=isoMDS(d, k=2)
 mds_annot_pre=data.table(N_number_seq=row.names(mds$points),MDS1=mds$points[,1],MDS2=mds$points[,2])
 mds_annot=merge(mds_annot_pre,annotation,by="N_number_seq")
@@ -56,10 +51,9 @@ for (batch_variable in batch_variables){
 dev.off()
 
 
-#actually combine
+#combine the differend tiles/regions to plot with one command
 meth_combined=rbindlist(list(rrbsTiled5ksub,rrbsProm1kb,rrbsCGI,rrbsEnhancers))
 rm(list=c("rrbsTiled5ksub","rrbsProm1kb","rrbsCGI","rrbsEnhancers"))
-
 
 #annotate
 annot_sub=annotation[,c("N_number_seq","patID","category","cohort","material","Center","Siteofsurgery","surgery.x","qualTier","enrichmentCycles","IDH"),with=FALSE]
@@ -74,7 +68,6 @@ rm(meth_combined)
 sample_count=length(unique(meth_combined_annot$id))
 core_regions=meth_combined_annot[,list(select=ifelse(sum(!is.na(methyl))>0.75*sample_count,TRUE,FALSE)),by=c( "chr","start", "end", "regionID_ext","regions")]
 core_regions[,sum(select),by="regions"]
-
 
 # check out correlations with enrichment cycles separately for each region
 sub=meth_combined_annot[category%in%c("GBMatch","GBmatch_val")&IDH=="wt"]
@@ -91,16 +84,15 @@ dev.off()
 
 
 #now plot overview
-
-####Figure S1e
 #for primary cohort
+####Figure S1e
 pdf("methylation_overview_material_prim.pdf",width=4.5,height=5)
 ggplot(meth_combined_annot[(readCount/CpGcount)>10&cohort=="primary"],aes(x=material,y=methyl,group=material))+geom_violin(fill="black")+geom_boxplot(outlier.size=NA,width=0.2)+facet_wrap(~regions,scale="free")+ylab("% DNA methylation")+xlab("")+ggtitle("> 10 reads per CpG")+stat_summary(fun.data=addN, geom="text", vjust=-0.5, col="blue")
 
 ggplot(meth_combined_annot[CpGcount>25&cohort=="primary"],aes(x=material,y=methyl,group=material))+geom_violin(fill="black")+geom_boxplot(outlier.size=NA,width=0.2)+facet_wrap(~regions,scale="free")+ylab("% DNA methylation")+xlab("")+ggtitle("> 10 reads per CpG")+ggtitle(">25 CpGs per region")+stat_summary(fun.data=addN, geom="text", vjust=-0.5, col="blue")
 dev.off()
 
-####Figure S1e
+####Figure S1f
 pdf("methylation_overview_qualTier_prim.pdf",width=6,height=5)
 ggplot(meth_combined_annot[(readCount/CpGcount)>10&cohort=="primary"],aes(y=methyl,x=as.factor(qualTier),group=as.factor(qualTier)))+geom_violin(fill="black")+geom_boxplot(outlier.size=NA,width=0.2)+facet_wrap(~regions,scale="free")+ylab("% DNA methylation")+ggtitle("> 10 reads per CpG")+stat_summary(fun.data=addN, geom="text", vjust=-0.5, col="blue")
 
@@ -115,14 +107,13 @@ ggplot(meth_combined_annot[(readCount/CpGcount)>10&cohort=="validation"],aes(x=m
 
 ggplot(meth_combined_annot[CpGcount>25&cohort=="validation"],aes(x=material,y=methyl,group=material))+geom_violin(fill="black")+geom_boxplot(outlier.size=NA,width=0.2)+facet_wrap(~regions,scale="free")+ylab("% DNA methylation")+xlab("")+ggtitle("> 10 reads per CpG")+ggtitle(">25 CpGs per region")+stat_summary(fun.data=addN, geom="text", vjust=-0.5, col="blue")
 dev.off()
+
 ####Figure S1f
 pdf("methylation_overview_qualTier_val.pdf",width=6,height=5)
 ggplot(meth_combined_annot[(readCount/CpGcount)>10&cohort=="validation"],aes(y=methyl,x=as.factor(qualTier),group=as.factor(qualTier)))+geom_violin(fill="black")+geom_boxplot(outlier.size=NA,width=0.2)+facet_wrap(~regions,scale="free")+ylab("% DNA methylation")+ggtitle("> 10 reads per CpG")+stat_summary(fun.data=addN, geom="text", vjust=-0.5, col="blue")
 
 ggplot(meth_combined_annot[CpGcount>25&cohort=="validation"],aes(y=methyl,x=as.factor(qualTier),group=as.factor(qualTier)))+geom_violin(fill="black")+geom_boxplot(outlier.size=NA,width=0.2)+facet_wrap(~regions,scale="free")+ylab("% DNA methylation")+ggtitle(">25 CpGs per region")+stat_summary(fun.data=addN, geom="text", vjust=-0.5, col="blue")
 dev.off()
-
-
 
 
 #scatter plot (first vs. second samples)
@@ -134,15 +125,13 @@ cors_samples=sel_samp_wide[!is.na(`1`)&!is.na(`2`),list(corelation=cor(x=`1`,y=`
 cors_material=sel_samp_wide[!is.na(`1`)&!is.na(`2`),list(corelation=cor(x=`1`,y=`2`),N=length(`1`)),by=c("material")]
 
 pdf("methylation_cor1vs2_material.pdf",width=10,height=3)
-
 ggplot(data=sel_samp_wide,aes(x=`1`,y=`2`))+stat_bin_hex(aes(fill=..density..^0.15))+geom_text(data=cors_material,x=35,y=98,aes(label=paste0("r=",round(corelation,3)," N=",N)))+scale_fill_gradientn(colours = colorRampPalette(c("white", blues9))(256))+facet_wrap(~material,scale="free")+xlab("Primary")+ylab("Recurring")+theme(aspect.ratio=1,panel.grid.major = element_blank(), panel.grid.minor = element_blank())
-
 dev.off()
 
+#plot separately for all patients
 pdf("methylation_cor1vs2_patients.pdf",width=4.3,height=3)
 for(patient in unique(sel_samp_wide$plotID)){
   print(patient)
-  
   pl=ggplot(data=sel_samp_wide[plotID==patient],aes(x=`1`,y=`2`))+stat_bin_hex(bins=30,aes(fill=..density..^0.01))+annotate("text",x=30,y=98,label=paste0("r=",round(cors_samples[plotID==patient]$corelation,3)," N=",cors_samples[plotID==patient]$N))+scale_fill_gradientn(colours = colorRampPalette(c("white", blues9))(256))+ggtitle(patient)+xlab("Primary")+ylab("Recurring")+theme(aspect.ratio=1,panel.grid.major = element_blank(), panel.grid.minor = element_blank())
   print(pl)
 }

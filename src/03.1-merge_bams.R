@@ -1,3 +1,4 @@
+#NOTE: This script creats merged BAM files to be used as background for CopywriteR
 library(project.init)
 project.init2("GBMatch")
 library(Rsamtools)

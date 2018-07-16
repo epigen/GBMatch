@@ -1,39 +1,34 @@
+#NOTE: helper script containing functions to process and make available/usable some types of annotations.
 library(data.table)
 library(ggplot2)
 
 
-#functions
-
-#prep histo table
+#prepare immunohistochemistry annotations
 prep_histo=function(input1,input2){
   histo=fread(input1)
   histo_add=fread(input2)
   histo=merge(histo,histo_add,by="N_number",all.x=TRUE)
-  
-  
   histo[histo==""]=NA
   histo=histo[!is.na(N_number)]
-  
-  
+  #extract dercription columns
   description_cols=c("WHO2016_classification","WHO2016_classification_comment","Pseudopalisading necrosis","Radiation necrosis","Vascular fibrosis","Vascular proliferation","Calcification","Blood remnants")
-  
   #check which labels are actually there and adapt translations accordingly
   message("Labels found: ")
   labels=apply(histo[,c(description_cols),with=FALSE],2,function(x){sort(unique(x))})
   print(labels)
-  #the order is what makes the correct match!!
+  #Prepare translations (number to word) the order is what makes the correct match!!
   #1 GBM classic,2 GBM giant cell,3 Gliosarcoma,4 Anaplastic Oligodendroglioma,5 GBM epithelioid,6 Radiation necrosis,7 Diffuse astro II,8 Oligo II
   #0 None,1 Spindle-celled,2 Small-celled,3 Adenoid,4 Clear-celled,5 Giant cell,6 Reactive gliosis,7 Gemistocytic
-  
   translations=list(`WHO2016_classification`=c("GBM classic","GBM giant cell","Gliosarcoma","Anaplastic Oligodendroglioma","Radiation necrosis","Diffuse astro II","Oligo II"),`WHO2016_classification_comment`=c("None","Spindle-celled","Small-celled","Adenoid","Clear-celled","Giant cell","Reactive gliosis","Gemistocytic"),`Pseudopalisading necrosis`=c("Absent","Present","Abundant"),`Radiation necrosis`=c("Absent","Present"),`Vascular fibrosis`=c("Absent","Present","Abundant"),`Vascular proliferation`=c("Absent","Present","Abundant"),`Calcification`=c("Absent","Present","Abundant"),`Blood remnants`=c("Absent","Present","Abundant"))
   
   message("Translations used:" )
   print(translations)
   
   histo_description=histo[,c("N_number",description_cols),with=FALSE][,lapply(.SD, as.character), by=N_number]
-  #for now only keep first entry in the comment column
+  #keep first entry in the comment column
   histo_description[,WHO2016_classification_comment:=gsub(",.*","",WHO2016_classification_comment),]
-    
+  
+  #actually perform the translation
   for (col in names(translations)){
     print(col)
     histo_description[,eval(col):=translations[[col]][factor(get(col))]]
@@ -41,12 +36,11 @@ prep_histo=function(input1,input2){
   
   histo_description=histo_description[apply(histo_description,1,function(x){sum(is.na(x))})<8]
   
-  #write.table(histo_description,paste0(wd,"/histo_description_annotation.tsv"),row.names = FALSE,sep="\t",quote=FALSE)
-  
-  #now create actual histo table
+  #now create actual immunohistochemistry table
   histo_long=melt(histo[,-description_cols,with=FALSE],id.vars = c("N_number","area of HE"),variable.name="measurement",value.name = "counts")
   histo_long[,measurement_group:=unlist(lapply(measurement,function(x){unlist(strsplit(as.character(x),"\\+| "))[1]})),]
   
+  #split actual measurement and reference measurement
   histo_long_count=histo_long[!grepl("reference",measurement)]
   histo_long_ref=histo_long[grepl("reference",measurement)]
   
@@ -55,13 +49,11 @@ prep_histo=function(input1,input2){
   histo_long_combined[,counts.norm:=counts/(counts.ref+0.1),]
   histo_long_combined[measurement_group%in%c("HLA-DR","CD34","cell"),counts.norm:=counts/`area of HE`,]
   
-  histo_wide=dcast(histo_long_combined,N_number~measurement_group,value.var="counts.norm",fill=NA)
-  #write.table(histo_wide,paste0(wd,"/histo_annotation.tsv"),row.names = FALSE,sep="\t",quote=FALSE)
-  
-  
+  histo_wide=dcast(histo_long_combined,N_number~measurement_group,value.var="counts.norm",fill=NA)  
   return(list(histo_description=histo_description,histo_annotation=as.data.table(histo_wide)))  
 }
 
+#prepare clinical annotations (transform patient centered table into sample centered table)
 prep_clin_annot=function(input){
   clinical_annot=fread(input)
   
@@ -71,10 +63,10 @@ prep_clin_annot=function(input){
   #add 7th surgery column sothat the very last progression without surgery is still included
   clinical_annot[,c("7th surgery N-No","Date of 6th progression","7th surgery","Age at 7th surg"):=NA,]
   
-  #Replace ambiguous center
+  #replace ambiguous center
   clinical_annot[Center=="1+3",Center:="3",]
   
-  #Sample centered
+  #rample centered
   clinical_annot_long1=melt(clinical_annot,measure.vars = c("1st surgery N-No","2nd surgery N-No","3rd surgery N-No","4th surgery N-No","5th surgery N-No","6th surgery N-No","7th surgery N-No"),variable.name="SampleEvent",value.name = "N_number")
   
   mapping=list("1st surgery N-No"=c(NA,"Date of 1st progression","1st surgery","Age at 1st surg",NA,NA,NA),
@@ -85,19 +77,19 @@ prep_clin_annot=function(input){
                "6th surgery N-No"=c("Date of 5th progression",NA,"6th surgery","Age at 6th surg","5th line CTX","5th line RTX","Dose (Gy).4"),
                "7th surgery N-No"=c("Date of 6th progression",NA,"7th surgery","Age at 7th surg","6th line CTX","6th line RTX","Dose (Gy).5"))
   
-  addComumns=c("ProgressionDate","FirstProgressionDate","SurgeryDate","Age","CTXTreatment","RTXTreatment","RTXDose")
-  clinical_annot_long1[,eval(addComumns):="NA",]
+  addColumns=c("ProgressionDate","FirstProgressionDate","SurgeryDate","Age","CTXTreatment","RTXTreatment","RTXDose")
+  clinical_annot_long1[,eval(addColumns):="NA",]
   
   
   for (i in 1:length(mapping)){
     print(names(mapping[i]))
-    if (with(clinical_annot_long1,is(try(get(mapping[[i]][1]),TRUE)))[1]!="try-error"){clinical_annot_long1[SampleEvent==names(mapping[i]),eval(addComumns[1]):=as.character(get(mapping[[i]][1])),]}else{clinical_annot_long1[SampleEvent==names(mapping[i]),ProgressionDate:="NA",]}
-    if (with(clinical_annot_long1,is(try(get(mapping[[i]][2]),TRUE)))[1]!="try-error"){clinical_annot_long1[SampleEvent==names(mapping[i]),eval(addComumns[2]):=as.character(get(mapping[[i]][2])),]}else{clinical_annot_long1[SampleEvent==names(mapping[i]),FirstProgressionDate:="NA",]}
-    if (with(clinical_annot_long1,is(try(get(mapping[[i]][3]),TRUE)))[1]!="try-error"){clinical_annot_long1[SampleEvent==names(mapping[i]),eval(addComumns[3]):=as.character(get(mapping[[i]][3])),]}else{clinical_annot_long1[SampleEvent==names(mapping[i]),SurgeryDate:="NA",]}
-    if (with(clinical_annot_long1,is(try(get(mapping[[i]][4]),TRUE)))[1]!="try-error"){clinical_annot_long1[SampleEvent==names(mapping[i]),eval(addComumns[4]):=as.character(get(mapping[[i]][4])),]}else{clinical_annot_long1[SampleEvent==names(mapping[i]),Age:="NA",]}
-    if (with(clinical_annot_long1,is(try(get(mapping[[i]][5]),TRUE)))[1]!="try-error"){clinical_annot_long1[SampleEvent==names(mapping[i]),eval(addComumns[5]):=as.character(get(mapping[[i]][5])),]}else{clinical_annot_long1[SampleEvent==names(mapping[i]),CTXTreatment:="NA",]}
-    if (with(clinical_annot_long1,is(try(get(mapping[[i]][6]),TRUE)))[1]!="try-error"){clinical_annot_long1[SampleEvent==names(mapping[i]),eval(addComumns[6]):=as.character(get(mapping[[i]][6])),]}else{clinical_annot_long1[SampleEvent==names(mapping[i]),RTXTreatment:="NA",]}
-   if (with(clinical_annot_long1,is(try(get(mapping[[i]][7]),TRUE)))[1]!="try-error"){clinical_annot_long1[SampleEvent==names(mapping[i]),eval(addComumns[7]):=as.character(get(mapping[[i]][7])),]}else{clinical_annot_long1[SampleEvent==names(mapping[i]),RTXDose:="NA",]}
+    if (with(clinical_annot_long1,is(try(get(mapping[[i]][1]),TRUE)))[1]!="try-error"){clinical_annot_long1[SampleEvent==names(mapping[i]),eval(addColumns[1]):=as.character(get(mapping[[i]][1])),]}else{clinical_annot_long1[SampleEvent==names(mapping[i]),ProgressionDate:="NA",]}
+    if (with(clinical_annot_long1,is(try(get(mapping[[i]][2]),TRUE)))[1]!="try-error"){clinical_annot_long1[SampleEvent==names(mapping[i]),eval(addColumns[2]):=as.character(get(mapping[[i]][2])),]}else{clinical_annot_long1[SampleEvent==names(mapping[i]),FirstProgressionDate:="NA",]}
+    if (with(clinical_annot_long1,is(try(get(mapping[[i]][3]),TRUE)))[1]!="try-error"){clinical_annot_long1[SampleEvent==names(mapping[i]),eval(addColumns[3]):=as.character(get(mapping[[i]][3])),]}else{clinical_annot_long1[SampleEvent==names(mapping[i]),SurgeryDate:="NA",]}
+    if (with(clinical_annot_long1,is(try(get(mapping[[i]][4]),TRUE)))[1]!="try-error"){clinical_annot_long1[SampleEvent==names(mapping[i]),eval(addColumns[4]):=as.character(get(mapping[[i]][4])),]}else{clinical_annot_long1[SampleEvent==names(mapping[i]),Age:="NA",]}
+    if (with(clinical_annot_long1,is(try(get(mapping[[i]][5]),TRUE)))[1]!="try-error"){clinical_annot_long1[SampleEvent==names(mapping[i]),eval(addColumns[5]):=as.character(get(mapping[[i]][5])),]}else{clinical_annot_long1[SampleEvent==names(mapping[i]),CTXTreatment:="NA",]}
+    if (with(clinical_annot_long1,is(try(get(mapping[[i]][6]),TRUE)))[1]!="try-error"){clinical_annot_long1[SampleEvent==names(mapping[i]),eval(addColumns[6]):=as.character(get(mapping[[i]][6])),]}else{clinical_annot_long1[SampleEvent==names(mapping[i]),RTXTreatment:="NA",]}
+    if (with(clinical_annot_long1,is(try(get(mapping[[i]][7]),TRUE)))[1]!="try-error"){clinical_annot_long1[SampleEvent==names(mapping[i]),eval(addColumns[7]):=as.character(get(mapping[[i]][7])),]}else{clinical_annot_long1[SampleEvent==names(mapping[i]),RTXDose:="NA",]}
   }
   
   #clean up
@@ -122,7 +114,7 @@ prep_clin_annot=function(input){
   clinical_annot_long1[,TreatmentDate:=ProgressionDate,]
   clinical_annot_long1[,TreatmentDate:=ifelse(is.na(TreatmentDate)&SampleEvent!="1st surgery N-No",max(c(TreatmentDate,SurgeryDate),na.rm = TRUE)+90,TreatmentDate),by=patID]
   
-  #translations
+  #translations (number to word)
   translations=list(
     Center=c("1"="MedUni Vienna","2"="Linz","3"="Salzburg","4"="Innsbruck","5"="Klagenfurt" ,"6"="Wr.Neustadt", "7"="St.P?lten", "8"="Rudolfstiftung","9"="Graz"),
     Sex=c("1"="m","2"="f"),
@@ -140,7 +132,7 @@ prep_clin_annot=function(input){
     Bevacizumab=c("0"="no","1"="between 1st and 2nd surgery","2"="after 2nd surgery"),
     RTXTreatment=c("0"="no RTX","1"="RTX","2"="Gamma Knife")
   )
-  
+  #perform the actual translation
   for (i in 1:length(translations)){
     name=names(translations[i])
     translation=translations[[i]]
@@ -174,9 +166,5 @@ prep_clin_annot=function(input){
     print(target)
     clinical_annot_long1[treatment!=1&CTXTreatment==target,CTXTreatment:=value,]
   }
-  
-  #write.table(clinical_annot_long1,paste0(wd,"/clinical_annotation_new.tsv"),row.names = FALSE,sep="\t",quote=FALSE)
-  
   return(clinical_annot_long1)
- 
 }

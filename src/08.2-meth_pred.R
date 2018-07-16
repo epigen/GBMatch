@@ -1,3 +1,5 @@
+#NOTE: This script assesses the predictability of various covariates from DNA methylation data.
+#It also follows-up on predictive regions
 library(project.init)
 project.init2("GBMatch")
 library(simpleCache)
@@ -24,7 +26,6 @@ annotation_all[,cohort_surv_median:=median(`Follow-up_years`,na.rm=TRUE),by=c("c
 annotation_all[,survival_class:=ifelse(category=="GBMatch"&`Follow-up_years`>=cohort_surv_median,"long",ifelse(category=="GBmatch_val"&`Follow-up_years`<=cohort_surv_median,"short",NA)),]
 annotation_all[,timeToFirstProg_est:=ifelse(is.na(timeToFirstProg),`Follow-up_years`*12-2,timeToFirstProg),]
 
-
 #column name lists
 load(file.path(getOption("PROCESSED.PROJECT"),"results_analysis/01.1-combined_annotation/column_annoation.RData"))
 column_annotation=lapply(column_annotation,function(x){grep("N_number|N-number|ID|read_length",x,value=TRUE,invert=TRUE)})
@@ -37,7 +38,7 @@ meth_data_dt=meth_data_dt_all[id%in%annotation_all[category%in%c("GBMatch","GBma
 set_scale=FALSE
 prepped_data=prepare_data(meth_data_dt=meth_data_dt,annotation_all=annotation_all,min_na_ratio=0.9)
 meth_sel="_bval_notscaled_0.9_cross"
-#remove unneeded objects: needed when running in parallel (cores>1)
+#remove unneeded objects
 rm(meth_data_dt_all)
 rm(meth_data_dt)
 gc()
@@ -52,19 +53,17 @@ cost=heuristicC(meth_sub)
 meth_pred_analysis(meth_data_imputed=meth_sub,annotation=anno_sub,column_annotation=column_annotation,to_analyse=c("prim_selected"),set_targets=c("CD163","CD3","CD68","CD45ro","CD8","EZH2","HLA-DR","CD34","cell","MIB","Mean AVG Eccentricity Tumor","Mean COV Eccentricity Tumor","Mean Nuclei # Tumor","Relative share necrosis","IDH","Sex","age"),meth_sel=meth_sel,set_scale=set_scale,type=4,cost=cost,cross=10,nReps=100)
 #comment: age is readily predictable here because this data set also includes the IDH mut/ oligodendroglioma samples, the patients of which are younger on average. So actually the classifier finds the IDH signature and not actually a signature for age.
 
-#analyze only selected features in GBMatch IDH=wt
+#analyze only selected covariates in GBMatch IDH=wt
 ####Figure 3g; 4c,i; S8g; S10b,d
-
 anno_sub=prepped_data$annotation[category%in%c("GBMatch")&IDH=="wt"]
 meth_sub=prepped_data$meth_data_imputed[anno_sub$N_number_seq,]
 stopifnot(row.names(meth_sub)==anno_sub$N_number_seq)
 
 cost=heuristicC(meth_sub)
 meth_pred_analysis(meth_data_imputed=meth_sub,annotation=anno_sub,column_annotation=column_annotation,to_analyse=c("prim_wt_selected"),set_targets=c("CD163","CD3","CD68","CD45ro","CD8","EZH2","HLA-DR","CD34","cell","MIB","Mean AVG Eccentricity Tumor","Mean COV Eccentricity Tumor","Mean Nuclei # Tumor","Relative share necrosis","Sex","age"),meth_sel=meth_sel,set_scale=set_scale,type=4,cost=cost,cross=10,nReps=100,cores=32)
-#comment: set cores > 1 to seed up. But don't do this on login node!!
+#comment: set cores > 1 to seed up. But don't do this on login node!! Submit to cluster (srun -n1 --cpus-per-task=32 --mem-per-cpu=8000 --part=longq --time=4-00:00:00 R --no-save)
 
-
-#analyze only selected features in validation cohort
+#analyze only selected covariates in validation cohort
 anno_sub=prepped_data$annotation[category%in%c("GBmatch_val")&IDH=="wt"]
 meth_sub=prepped_data$meth_data_imputed[anno_sub$N_number_seq,]
 stopifnot(row.names(meth_sub)==anno_sub$N_number_seq)
@@ -73,7 +72,7 @@ cost=heuristicC(meth_sub)
 meth_pred_analysis(meth_data_imputed=meth_sub,annotation=anno_sub,column_annotation=column_annotation,to_analyse=c("val_wt_selected"),set_targets=c("CD163","CD68","MIB","Mean AVG Eccentricity Tumor","Mean COV Eccentricity Tumor","Mean Nuclei # Tumor","Relative share necrosis","StuppComplete","Follow-up_years","timeToFirstProg","Sex","age"),meth_sel=meth_sel,set_scale=set_scale,type=4,cost=cost,cross=10,nReps=100)
 
 
-#only surgery 1 in primary
+#only surgery 1 in progression cohort
 anno_sub=prepped_data$annotation[category%in%c("GBMatch")&surgery.x==1&IDH=="wt"]
 meth_sub=prepped_data$meth_data_imputed[anno_sub$N_number_seq,]
 stopifnot(row.names(meth_sub)==anno_sub$N_number_seq)
@@ -81,7 +80,7 @@ stopifnot(row.names(meth_sub)==anno_sub$N_number_seq)
 cost=heuristicC(meth_sub)
 meth_pred_analysis(meth_data_imputed=meth_sub,annotation=anno_sub,column_annotation=column_annotation,to_analyse=c("prim_s1_selected"),set_targets=c("StuppComplete","Shape_shift","TumorPhenotype","Follow-up_years","timeToFirstProg","timeToSecSurg","Sex","age"),meth_sel=meth_sel,set_scale=set_scale,type=4,cost=cost,cross=10,nReps=100)
 
-#only surgery 2 in primary
+#only surgery 2 in progression cohort
 anno_sub=prepped_data$annotation[category%in%c("GBMatch")&surgery.x==2&IDH=="wt"]
 meth_sub=prepped_data$meth_data_imputed[anno_sub$N_number_seq,]
 stopifnot(row.names(meth_sub)==anno_sub$N_number_seq)
@@ -89,7 +88,7 @@ stopifnot(row.names(meth_sub)==anno_sub$N_number_seq)
 cost=heuristicC(meth_sub)
 meth_pred_analysis(meth_data_imputed=meth_sub,annotation=anno_sub,column_annotation=column_annotation,to_analyse=c("prim_s2_selected"),set_targets=c("StuppComplete","Shape_shift","TumorPhenotype","Follow-up_years","timeToFirstProg","timeToSecSurg","Sex","age"),meth_sel=meth_sel,set_scale=set_scale,type=4,cost=cost,cross=10,nReps=100)
 
-#selected in progression and validation cohort only surgery 1, wt
+#selected covariates in progression and validation cohort only surgery 1, and IDHwt
 #Figure 6g
 anno_sub=prepped_data$annotation[category%in%c("GBMatch","GBmatch_val")&surgery.x==1&IDH=="wt"]
 meth_sub=prepped_data$meth_data_imputed[anno_sub$N_number_seq,]
@@ -97,7 +96,7 @@ stopifnot(row.names(meth_sub)==anno_sub$N_number_seq)
 
 cost=heuristicC(meth_sub)
 meth_pred_analysis(meth_data_imputed=meth_sub,annotation=anno_sub,column_annotation=column_annotation,to_analyse=c("prim&val_s1_selected"),set_targets=c("StuppComplete","survival_class","Follow-up_years","timeToFirstProg_est","Sex","age"),meth_sel=meth_sel,set_scale=set_scale,type=4,cost=cost,cross=10,nReps=100,cores=32)
-#note core >1 --> don't run on login node!! (srun -n1 --cpus-per-task=32 --mem-per-cpu=8000 --part=longq --time=4-00:00:00 R --no-save)
+#note core >1 --> don't run on login node!! Submit to cluster (srun -n1 --cpus-per-task=32 --mem-per-cpu=8000 --part=longq --time=4-00:00:00 R --no-save)
 
 
 ##full run on all data and all the different annotations and data in loo-cv --> takes ages (adapt e.g. to run only on primary or validation cohort)
@@ -119,12 +118,10 @@ get_features=function(pl,prepped_data,factor,rank_cutoff=50){
     annotation_sel[,bin:=get(factor),]
   }
   comp=sort(annotation_sel[,unique(bin)])
-  #annotation_sel[,bin:=binarize(get(factor),0.5,0.5)]
-  
+
   weights_dt[,rank:=rank(-abs(get(comp[1])),ties.method="random"),]
   
   #now continue the analysis
-  #sel_weights=weights_dt[rank<=rank_cutoff]
   sel_weights=weights_dt[rank<=rank_cutoff&region%in%colnames(prepped_data$meth_data_imputed)]
   sel=prepped_data$meth_data_imputed[row.names(prepped_data$meth_data_imputed)%in%annotation_sel[!is.na(bin)]$N_number_seq,sel_weights$region]
   
@@ -153,22 +150,21 @@ plot_heatmap=function(file_name=NULL,pl,prepped_data,factor,rank_cutoff,title=fa
   if(!is.null(file_name)){
     if(all(features_res$annot_row[,factor]==features_res$annot_row[,"bin"])){features_res$annot_row[,factor]=NULL}
     png(paste0(file_name,".png"),height=250,width=270)
-  pheatmap(t(features_res$data),clustering_distance_rows=dist(t(scale(features_res$data,center=TRUE,scale=TRUE))),clustering_distance_cols=dist(scale(features_res$data,center=TRUE,scale=TRUE)),annotation_names_row=FALSE,annotation_names_col=FALSE,treeheight_col=25,cluster_rows=FALSE,cluster_cols=TRUE,show_rownames=FALSE,show_colnames=FALSE,annotation_col=features_res$annot_row,annotation_row=features_res$annot_col,color=colorRampPalette(c("blue" ,"red"))(20),border_color=NA,annotation_colors=colors,main=paste0(title," top ", rank_cutoff," features"),fontsize=11,legend=FALSE,annotation_legend=FALSE)
+    pheatmap(t(features_res$data),clustering_distance_rows=dist(t(scale(features_res$data,center=TRUE,scale=TRUE))),clustering_distance_cols=dist(scale(features_res$data,center=TRUE,scale=TRUE)),annotation_names_row=FALSE,annotation_names_col=FALSE,treeheight_col=25,cluster_rows=FALSE,cluster_cols=TRUE,show_rownames=FALSE,show_colnames=FALSE,annotation_col=features_res$annot_row,annotation_row=features_res$annot_col,color=colorRampPalette(c("blue" ,"red"))(20),border_color=NA,annotation_colors=colors,main=paste0(title," top ", rank_cutoff," features"),fontsize=11,legend=FALSE,annotation_legend=FALSE)
     dev.off()
-  #write heatmap data
-  write.table(as.data.table(t(features_res$data),keep.rownames="pos"),paste0(file_name,"_data.csv"),sep=";",quote=FALSE,row.names=FALSE)
+    #write heatmap data
+    write.table(as.data.table(t(features_res$data),keep.rownames="pos"),paste0(file_name,"_data.csv"),sep=";",quote=FALSE,row.names=FALSE)
   }
 }
 
 
 #set up analysis
-#load previously built (on original cohort) and crossvalidated classifiers
+#load previously built and crossvalidated classifiers
 meth_sel="bval_notscaled_0.9_cross"
 load("dat_prim_wt_selected_bval_notscaled_0.9_cross.RData")
 
-
 ####Matching methylation matrix on which cross validation was performed##############
-#like above (only rerun when not available)
+#like above (only needs to be rerun when not available)
 #meth_data_dt=meth_data_dt_all[id%in%annotation_all[category%in%c("GBMatch","GBmatch_val","GBmatch_add")]$N_number_seq]
 #set_scale=FALSE
 #prepped_data=prepare_data(meth_data_dt=meth_data_dt,annotation_all=annotation_all,min_na_ratio=0.9)
@@ -182,7 +178,6 @@ stopifnot(row.names(prepped_data_val$meth_data_imputed)==prepped_data_val$annota
 
 prepped_data_wt=list(meth_data_imputed=prepped_data$meth_data_imputed[prepped_data$annotation[IDH=="wt"]$N_number_seq,],annotation=prepped_data$annotation[IDH=="wt"])
 stopifnot(row.names(prepped_data_wt$meth_data_imputed)==prepped_data_wt$annotation$N_number_seq)
-
 
 #make results directory
 dir.create("feature_analysis")
@@ -201,19 +196,14 @@ factor="Sex"
 factor="Relative share necrosis"
 factor="Mean AVG Eccentricity Tumor" #196
 factor="Mean COV Eccentricity Tumor" #160
-#only for survival prediction in prim&val
+#only for survival prediction in prim&val (prepped_data_wt)
 factor="survival_class" #rank_cutoff=200
 
 for (rank_cutoff in seq(150,200,by=2)){
-plot_heatmap(pl=pl,prepped_data=prepped_data_prim,factor=factor,rank_cutoff=rank_cutoff)
+  plot_heatmap(pl=pl,prepped_data=prepped_data_prim,factor=factor,rank_cutoff=rank_cutoff)
 }
 
 #set factor and rank_cutoff for complrehensive analysis
-#complete val
-#factor_list=list(c("MIB",150),c("CD45ro",150),c("CD163",190),c("CD3",196),c("CD68",164),c("CD8",190),c("CD34",196),c("HLA-DR",188),c("Sex",196))
-#without val plate 2 including IDH mut
-#factor_list=list(c("MIB",190),c("CD45ro",184),c("CD163",182),c("CD3",184),c("CD68",174),c("CD8",174),c("CD34",150),c("HLA-DR",184),c("Sex",188))
-#without val plate 2 without IDH mut
 factor_list=list(c("MIB",194),c("CD45ro",196),c("CD163",160),c("CD3",158),c("CD68",178),c("CD8",178),c("CD34",164),c("HLA-DR",194),c("EZH2",190),c("Sex",186),c("Relative share necrosis",164),c("Mean AVG Eccentricity Tumor" ,196),c("Mean COV Eccentricity Tumor" ,160))
 
 
@@ -275,17 +265,16 @@ for (factor in factor_list){
     
     dev.off() 
   }else{print("Too few measurements in validation cohort. Skipping cross prediction.")}
+  
   ######analyze features (heatmap etc)  
   #get features
-  
   if (val_labels>=5){
     data_list=list(all=prepped_data_wt,GBMatch=prepped_data_prim,GBmatch_val=prepped_data_val)
   }else{
     data_list=list(GBMatch=prepped_data_prim)
     print("Too few measurements in validation cohort. Feature analysis only on primary cohort.")
   }
-  
-  
+
   for (i in 1:length(data_list)){
     sel_data=data_list[[i]]
     analysis=names(data_list[i])
@@ -299,7 +288,6 @@ for (factor in factor_list){
     
     annot_row_hm=annot_row
     if(all(annot_row_hm[,gsub("-| ",".",factor)]==annot_row_hm[,"bin"])){annot_row_hm[,gsub("-| ",".",factor)]=NULL}
-    
     
     #heatmap analysis (clustering)
     bin=c()
@@ -336,11 +324,8 @@ for (factor in factor_list){
     sel_long[,end:=spl[seq(3,length(spl),3)],]
     
     write.table(sel_long,paste0("feature_analysis/features_weight_meth_",factor,"_",meth_sel,"_",analysis,".tsv"),sep="\t",quote=FALSE,row.names=FALSE)
-    
-    
     write.table(unique(sel_long[weight_group=="weights +",c("chr","start","end"),with=FALSE]),paste0("feature_analysis/weight_pos_",factor,"_",meth_sel,"_",analysis,".bed"),sep="\t",quote=FALSE,row.names=FALSE,col.names=FALSE)
     write.table(unique(sel_long[weight_group=="weights -",c("chr","start","end"),with=FALSE]),paste0("feature_analysis/weight_neg_",factor,"_",meth_sel,"_",analysis,".bed"),sep="\t",quote=FALSE,row.names=FALSE,col.names=FALSE)
-    
     
     pdf(paste0("feature_analysis/density_",factor,"_",meth_sel,"_",analysis,".pdf"),height=2.5,width=7.5)
     print(ggplot(sel_all_long,aes(x=methyl,col=bin))+ggtitle(factor)+geom_density()+facet_wrap(~weight_group,scales="free_y"))
@@ -352,16 +337,15 @@ for (factor in factor_list){
   }
 }
 
-
 #########for survival prediction
-#load previously built (on combined cohort) and crossvalidated classifiers (for survival presiction)
+#load previously built and crossvalidated classifiers (for survival presiction)
 #Figure 6g
 load("dat_prim&val_s1_selected_bval_notscaled_0.9_cross.RData")
 
 prepped_data_prim_val=list(meth_data_imputed=prepped_data$meth_data_imputed[prepped_data$annotation[category%in%c("GBMatch","GBmatch_val")&surgery.x==1&IDH=="wt"]$N_number_seq,],annotation=prepped_data$annotation[category%in%c("GBMatch","GBmatch_val")&surgery.x==1&IDH=="wt"])
 stopifnot(row.names(prepped_data_prim_val$meth_data_imputed)==prepped_data_prim_val$annotation$N_number_seq)
 #plot and save only heatmap for selected factor and rank_cutoff
-factor="survival_class" #rank_cutoff=200
+factor="survival_class" 
 plot_heatmap(file_name=paste0("feature_analysis/only_heatmap_",factor),pl=pl,prepped_data=prepped_data_prim_val,factor="survival_class",rank_cutoff=200,title="Survival class")
 
 roc_data=pl[[factor]]$plot_int[["long"]]$data
@@ -396,7 +380,6 @@ uset=GRangesList()
 uset[[paste0(sel_analysis,"_",sel_level,"_neg")]]=univ[1:1000]
 uset[[paste0(sel_analysis,"_",sel_level,"_pos")]]=univ[(length(univ)-999):length(univ)]
 
-
 locResults=runLOLA(userSets=uset,userUniverse=univ,regionDB=regionDB_seg)
 
 locResults[,p.adjust:=p.adjust(10^(-pValueLog),method="BY"),by=userSet]
@@ -412,7 +395,4 @@ ggplot(locResults_sel,aes(y=-log10(p.adjust),x=seg_explanation,size=logOddsRatio
 dev.off()
 
 write.table(locResults_sel[,list(p.adjust,seg_explanation,logOddsRatio,ANATOMY_cor,userSet),],"feature_analysis/Source Data Figure6h.csv",sep=";",quote=FALSE,row.names=FALSE)
-
-
-
 

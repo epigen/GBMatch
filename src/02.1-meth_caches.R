@@ -1,3 +1,6 @@
+#NOTE: This script creates caches for DNA methylation data that are used in following analysis.
+#This is based on and adapted from Nathan Sheffields analysis for the DNA methyalation Ewing sarcoma study.
+
 library(project.init)
 project.init2("GBMatch")
 library(LOLA)
@@ -6,13 +9,11 @@ nenv()
 eload(loadGencodeGenes("human",versNum=87))
 eload(loadUCSCRepeats())
 repeats = SV$repeats
-
 eload(loadAnnotation())
+
 #only include samples in combined sample annotation
 annotation=fread(file.path(getOption("PROCESSED.PROJECT"),"results_analysis/01.1-combined_annotation/annotation_combined.tsv"))
 BSSamples = SV$psa[file.exists(BSFile) & library=="RRBS"&sample_name%in%annotation$N_number_seq, sample_name]; BSSamples
-
-
 
 
 ##functions##########
@@ -20,35 +21,34 @@ buildJadd=function(cols,funcs,special){
   r = paste("list(", paste(c(paste0(cols, "=", funcs, "(", cols, ")"),special), collapse=","), ")")
   return(r);
 }
-
 ####################
 
 setLapplyAlias(12)
 simpleCache("rrbsCg", {
-	sampleSummaryList = lapplyAlias(BSSamples, sampleFilter,
-		minReads=10, excludeGR = repeats,
-		SV$psa, idColumn = "sample_name", fileColumn="BSFile", 
-		cachePrepend="meth.cg.", cacheSubDir="meth/cg_sub", 
-		readFunction=function(x) {
-			tmp = BSreadBiSeq(x);
-			tmp[,methyl:=round(hitCount/readCount,3)]
-			return(tmp)
-		}, recreate=FALSE, mc.preschedule=FALSE)
-	sampleSummaryLong = rbindlist(sampleSummaryList)
-	sampleSummaryLong # Cache this.
+  sampleSummaryList = lapplyAlias(BSSamples, sampleFilter,
+                                  minReads=10, excludeGR = repeats,
+                                  SV$psa, idColumn = "sample_name", fileColumn="BSFile", 
+                                  cachePrepend="meth.cg.", cacheSubDir="meth/cg_sub", 
+                                  readFunction=function(x) {
+                                    tmp = BSreadBiSeq(x);
+                                    tmp[,methyl:=round(hitCount/readCount,3)]
+                                    return(tmp)
+                                  }, recreate=FALSE, mc.preschedule=FALSE)
+  sampleSummaryLong = rbindlist(sampleSummaryList)
+  sampleSummaryLong # Cache this.
 }, recreate=TRUE, noload=TRUE)
 
 setLapplyAlias(12)
 simpleCache("rrbsCgNoMin", {
   sampleSummaryList = lapplyAlias(BSSamples, sampleFilter,
-  minReads=0, excludeGR = repeats,
-  SV$psa, idColumn = "sample_name", fileColumn="BSFile", 
-  cachePrepend="meth.cg.", cacheSubDir="meth/cg_subNoMin", 
-  readFunction=function(x) {
-    tmp = BSreadBiSeq(x);
-    tmp[,methyl:=round(hitCount/readCount,3)]
-    return(tmp)
-  }, recreate=FALSE, mc.preschedule=FALSE)
+                                  minReads=0, excludeGR = repeats,
+                                  SV$psa, idColumn = "sample_name", fileColumn="BSFile", 
+                                  cachePrepend="meth.cg.", cacheSubDir="meth/cg_subNoMin", 
+                                  readFunction=function(x) {
+                                    tmp = BSreadBiSeq(x);
+                                    tmp[,methyl:=round(hitCount/readCount,3)]
+                                    return(tmp)
+                                  }, recreate=FALSE, mc.preschedule=FALSE)
   sampleSummaryLong = rbindlist(sampleSummaryList)
   sampleSummaryLong # Cache this.
 }, recreate=TRUE, noload=TRUE)
@@ -68,8 +68,6 @@ special=c("CpGcount=length(na.omit(methyl))")
 jCommand = buildJadd(cols,funcs,special)
 
 setLapplyAlias(12)
-
-
 # 5kb tiles after subtracting repeats
 simpleCache("rrbsTiled5ksub", {
   sampleSummaryList = lapplyAlias(BSSamples, sampleSummaryByRegion,
@@ -141,9 +139,7 @@ simpleCache("rrbsCGI", {
 
 #enhancers in astrocytes
 enhancers<- LOLA::getRegionSet("/data/groups/lab_bock/shared/resources/regions/customRegionDB/hg38", collections="roadmap_segmentation", "E125_15_coreMarks_segments_E7.bed")
-
 enhancers=enhancers[!duplicated(enhancers)]
-
 simpleCache("rrbsEnhancers", {
   sampleSummaryList = lapplyAlias(BSSamples, sampleSummaryByRegion,
                                   regions=enhancers, excludeGR = NULL,

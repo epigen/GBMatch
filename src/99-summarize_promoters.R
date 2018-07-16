@@ -1,3 +1,5 @@
+#NOTE: helper script to summarize differential methylation results across promoter regions
+#Adapted from N. Sheffields analysis for the Ewing sarcoma DNA methylation study
 BSAggregate_prom=function(BSDT, regionsGRL, excludeGR=NULL, regionsGRL.length = NULL, splitFactor=NULL, keepCols=NULL, sumCols=NULL, jCommand=NULL, byRegionGroup=FALSE, keep.na=FALSE) {
   
   # Assert that regionsGRL is a GRL.
@@ -117,9 +119,9 @@ BSAggregate_prom=function(BSDT, regionsGRL, excludeGR=NULL, regionsGRL.length = 
 
 
 sampleSummaryByProm=function(id, regions, excludeGR, annotationTable,
-         idColumn, fileColumn, cachePrepend, cacheSubDir, 
-         jCommand, readFunction, byRegionGroup= FALSE,
-         regionsGRL.length=NULL, ...) {
+                             idColumn, fileColumn, cachePrepend, cacheSubDir, 
+                             jCommand, readFunction, byRegionGroup= FALSE,
+                             regionsGRL.length=NULL, ...) {
   # Check 
   if (! "GRanges" %in% class(regions) & !"GRangesList" %in% class(regions)) {
     stop("regions is not a GRanges");

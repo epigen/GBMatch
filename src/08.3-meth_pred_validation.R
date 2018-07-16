@@ -1,3 +1,4 @@
+#NOTE: This script was used to identify and investigate the potentialy contaminated samples on plate 2 of the validation cohort
 library(project.init)
 project.init2("GBMatch")
 library(simpleCache)
@@ -6,47 +7,9 @@ library(pheatmap)
 library(sva)
 source(file.path(getOption("PROJECT.DIR"),"src/99-liblinearFunctions.R"))
 
-##functions##########
-buildJadd=function(cols,funcs,special){
-  r = paste("list(", paste(c(paste0(cols, "=", funcs, "(", cols, ")"),special), collapse=","), ")")
-  return(r);
-}
-
 out_dir=file.path(getOption("PROCESSED.PROJECT"),"results_analysis/08.2-meth_pred/validation")
 dir.create(out_dir)
 setwd(out_dir)
-
-#create cache including "plate2" and rerun samples (only needed first time)
-# eload(loadAnnotation())
-# eload(loadUCSCRepeats())
-# repeats = SV$repeats
-# eload(loadAnnotation())
-# BSSamples = SV$psa[file.exists(BSFile) & library=="RRBS", sample_name]; BSSamples
-# eload(loadTiles(genomeBuild=genome, tileSize=5000))
-# agRegions = get(paste0("tiles5000", genome), env=SV)
-# 
-# cols=c("hitCount", "readCount", "methyl")
-# funcs = c("sum", "sum", "mean")
-# special=c("CpGcount=length(na.omit(methyl))")
-# jCommand = buildJadd(cols,funcs,special)
-# 
-# setLapplyAlias(12)
-# 
-# 
-# # 5kb tiles after subtracting repeats
-# simpleCache("rrbsTiled5ksub_val", {
-#   sampleSummaryList = lapplyAlias(BSSamples, sampleSummaryByRegion,
-#                                   regions=agRegions, excludeGR = repeats,
-#                                   SV$psa, idColumn = "sample_name", fileColumn="BSFile", 
-#                                   cachePrepend="meth.5k.", cacheSubDir="meth/tile5k_sub_val", 
-#                                   jCommand=jCommand, 
-#                                   readFunction=function(x) {
-#                                     ino = BSreadBiSeq(x);
-#                                     ino[,methyl:=hitCount/readCount]
-#                                   }, mc.preschedule=FALSE)
-#   sampleSummaryLong = rbindlist(sampleSummaryList)
-#   sampleSummaryLong # Cache this.
-# }, recreate=TRUE, noload=TRUE)
 
 
 #get meth data from caches
@@ -56,7 +19,8 @@ meth_data_dt_all=get(cacheName)
 
 #load annotation
 annotation_all=fread(file.path(getOption("PROCESSED.PROJECT"),"results_analysis/01.1-combined_annotation/annotation_combined_includeAll.tsv"))
-#add rerun samples
+
+#add rerun samples (to make sure it was not a mistake in RRBS library preparation)
 rerun_stats=fread(file.path(getOption("PROCESSED.PROJECT"),"results_pipeline/RRBS_stats_summary_rerun.tsv"))
 rerun_stats=rerun_stats[grep("rerun",sampleName)]
 rerun_stats[,Sex:=annotation_all[N_number_seq==gsub("_rerun","",sampleName)]$Sex,by=1:nrow(rerun_stats)]
@@ -76,7 +40,6 @@ meth_data_dt_all[,region:=paste0(chr,"_",start,"_",end),]
 meth_data_dt=meth_data_dt_all[id%in%annotation_all[category%in%c("GBMatch","GBmatch_val","rerun")&IDH=="wt"]$N_number_seq]
 prepped_data=prepare_data(meth_data_dt=meth_data_dt,annotation_all=annotation_all,min_na_ratio=0.9,min_na_ratio_samp=0.45)
 
-
 #create subsets of samples to analyze
 prepped_data_prim=list(meth_data_imputed=prepped_data$meth_data_imputed[prepped_data$annotation[category=="GBMatch"]$N_number_seq,],annotation=prepped_data$annotation[category=="GBMatch"])
 stopifnot(row.names(prepped_data_prim$meth_data_imputed)==prepped_data_prim$annotation$N_number_seq)
@@ -91,11 +54,8 @@ stopifnot(row.names(prepped_data_val_plate1$meth_data_imputed)==prepped_data_val
 prepped_data_val_plate2=list(meth_data_imputed=prepped_data$meth_data_imputed[prepped_data$annotation[category=="GBmatch_val"&plate_dna_abbrev=="EA003_plate2"]$N_number_seq,],annotation=prepped_data$annotation[category=="GBmatch_val"&plate_dna_abbrev=="EA003_plate2"])
 stopifnot(row.names(prepped_data_val_plate2$meth_data_imputed)==prepped_data_val_plate2$annotation$N_number_seq)
 
-
-
 #estimate cost for primary cohort, because this is the one the perdictor is buit on
 cost=heuristicC(prepped_data_prim$meth_data_imputed)
-
 
 #build classifier on primary dataset
 classification_prim=check_prediction(data=prepped_data_prim$meth_data_imputed,labels=prepped_data_prim$annotation$Sex,samples=prepped_data_prim$annotation$N_number_seq,cross=10,nReps=3,type=4,cost=cost)
@@ -103,9 +63,7 @@ classification_prim=check_prediction(data=prepped_data_prim$meth_data_imputed,la
 #plot ROC
 classification_prim$plot
 
-
 #use classifier to predict sex for validation cohort
-
 p_val=predict(classification_prim$model,prepped_data_val$meth_data_imputed,proba=FALSE,decisionValues=TRUE)
 
 prediction_val=data.table(sample=prepped_data_val$annotation$N_number_seq,predicted_label=p_val$predictions,true_label=prepped_data_val$annotation$Sex,p_val$decisionValues,prepped_data_val$annotation[,c("plate_dna_abbrev","position_dna","position_rrbs","experiment","pool","adapter"),with=FALSE])
@@ -152,7 +110,7 @@ gregexpr("fmmmmff",predicted_mf_col)
 #create random distribution concordance/discordance count
 sub_pred=prediction_val[plate_dna_abbrev=="EA003_plate2",c("sample", "predicted_label", "true_label"),with=FALSE]
 for (i in 1:1000){
-sub_pred[,paste0("rand",i):=sample(true_label,length(true_label),replace=FALSE),]
+  sub_pred[,paste0("rand",i):=sample(true_label,length(true_label),replace=FALSE),]
 }
 sub_pred_long=melt(sub_pred,id.vars=c("sample", "predicted_label", "true_label"))
 
@@ -163,7 +121,6 @@ ggplot(sub_pred_long_red_lon,aes(x=value))+geom_histogram()+facet_wrap(~count_ty
 
 
 #complementary analysis using read coverage on x and y chromosomes
-
 par=data.table(chr=c("chrX","chrX","chrY","chrY"),start=c(10001,155701383,10001,56887903),end=c(2781479,156030895,2781479,57217415),par=c("parX1","parX2","parY1","parY2"))
 setkey(par, chr, start, end)
 rrbsData_chrX_Y=foverlaps(meth_data_dt_all[chr%in%c("chrX","chrY")],par,type="within",mult="first")
@@ -193,7 +150,7 @@ ggplot(XY_detected_ratio_annot[category%in%c("GBmatch_val","GBMatch")&plate_dna!
 dev.off()
 
 #########further prediction tests on subsets
-#check classification on validation cohort without misclassified samples from primary prediction
+#check classification on validation cohort without mis-classified samples from primary prediction
 #complete val cohort
 cost_val=heuristicC(prepped_data_val$meth_data_imputed)
 classification_val_complete=check_prediction(data=prepped_data_val$meth_data_imputed,labels=prepped_data_val$annotation$Sex,samples=prepped_data_val$annotation$N_number_seq,cross=10,nReps=3,type=4,cost=cost_val)
@@ -210,7 +167,6 @@ classification_val_red$plot
 
 
 # separated plate 1 and 2
-
 cost_val_p1=heuristicC(prepped_data_val_plate1$meth_data_imputed)
 classification_val_p1=check_prediction(data=prepped_data_val_plate1$meth_data_imputed,labels=prepped_data_val_plate1$annotation$Sex,samples=prepped_data_val_plate1$annotation$N_number_seq,cross=10,nReps=3,type=4,cost=cost_val_p1)
 #plot ROC
@@ -220,8 +176,6 @@ cost_val_p2=heuristicC(prepped_data_val_plate2$meth_data_imputed)
 classification_val_p2=check_prediction(data=prepped_data_val_plate2$meth_data_imputed,labels=prepped_data_val_plate2$annotation$Sex,samples=prepped_data_val_plate2$annotation$N_number_seq,cross=10,nReps=3,type=4,cost=cost_val_p2)
 #plot ROC
 classification_val_p2$plot
-
-
 
 #now try reduced validation data set for immune prediction
 meth_pred_analysis(meth_data_imputed=prepped_data_val$meth_data_imputed[correct_samples,],annotation=prepped_data_val$annotation[N_number_seq%in%correct_samples,],column_annotation=column_annotation,to_analyse=c("immuno_sex"),set_targets=c("MIB","CD68","CD163","Sex"),meth_sel="_val_red_",set_scale=FALSE,type=4,cost=cost_val_red,cross=10,nReps=3)
@@ -233,9 +187,7 @@ meth_pred_analysis(meth_data_imputed=prepped_data_val_plate1$meth_data_imputed,a
 meth_pred_analysis(meth_data_imputed=prepped_data_val_plate2$meth_data_imputed,annotation=prepped_data_val_plate2$annotation,column_annotation=column_annotation,to_analyse=c("immuno_sex"),set_targets=c("MIB","CD68","CD163","Sex"),meth_sel="_val_plate2",set_scale=FALSE,type=4,cost=cost_val_p1,cross=10,nReps=10)
 
 
-
 #predict immune infiltration in validation cohort through prim model
-
 meth_pred_analysis(meth_data_imputed=prepped_data_prim$meth_data_imputed,annotation=prepped_data_prim$annotation,column_annotation=column_annotation,to_analyse=c("histo_immuno"),set_targets=c("MIB","CD68","CD163"),meth_sel="_immuno_prim_",set_scale=FALSE,type=4,cost=cost,cross=10,nReps=3)
 load("dat_histo_immuno_immuno_prim_.RData")
 
@@ -258,7 +210,6 @@ prediction_val=data.table(sample=prepped_data_val_plate1$annotation$N_number_seq
 #plate2
 p_val=predict(pl[[factor]]$model,prepped_data_val_plate2$meth_data_imputed,proba=FALSE,decisionValues=TRUE)
 prediction_val=data.table(sample=prepped_data_val_plate2$annotation$N_number_seq,predicted_label=p_val$predictions,true_label=binarize(prepped_data_val_plate2$annotation[,factor,with=FALSE],low=0.2,high=0.8),p_val$decisionValues)
-
 
 #plot here
 roc_mat=multi_roc(class="high",decisionValues=prediction_val[!is.na(true_label),"high"],true_labels=prediction_val[!is.na(true_label)]$true_label)

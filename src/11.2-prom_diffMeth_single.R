@@ -1,10 +1,10 @@
+#NOTE: This script analyzes differentially methylated promoters between primary and recurring tumors for each patient.
 library(project.init)
 project.init2("GBMatch")
 library(LOLA)
 library(RGenomeUtils)
-library(enrichR)
+library(enrichR) #devtools::install_github("definitelysean/enrichR")
 library(pathview)
-
 
 
 ##set directories
@@ -18,12 +18,11 @@ annotation=fread(file.path(getOption("PROCESSED.PROJECT"),"results_analysis/01.1
 annot_ASC=annotation[IDH=="wt",list(sample.1=N_number_seq[surgery.x==1][1],cycles.1=enrichmentCycles[surgery.x==1][1],cycles.2=enrichmentCycles[surgery.x==2][1],Age=min(Age),Sex=unique(Sex), extentOfResection=Extentofresection[surgery.x==1][1],progression_location=progression_location[surgery.x==2][1],timeToSecSurg=unique(timeToSecSurg)),by=patID]
 
 
-
 #chose here
 ##list all available diff meths
 diffMeth_files=list.files(file.path(getOption("RCACHE.DIR"),paste0("diffMeth/Prom1k")),full.names=TRUE)
 
-#patient wise combi for GBMatch
+#patient-wise combinations for GBMatch
 combinations=annotation[category=="GBMatch"&IDH=="wt",list(N1=N_number_seq[surgery.x==1],N2=N_number_seq[surgery.x==2]),by=c("patientID","patID")]
 combinations[,cache:=unlist(lapply(paste0(N1,"vs",N2,".RData"),function(x){ret=grep(x,diffMeth_files,value=TRUE);return(paste0(ret,""))})),]
 stopifnot(nrow(combinations[cache==""])==0)
@@ -37,15 +36,13 @@ all_signif=data.table()
 all=data.table()
 
 for (i in 1:nrow(combinations)){
-
   print(combinations[i]$cache)
   rm(ret)
   load(combinations[i]$cache)
   ret[,signif:=p.value.adj<diffmeth_plim&abs(methyl.1-methyl.2)>diffmeth_diff&readCount.1>diffmeth_readlim&readCount.2>diffmeth_readlim]
   
   all_signif=rbindlist(list(all_signif,ret[signif==TRUE]))
-  all=rbindlist(list(all,ret))
-
+  all=rbindlist(list(all,ret)) 
 }
 
 #add patID
@@ -56,14 +53,12 @@ all_signif[,patID:=sub("_[1-9]$","",id,perl=TRUE),]
 all[,sample.1:=sub("RRBS_cpgMethylation_","",sampleName.1),]
 all[,patID:=sub("_[1-9]$","",id,perl=TRUE),]
 
-
 sub=all_signif[,.N,by=c("gene_name","hypo_meth")][gene_name%in%gene_name[N>4]]
 sub[,N:=ifelse(hypo_meth==1,N,-N),]
 sub[,plot_order:=-N[which.max(abs(N))],by="gene_name"]
 #fix order for DCN (equel + and -)
 sub[gene_name=="DCN",plot_order:=-4,]
 sub[,gene_name:=factor(gene_name,levels=unique(gene_name[order(plot_order,decreasing=TRUE)])),]
-
 
 sub_expand <- rbind(sub, cbind(expand.grid(gene_name=levels(sub$gene_name), hypo_meth=levels(as.factor(sub$hypo_meth))), N=NA,plot_order=NA))
 
@@ -72,7 +67,6 @@ pdf("promoter_diff_meth_recurrent.pdf",width=5,height=5)
 ggplot(sub_expand,aes(x=gene_name,y=N,fill=factor(hypo_meth,levels=c("2","1")),group=hypo_meth,alpha=ifelse(abs(N)<5,"off","on")))+geom_bar(col="black",stat="identity",position=position_dodge(width=0))+theme(axis.text.x=element_text(angle = -90, hjust = 0,vjust=0.5))+scale_alpha_discrete(range=c(0.25,1))+theme(legend.position="bottom",legend.box = "vertical")
 dev.off()
 write.table(sub_expand,"Source Data Figure6b_upper.csv",sep=";",quote=FALSE,row.names=FALSE)
-
 
 sub_signif=all_signif[gene_name%in%sub$gene_name]
 sub_all=all[readCount.1>diffmeth_readlim&readCount.2>diffmeth_readlim]
@@ -115,7 +109,6 @@ dev.off()
 
 write.table(sel_recurring_trend_pat[,list(diff_trend_dist_norm,patID),],"Source Data Figure6c.csv",sep=";",quote=FALSE,row.names=FALSE)
 
-
 sel_recurring_trend=merge(sel_recurring,sel_recurring_trend_pat,by="patID")
 sel_recurring_trend[,annot:=ifelse(diff_trend_dist_norm>=1,"anti-trend",ifelse(diff_trend_dist_norm<0.8,"trend",NA)),]
 sel_recurring_trend[,gene_name:=factor(gene_name,levels=levels(sub_expand$gene_name)),]
@@ -136,7 +129,6 @@ enrichr_res_hypo_1[,hypo_meth:="1",]
 enrichr_res_hypo_2=try(as.data.table(enrichGeneList(unique(sub_uniq[hypo_meth==2]$gene_name),databases = c("Panther_2016"),fdr.cutoff=0.05)),silent = TRUE)
 enrichr_res_hypo_2[,hypo_meth:="2",]
 
-
 enrichr_res_sub=rbindlist(list(enrichr_res_hypo_1[pval<0.05][order(genes)],enrichr_res_hypo_2[pval<0.05][order(genes)]))
 enrichr_res_sub[,category_simpl:=gsub("\\(.*\\)|P0....|Homo sapiens","",gsub("_"," ",category)),]
 enrichr_res_sub[,annot:=ifelse(grepl("devel|gastru|guidance",category),"Development",ifelse(grepl("DNA|apopto|Apopto",category),"Apoptosis",ifelse(grepl("Wnt|Cadherin",category),"Wnt signalling",ifelse(grepl("Pentose|Fructose|Glyco",category),"Glycolysis","Immune response")))),]
@@ -149,7 +141,7 @@ ggplot(enrichr_res_sub,aes(x=category_simpl,y=-log10(pval)))+geom_bar(stat="iden
 dev.off()
 write.table(enrichr_res_sub[,list(pval,genes,hypo_meth,category_simpl,annot),],"Source Data Figure6e.csv",sep=";",quote=FALSE,row.names=FALSE)
 
-#now group samples according to methylation status in developmental/ DNA damage response genes (from enrichr)
+#now group samples according to methylation status in pathway genes identified by enrichr
 enrichr_genes=fread(file.path(getOption("PROJECT.DIR"),"metadata/gene_lists/Panther_2016_from_enrichr"),col.names=c("category","genes"))
 
 term_list=c("Development","Apoptosis","Wnt signalling","Immune response")
@@ -168,7 +160,6 @@ sub_all_term_pat=sub_all_term[,list(mean_diffmeth=mean(diff_meth,na.rm=TRUE),sd_
 
 sub_all_term_pat_wide=reshape(sub_all_term_pat[Ngenes>4],idvar="patID",timevar="term",drop=c("Ngenes","median_diffmeth","sd_diffmeth"),direction="wide")
 write.table(sub_all_term_pat_wide,"promoter_diff_meth_enrichr_term.tsv",sep="\t",quote=FALSE,row.names=FALSE)
-
 
 #relative diffmeth comparisons
 min_diff=0
@@ -195,7 +186,6 @@ dev.off()
 write.table(sub_cyc[,list(log10_DPM,timeToSecSurg,patID),],"Source Data Figure5e.csv",sep=";",quote=FALSE,row.names=FALSE)
 
 
-
 #follow-up on Wnt genes (specifically SFRP2)
 
 #get genes
@@ -210,7 +200,6 @@ genes_annot=genes_annot[!duplicated(cbind(chr,start,end)),]
 
 
 #get measures of promoter DNA Meth and heterogeneity
-
 simpleCache("pdrPromoters1ksub", assignToVariable="pdr_ag")
 simpleCache("entropy/rrbsAgEntropy_min40_prom1k",assignToVariable="entropy_ag")
 simpleCache("rrbsProm1kb",assignToVariable="meth_ag")
@@ -231,7 +220,6 @@ write.table(SFRP2_meth,"SFRP2_meth.tsv",quote=FALSE,sep="\t",row.names=FALSE)
 
 
 #some plots
-
 sub=merged_heterogeneity_annot_genes[external_gene_name%in%c("SFRP2")&category%in%c("GBMatch","GBmatch_val")&surgery.x%in%c(1,2)&IDH=="wt"&(readCount/CpGcount_meth)>10&CpGcount_meth>20]
 sub[,NsurgAvail:=.N,by=patID]
 sub_long=melt(sub,id.vars=c("patID","N_number_seq","category","external_gene_name","surgery.x","NsurgAvail"),measure.vars=c("methyl","PDRa"))
@@ -251,8 +239,7 @@ ggplot(sub_long[NsurgAvail>1],aes(y=value, x=paste0("Surgery ",surgery.x),group=
 dev.off()
 
 
-#wnt pathway visualisation
-
+#wnt pathway visualisation using KEGG maps
 wnt_genes_meth=merged_heterogeneity_annot_genes[external_gene_name%in%genes_enrichr[term=="Wnt signalling"]$gene_name]
 wnt_genes_meth[,Nallsamples:=length(unique(N_number_seq)),by=c("category","surgery.x")]
 wnt_genes_meth_merged=wnt_genes_meth[category%in%c("GBMatch","GBmatch_val","control")&surgery.x%in%c(1,2,NA)&CpGcount_meth>2&(readCount/CpGcount_meth)>10,list(Nsamples=sum(!is.na(methyl)),mean_meth=mean(methyl,na.rm=TRUE),mean_CpG=mean(CpGcount_meth,na.rm=TRUE),mean_reads=mean(readCount,na.rm=TRUE)),by=c("category","surgery.x","external_gene_name", "ensembl_gene_id","Nallsamples")]

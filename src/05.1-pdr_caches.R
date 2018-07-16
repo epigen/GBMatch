@@ -1,3 +1,5 @@
+#NOTE: This script creates caches for proportion of discordant read (PDR) data that are used in following analysis.
+#This is based on and adapted from Nathan Sheffields analysis for the DNA methyalation Ewing sarcoma study.
 library(project.init)
 project.init2("GBMatch")
 library(LOLA)
@@ -16,17 +18,13 @@ agRegions1k = get(paste0("tiles1000", genome), env=SV)
 prom1k=promoters(SV$gencodeContainer$genesGR[SV$gencodeContainer$genes[,which(gene_biotype=="protein_coding")]], upstream=1000, downstream=500)
 prom1k=prom1k[!duplicated(prom1k)]
 
-##functions##########
+
 buildJadd=function(cols,funcs,special){
   r = paste("list(", paste(c(paste0(cols, "=", funcs, "(", cols, ")"),special), collapse=","), ")")
   return(r);
 }
 
-####################
-
-
-# Now, aggregate PDR across the same region sets.
-
+# Aggregate PDR across the same region sets.
 # Build summary J command
 cols=c("ConcordantMethylatedReadCount", "ConcordantUnmethylatedReadCount", "DiscordantReadCount", "PDRa")
 funcs = c("sum", "sum", "sum", "mean")
@@ -38,13 +36,11 @@ jCommand = buildJadd(cols,funcs,special)
 annotation=fread(file.path(getOption("PROCESSED.PROJECT"),"results_analysis/01.1-combined_annotation/annotation_combined.tsv"))
 pdrSamples = SV$psa[file.exists(PDRFile)&sample_name%in%annotation$N_number_seq, sample_name]; pdrSamples
 
-
-
 # This lapply will run on every sample in pdrSamples (defined above)
-# A summary by region; It just reads in the file, and then summarizes the
-# columns (defined by the jCommand) across the regions defined in 'regions'
+# summarizes the columns (defined by the jCommand) across the regions defined in 'regions'
 setLapplyAlias(12)
 
+#cache 5kb tiles
 simpleCache("pdrTiled5ksub", {
   sampleSummaryList = lapplyAlias(pdrSamples, sampleSummaryByRegion,
                                   regions=agRegions, excludeGR = repeats,
@@ -76,7 +72,6 @@ simpleCache("pdrTiled1ksub", {
 },recreate=TRUE)
 
 
-
 #summarize promoters
 simpleCache("pdrPromoters1ksub", {
   sampleSummaryList = lapplyAlias(pdrSamples, sampleSummaryByRegion,
@@ -92,26 +87,21 @@ simpleCache("pdrPromoters1ksub", {
   sampleSummaryLong # Cache this.
 },recreate=TRUE)
 
-
-
 #per CGI
 cpgIslands <- LOLA::getRegionSet("/data/groups/lab_bock/shared/resources/regions/LOLACore/hg38", collections="ucsc_features", "cpgIslandExt.bed")
 cpgIslands=unlist(cpgIslands[!duplicated(cpgIslands)])
 
 
 simpleCache("pdrCgi", {
-	sampleSummaryList = lapplyAlias(pdrSamples, sampleSummaryByRegion,
-		regions=cpgIslands,excludeGR=NULL, 
-		SV$psa, idColumn = "sample_name", fileColumn="PDRFile", 
-		cachePrepend="pdr.cgi", cacheSubDir="pdr/cgi", jCommand, 
-		readFunction=function(x) { 
-			ino = fread(x);
-			ino[, PDRa := DiscordantReadCount/(ConcordantMethylatedReadCount+ConcordantUnmethylatedReadCount+DiscordantReadCount)];
-		}, mc.preschedule=FALSE)
-
-	sampleSummaryLong = rbindlist(sampleSummaryList)
-	sampleSummaryLong # Cache this.
+  sampleSummaryList = lapplyAlias(pdrSamples, sampleSummaryByRegion,
+                                  regions=cpgIslands,excludeGR=NULL, 
+                                  SV$psa, idColumn = "sample_name", fileColumn="PDRFile", 
+                                  cachePrepend="pdr.cgi", cacheSubDir="pdr/cgi", jCommand, 
+                                  readFunction=function(x) { 
+                                    ino = fread(x);
+                                    ino[, PDRa := DiscordantReadCount/(ConcordantMethylatedReadCount+ConcordantUnmethylatedReadCount+DiscordantReadCount)];
+                                  }, mc.preschedule=FALSE)
+  
+  sampleSummaryLong = rbindlist(sampleSummaryList)
+  sampleSummaryLong # Cache this.
 },recreate=TRUE)
-
-
-

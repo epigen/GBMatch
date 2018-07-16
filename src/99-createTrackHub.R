@@ -1,3 +1,4 @@
+#NOTE: this script was used to create track hubs for the UCSC genome browser
 library(project.init)
 project.init2("GBMatch")
 
@@ -18,7 +19,7 @@ annotation_all[is.na(surgery.x),surgery.x:=0,]
 annotation_all[,track_name:=paste0(patID,"_",surgery.x),]
 
 
-##hub txt
+##hub.txt
 hub="hub GBMatch
 shortLabel GBMatch RRBS
 longLabel GBMatch RRBS
@@ -50,9 +51,7 @@ dimensions dimA=category dimA=surgery dimA=IDH\n\n"
 
 cat(db_header,file=paste0(out_dir,genome,"/RRBS_trackDB.txt"))
 
-
 for (i in c(1:nrow(annotation_all))){  
-#for (i in c(1:50)){
   annot_sub=annotation_all[i]
   track=paste0("RRBS_",annot_sub$N_number_seq)
   sg1= annot_sub$category
@@ -71,7 +70,7 @@ for (i in c(1:nrow(annotation_all))){
     "\tshortLabel ",sl,"\n",
     "\tlongLabel ",ll,"\n",
     "\tbigDataUrl ",bdu,"\n\n"
-    )
+  )
   cat(track,file=paste0(out_dir,genome,"/RRBS_trackDB.txt"),append=TRUE)
   file.copy(from=annot_sub$bw_file,to=paste0(out_dir,genome),overwrite=FALSE)
 }
