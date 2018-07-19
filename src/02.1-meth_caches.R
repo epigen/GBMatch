@@ -117,6 +117,29 @@ simpleCache("rrbsProm1kb", {
   sampleSummaryLong # Cache this.
 }, recreate=TRUE, noload=TRUE)
 
+#promoters with gene names
+source(file.path(getOption("PROJECT.DIR"),"src/99-summarize_promoters.R"))
+genesGR=SV$gencodeContainer$genesGR
+genesGR$gene_name=SV$gencodeContainer$genes$external_gene_name
+genesGR$ensG=SV$gencodeContainer$genes$ensembl_gene_id
+
+prom1k_geneNames=promoters(genesGR[SV$gencodeContainer$genes[,which(gene_biotype=="protein_coding")]], upstream=1000, downstream=500)
+prom1k_geneNames=prom1k_geneNames[!duplicated(prom1k_geneNames)]
+
+simpleCache("rrbsProm1kb_geneNames", {
+  sampleSummaryList = lapplyAlias(BSSamples, sampleSummaryByProm,
+                                  regions=prom1k_geneNames, excludeGR = NULL,
+                                  SV$psa, idColumn = "sample_name", fileColumn="BSFile", 
+                                  cachePrepend="prom.1k.gn.", cacheSubDir="meth/prom1k_gn", 
+                                  jCommand=jCommand, 
+                                  readFunction=function(x) {
+                                    ino = BSreadBiSeq(x);
+                                    ino[,methyl:=hitCount/readCount]
+                                  }, mc.preschedule=FALSE)
+  sampleSummaryLong = rbindlist(sampleSummaryList)
+  sampleSummaryLong # Cache this.
+}, recreate=TRUE, noload=TRUE)
+
 
 #CGI
 cpgIslands <- LOLA::getRegionSet("/data/groups/lab_bock/shared/resources/regions/LOLACore/hg38", collections="ucsc_features", "cpgIslandExt.bed")
