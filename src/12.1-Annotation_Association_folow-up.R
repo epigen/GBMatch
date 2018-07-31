@@ -367,14 +367,14 @@ factors=c("Area total [mm²]","Area tumor [mm²]","Total (mm3)","Enhancing (mm3)
 ####Figure S12b
 pdf(paste0("heterogeneity_size.pdf"),height=2.5,width=5.5)
 for (factor in factors){
-  cor=sub[,list(cor(get(factor),mean_entropy,use="pairwise.complete.obs"),N=nrow(na.omit(cbind(get(factor),mean_entropy)))),by=c("surgery","category")]
+  cor=sub[,list(p.value=cor.test(get(factor),mean_entropy,use="pairwise.complete.obs")$p.value,cor=cor.test(get(factor),mean_entropy,use="pairwise.complete.obs")$estimate,N=nrow(na.omit(cbind(get(factor),mean_entropy)))),by=c("surgery","category")]
   x=sub[,max(get(factor),na.rm=TRUE)/3,]
-  ggpl=ggplot(sub,aes(x=get(factor),y=mean_entropy))+geom_point(shape=21,fill="grey",alpha=0.6)+geom_smooth(method="lm",fill="lightgrey")+geom_text(data=cor,aes(x=x,y=45,label=paste0("r=",round(V1,3)," N=",N)))+facet_wrap(~surgery+category,scale="free")+xlab(factor)
+  ggpl=ggplot(sub,aes(x=get(factor),y=mean_entropy))+geom_point(shape=21,fill="grey",alpha=0.6)+geom_smooth(method="lm",fill="lightgrey")+geom_text(data=cor,aes(x=x,y=45,label=paste0("r=",signif(cor,2)," p=",signif(p.value,2)," N=",N)),size=2.5)+facet_wrap(~surgery+category,scale="free")+xlab(factor)
   print(ggpl)
   
-  cor=sub[,list(cor(get(factor),mean_pdr,use="pairwise.complete.obs"),N=nrow(na.omit(cbind(get(factor),mean_entropy)))),by=c("surgery","category")]
+  cor=sub[,list(p.value=cor.test(get(factor),mean_pdr,use="pairwise.complete.obs")$p.value,cor=cor.test(get(factor),mean_pdr,use="pairwise.complete.obs")$estimate,N=nrow(na.omit(cbind(get(factor),mean_entropy)))),by=c("surgery","category")]
   x=sub[,max(get(factor),na.rm=TRUE)/3,]
-  ggpl=ggplot(sub,aes(x=get(factor),y=mean_pdr*100))+geom_point(shape=21,fill="grey",alpha=0.6)+geom_smooth(method="lm",fill="lightgrey")+geom_text(data=cor,aes(x=x,y=30,label=paste0("r=",round(V1,3)," N=",N)))+facet_wrap(~surgery+category,scale="free")+xlab(factor)
+  ggpl=ggplot(sub,aes(x=get(factor),y=mean_pdr*100))+geom_point(shape=21,fill="grey",alpha=0.6)+geom_smooth(method="lm",fill="lightgrey")+geom_text(data=cor,aes(x=x,y=30,label=paste0("r=",signif(cor,2)," p=",signif(p.value,2)," N=",N)),size=2.5)+facet_wrap(~surgery+category,scale="free")+xlab(factor)
   print(ggpl)
 }
 dev.off()

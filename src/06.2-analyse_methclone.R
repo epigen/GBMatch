@@ -149,10 +149,10 @@ for (min_reads in min_reads_list){
     #EPM comparisons
     sub_cyc=sub
     sub_cyc[,log10_EPM:=log10(EPM),]
-    cors=sub_cyc[,list(cor=cor(timeToSecSurg,log10_EPM),N=length(timeToSecSurg),y=max(log10_EPM)),by="comparison"]
+    cors=sub_cyc[,list(cor=cor.test(timeToSecSurg,log10_EPM)$estimate,p.value=cor.test(timeToSecSurg,log10_EPM)$p.value,N=length(timeToSecSurg),y=max(log10_EPM)),by="comparison"]
     
     pdf("EPM_comps.pdf",height=3.5,width=7)
-    print(ggplot(sub_cyc,aes(y=log10_EPM,x=timeToSecSurg/30))+geom_point(shape=21)+geom_smooth(method="lm")+geom_text(data=cors,x=10,aes(y=y,label=paste0("r=",round(cor,3)," N=",N)))+facet_wrap(~comparison,scale="free")+xlab("timeToSecSurg (months)"))
+    print(ggplot(sub_cyc,aes(y=log10_EPM,x=timeToSecSurg/30))+geom_point(shape=21)+geom_smooth(method="lm")+geom_text(data=cors,x=10,aes(y=y,label=paste0("r=",signif(cor,2)," p=",signif(p.value,2)," N=",N)),size=2.5)+facet_wrap(~comparison,scale="free")+xlab("timeToSecSurg (months)"))
     
     print(ggplot(sub_cyc,aes(y=log10_EPM,x=as.factor(progression_location),group=progression_location))+geom_point(shape=21,position=position_jitter(width=0.2))+geom_boxplot(fill="transparent",outlier.shape=NA)+facet_wrap(~comparison,scale="free"))
     
@@ -161,7 +161,7 @@ for (min_reads in min_reads_list){
     
     ####Figure S12f
     pdf("EPM_comps_1vs2.pdf",height=3.5,width=3)
-    print(ggplot(sub_cyc[comparison=="1vs2"],aes(y=log10_EPM,x=timeToSecSurg/30))+geom_point(shape=21,size=3,fill="grey",alpha=0.6)+geom_smooth(method="lm",fill="lightgrey")+geom_text(data=cors[comparison=="1vs2"],x=10,aes(y=y,label=paste0("r=",round(cor,3)," N=",N)))+xlab("timeToSecSurg (months)"))
+    print(ggplot(sub_cyc[comparison=="1vs2"],aes(y=log10_EPM,x=timeToSecSurg/30))+geom_point(shape=21,size=3,fill="grey",alpha=0.6)+geom_smooth(method="lm",fill="lightgrey")+geom_text(data=cors[comparison=="1vs2"],x=20,aes(y=y,label=paste0("r=",signif(cor,2)," p=",signif(p.value,2)," N=",N)),size=3)+xlab("timeToSecSurg (months)"))
     
     print(ggplot(sub_cyc[comparison=="1vs2"],aes(y=log10_EPM,x=as.factor(progression_location),group=progression_location))+geom_point(shape=21,position=position_jitter(width=0.2))+geom_boxplot(fill="transparent",outlier.shape=NA))
     
