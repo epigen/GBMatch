@@ -1,17 +1,17 @@
 # GBMatch
 This repository contains code and metadata for the glioblastoma progression study (https://www.biorxiv.org/content/early/2017/08/09/173864). 
-The data analysis code in src relies on the processed data (methylation calls, PDR calls, statistics) being available in the directory structure 
-produced by a data processing  pipeline based on Pypiper (https://pypiper.readthedocs.io) and Looper (https://looper.readthedocs.io) as specified in the 
-[project configuration file](metadata/GBMatch.yaml).
+The data analysis code in [src](src) relies on the processed data (methylation calls, PDR calls, statistics) being available in the directory structure produced by a data processing pipeline based on Pypiper (https://pypiper.readthedocs.io) and Looper (https://looper.readthedocs.io) as specified in the [project configuration file](metadata/GBMatch.yaml).
 It further relies on the [projectInit R package](https://github.com/databio/projectInit) to read the pipeline results 
-into R for further analysis. The scripst found in this repository are meant to be executed in order and produce the plots and tables 
+into R for further analysis. The scripts found in this repository are meant to be executed in order and produce the plots and tables 
 presented in the corresponding publication.
 
 Addititional data can be found on the supplementary website: http://glioblastoma-progression.computational-epigenetics.org
 
 ### Linking figures, scrips, and results:
 
-The combined annotation tables used in nearly every analysis are produced using the scripts 01.1-combine_annotation.R (combining the different types of collected annotations) and 10.1_add_annotation.R (adding annotations produced through analysis e.g. transcriptional subtypes) and stored in the folder 01.1-combined_annotation.
+Additionally to the links between figures and scripts listed below, the positions in the scripts where the respective plots are produced are marked with *####Figure X*. 
+
+The combined annotation tables used in nearly every analysis are produced using the scripts *01.1-combine_annotation.R* (combining the different types of collected annotations) and *10.1_add_annotation.R* (adding annotations produced through analysis e.g. transcriptional subtypes) and stored in the folder *01.1-combined_annotation*.
 
 Figure|Scripts|Results
 ------|------|--------------
