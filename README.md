@@ -2,7 +2,7 @@
 This repository contains code and metadata for the glioblastoma progression study (https://www.biorxiv.org/content/early/2017/08/09/173864). 
 The data analysis code in [src](src) relies on the processed data (methylation calls, PDR calls, statistics) being available in the directory structure produced by a data processing pipeline based on Pypiper (https://pypiper.readthedocs.io) and Looper (https://looper.readthedocs.io) as specified in the [project configuration file](metadata/GBMatch.yaml).
 It further relies on the [projectInit R package](https://github.com/databio/projectInit) to read the pipeline results 
-into R for further analysis. The scripts found in this repository are meant to be executed in order and produce the plots and tables 
+into R for further analysis. Specifically an early version of this package was used: [project.init](https://github.com/databio/projectInit/releases/tag/v0.1). The scripts found in this repository are meant to be executed in order and produce the plots and tables 
 presented in the corresponding publication.
 
 Addititional data can be found on the supplementary website: http://glioblastoma-progression.computational-epigenetics.org
